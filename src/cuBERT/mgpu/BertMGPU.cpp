@@ -38,9 +38,9 @@ namespace cuBERT {
         }
     }
 
-    void BertMGPU::compute_cpu(size_t batch_size, int *input_ids, char *input_mask, char *segment_ids, float *logits) {
+    unsigned int BertMGPU::compute_cpu(size_t batch_size, int *input_ids, char *input_mask, char *segment_ids, float *logits) {
         uint8_t count = rr++;
-        size_t choice = count % bert_instances.size();
+        unsigned int choice = count % bert_instances.size();
 
         Bert *bert_instance = bert_instances[choice];
         std::mutex *mutex_instance = mutex_instances[choice];
@@ -48,5 +48,7 @@ namespace cuBERT {
         std::lock_guard<std::mutex> lg(*mutex_instance);
         bert_instance->compute_cpu(batch_size, input_ids, input_mask, segment_ids);
         bert_instance->logits(batch_size, logits);
+
+        return choice;
     }
 }

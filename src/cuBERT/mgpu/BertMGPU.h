@@ -20,7 +20,7 @@ namespace cuBERT {
 
         virtual ~BertMGPU();
 
-        void compute_cpu(size_t batch_size, int *input_ids, char *input_mask, char *segment_ids, float *logits);
+        unsigned int compute_cpu(size_t batch_size, int *input_ids, char *input_mask, char *segment_ids, float *logits);
 
     private:
         Graph graph;

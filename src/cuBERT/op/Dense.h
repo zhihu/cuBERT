@@ -1,7 +1,3 @@
-//
-// Created by 田露 on 2019/1/14.
-//
-
 #ifndef CUBERT_DENSE_H
 #define CUBERT_DENSE_H
 
