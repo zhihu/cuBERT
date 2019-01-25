@@ -109,13 +109,6 @@ namespace internal {
 LIBPROTOBUF_EXPORT double Infinity();
 LIBPROTOBUF_EXPORT double NaN();
 
-LIBPROTOBUF_EXPORT void InitProtobufDefaults();
-
-// This used by proto1
-inline const std::string& GetEmptyString() {
-  InitProtobufDefaults();
-  return GetEmptyStringAlreadyInited();
-}
 
 // True if IsInitialized() is true for all elements of t.  Type is expected
 // to be a RepeatedPtrField<some message type>.  It's useful to have this
@@ -143,6 +136,8 @@ bool AllAreInitializedWeak(const ::google::protobuf::RepeatedPtrField<T>& t) {
   }
   return true;
 }
+
+LIBPROTOBUF_EXPORT void InitProtobufDefaults();
 
 struct LIBPROTOBUF_EXPORT FieldMetadata {
   uint32 offset;  // offset of this field in the struct
@@ -340,16 +335,7 @@ struct LIBPROTOBUF_EXPORT SCCInfoBase {
     kRunning = 1,
     kUninitialized = -1,  // initial state
   };
-#ifndef _MSC_VER
   std::atomic<int> visit_status;
-#else
-  // MSVC doesnt make std::atomic constant initialized. This union trick
-  // makes it so.
-  union {
-    int visit_status_to_make_linker_init;
-    std::atomic<int> visit_status;
-  };
-#endif
   int num_deps;
   void (*init_func)();
   // This is followed by an array  of num_deps
@@ -371,17 +357,6 @@ LIBPROTOBUF_EXPORT void InitSCCImpl(SCCInfoBase* scc);
 inline void InitSCC(SCCInfoBase* scc) {
   auto status = scc->visit_status.load(std::memory_order_acquire);
   if (GOOGLE_PREDICT_FALSE(status != SCCInfoBase::kInitialized)) InitSCCImpl(scc);
-}
-
-LIBPROTOBUF_EXPORT void DestroyMessage(const void* message);
-LIBPROTOBUF_EXPORT void DestroyString(const void* s);
-// Destroy (not delete) the message
-inline void OnShutdownDestroyMessage(const void* ptr) {
-  OnShutdownRun(DestroyMessage, ptr);
-}
-// Destroy the string (call string destructor)
-inline void OnShutdownDestroyString(const std::string* ptr) {
-  OnShutdownRun(DestroyString, ptr);
 }
 
 }  // namespace internal
