@@ -13,9 +13,14 @@ TF_Session* open_tf(const char* export_dir) {
     const char* tag = "serve";
     TF_Status* status = TF_NewStatus();
 
+    /*
+>>> config = tf.ConfigProto(allow_soft_placement=True)
+>>> config.gpu_options.allow_growth = True
+>>> config.gpu_options.visible_device_list = '1'
+     */
     TF_SessionOptions* opts = TF_NewSessionOptions();
-    unsigned char config[16] = {0x10, 8, 0x28, 8, 0x32, 0x02, 0x20, 1, 0x38, 0x01, 0x52, 0x04, 0x1a, 0x02, 0x28, 0};
-    TF_SetConfig(opts, config, 16, status);
+    unsigned char config[9] = {0x32, 0x05, 0x20, 0x01, 0x2a, 0x01, 0x31, 0x38, 0x01};
+    TF_SetConfig(opts, config, 9, status);
 
     TF_Graph* graph = TF_NewGraph();
     TF_Session* session = TF_LoadSessionFromSavedModel(opts, nullptr, export_dir, &tag, 1, graph, nullptr, status);
@@ -88,12 +93,14 @@ int main() {
     TF_Tensor* tf_input_ids = TF_AllocateTensor(TF_INT64, dims, 2, sizeof(int64_t) * dims[0] * dims[1]);
     TF_Tensor* tf_input_mask = TF_AllocateTensor(TF_INT64, dims, 2, sizeof(int64_t) * dims[0] * dims[1]);
     TF_Tensor* tf_segment_ids = TF_AllocateTensor(TF_INT64, dims, 2, sizeof(int64_t) * dims[0] * dims[1]);
+    std::cout << TF_Version() << std::endl;
 
     void* model = cuBERT_open("bert_frozen_seq32.pb", max_batch_size, seq_length, 12, 12);
     TF_Session* tf_model = open_tf("bert");
 
     std::cout << "=== warm_up ===" << std::endl;
     for (int i = 0; i < 10; ++i) {
+        TF_Tensor* output;
         random_input(input_ids, input_mask, segment_ids, batch_size * seq_length,
                      tf_input_ids, tf_input_mask, tf_segment_ids);
 
@@ -103,7 +110,6 @@ int main() {
         long long milli = std::chrono::duration_cast<std::chrono::milliseconds>(finish - start).count();
         std::cout << "cuBERT: " << milli << "ms" << std::endl;
 
-        TF_Tensor* output;
         start = std::chrono::high_resolution_clock::now();
         compute_tf(tf_model, tf_input_ids, tf_input_mask, tf_segment_ids, &output);
         finish = std::chrono::high_resolution_clock::now();
@@ -116,6 +122,7 @@ int main() {
 
     std::cout << "=== benchmark ===" << std::endl;
     for (int i = 0; i < 10; ++i) {
+        TF_Tensor* output;
         random_input(input_ids, input_mask, segment_ids, batch_size * seq_length,
                      tf_input_ids, tf_input_mask, tf_segment_ids);
 
@@ -125,7 +132,6 @@ int main() {
         long long milli = std::chrono::duration_cast<std::chrono::milliseconds>(finish - start).count();
         std::cout << "cuBERT: " << milli << "ms" << std::endl;
 
-        TF_Tensor* output;
         start = std::chrono::high_resolution_clock::now();
         compute_tf(tf_model, tf_input_ids, tf_input_mask, tf_segment_ids, &output);
         finish = std::chrono::high_resolution_clock::now();
