@@ -3,6 +3,7 @@
 //
 #include <string>
 
+#include "cuBERT/common.h"
 #include "Transformer.h"
 
 namespace cuBERT {
@@ -35,8 +36,7 @@ namespace cuBERT {
         size_t attention_head_size = hidden_size / num_attention_heads;
 
         this->attention_mask = new AttentionMask(cublas, seq_length, num_attention_heads, max_batch_size);
-        cudaMalloc(&this->neg_attention_mask_buffer,
-                   sizeof(float) * max_batch_size * num_attention_heads * seq_length * seq_length);
+        CUDA_CHECK(cudaMalloc(&this->neg_attention_mask_buffer, sizeof(float) * max_batch_size * num_attention_heads * seq_length * seq_length));
 
         for (int layer_idx = 0; layer_idx < num_hidden_layers; ++layer_idx) {
             attention_self[layer_idx] = new AttentionSelf(cublas, cudnn,
@@ -90,20 +90,19 @@ namespace cuBERT {
                                                          output_norm_beta, output_norm_gamma);
 
             // buffers
-            cudaMalloc(&attention_heads[layer_idx], sizeof(float) * max_batch_size * seq_length * hidden_size);
-            cudaMalloc(&attention_output[layer_idx], sizeof(float) * max_batch_size * seq_length * hidden_size);
-            cudaMalloc(&intermediate_output[layer_idx],
-                       sizeof(float) * max_batch_size * seq_length * intermediate_size);
-            cudaMalloc(&layer_output[layer_idx], sizeof(float) * max_batch_size * seq_length * hidden_size);
+            CUDA_CHECK(cudaMalloc(&attention_heads[layer_idx], sizeof(float) * max_batch_size * seq_length * hidden_size));
+            CUDA_CHECK(cudaMalloc(&attention_output[layer_idx], sizeof(float) * max_batch_size * seq_length * hidden_size));
+            CUDA_CHECK(cudaMalloc(&intermediate_output[layer_idx], sizeof(float) * max_batch_size * seq_length * intermediate_size));
+            CUDA_CHECK(cudaMalloc(&layer_output[layer_idx], sizeof(float) * max_batch_size * seq_length * hidden_size));
         }
     }
 
     Transformer::~Transformer() {
         for (int i = 0; i < num_hidden_layers; ++i) {
-            cudaFree(layer_output[i]);
-            cudaFree(intermediate_output[i]);
-            cudaFree(attention_output[i]);
-            cudaFree(attention_heads[i]);
+            CUDA_CHECK(cudaFree(layer_output[i]));
+            CUDA_CHECK(cudaFree(intermediate_output[i]));
+            CUDA_CHECK(cudaFree(attention_output[i]));
+            CUDA_CHECK(cudaFree(attention_heads[i]));
 
             delete output_layer_norm[i];
             delete output_dense[i];
@@ -114,13 +113,13 @@ namespace cuBERT {
             delete attention_self[i];
         }
 
-        cudaFree(neg_attention_mask_buffer);
+        CUDA_CHECK(cudaFree(neg_attention_mask_buffer));
         delete attention_mask;
     }
 
     float *Transformer::compute(size_t batch_size, float *input_gpu, char *attention_mask) {
         cudaStream_t stream = nullptr;
-        cublasGetStream_v2(cublas, &stream);
+        CUBLAS_CHECK(cublasGetStream_v2(cublas, &stream));
 
         // broadcast neg_attention_mask
         this->attention_mask->compute(batch_size, attention_mask, neg_attention_mask_buffer);
@@ -139,8 +138,7 @@ namespace cuBERT {
 
             // intermediate
             intermediate_dense[i]->compute(batch_size * seq_length, attention_output[i], intermediate_output[i]);
-            intermediate_act_fn[i]->compute_(batch_size * seq_length * intermediate_size, intermediate_output[i],
-                                             stream);
+            intermediate_act_fn[i]->compute_(batch_size * seq_length * intermediate_size, intermediate_output[i], stream);
 
             // output
             output_dense[i]->compute(batch_size * seq_length, intermediate_output[i], layer_output[i]);

@@ -1,5 +1,6 @@
 #include <cuda_runtime.h>
 
+#include "cuBERT/common.h"
 #include "AdditionalOutputLayer.h"
 
 namespace cuBERT {
@@ -10,23 +11,23 @@ namespace cuBERT {
         this->handle = handle;
         this->hidden_size = hidden_size;
 
-        cudaMalloc(&this->output_weights_gpu, sizeof(float) * hidden_size);
-        cudaMemcpy(output_weights_gpu, output_weights, sizeof(float) * hidden_size, cudaMemcpyHostToDevice);
+        CUDA_CHECK(cudaMalloc(&this->output_weights_gpu, sizeof(float) * hidden_size));
+        CUDA_CHECK(cudaMemcpy(output_weights_gpu, output_weights, sizeof(float) * hidden_size, cudaMemcpyHostToDevice));
     }
 
     AdditionalOutputLayer::~AdditionalOutputLayer() {
-        cudaFree(output_weights_gpu);
+        CUDA_CHECK(cudaFree(output_weights_gpu));
     }
 
     void AdditionalOutputLayer::compute(size_t batch_size, float *in_gpu, float *out_gpu) {
         // TODO: can be simplified by sapy
-        cublasSgemm_v2(handle,
-                       CUBLAS_OP_N, CUBLAS_OP_N,
-                       1, batch_size, hidden_size,
-                       &ONE,
-                       output_weights_gpu, 1,
-                       in_gpu, hidden_size,
-                       &ZERO,
-                       out_gpu, 1);
+        CUBLAS_CHECK(cublasSgemm_v2(handle,
+                                    CUBLAS_OP_N, CUBLAS_OP_N,
+                                    1, batch_size, hidden_size,
+                                    &ONE,
+                                    output_weights_gpu, 1,
+                                    in_gpu, hidden_size,
+                                    &ZERO,
+                                    out_gpu, 1));
     }
 }

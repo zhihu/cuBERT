@@ -2,6 +2,7 @@
 // Created by 田露 on 2019/1/18.
 //
 
+#include "cuBERT/common.h"
 #include "Softmax.h"
 
 namespace cuBERT {
@@ -12,19 +13,19 @@ namespace cuBERT {
         this->handle = handle;
         this->channel = channel;
 
-        cudnnCreateTensorDescriptor(&desc);
+        CUDNN_CHECK(cudnnCreateTensorDescriptor(&desc));
     }
 
     Softmax::~Softmax() {
-        cudnnDestroyTensorDescriptor(desc);
+        CUDNN_CHECK(cudnnDestroyTensorDescriptor(desc));
     }
 
     void Softmax::compute_(size_t batch_size, float *inout_gpu) {
-        cudnnSetTensor4dDescriptor(desc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, batch_size, channel, 1, 1);
+        CUDNN_CHECK(cudnnSetTensor4dDescriptor(desc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, batch_size, channel, 1, 1));
 
-        cudnnSoftmaxForward(handle,
-                            CUDNN_SOFTMAX_ACCURATE, CUDNN_SOFTMAX_MODE_INSTANCE,
-                            &ONE, desc, inout_gpu,
-                            &ZERO, desc, inout_gpu);
+        CUDNN_CHECK(cudnnSoftmaxForward(handle,
+                                        CUDNN_SOFTMAX_ACCURATE, CUDNN_SOFTMAX_MODE_INSTANCE,
+                                        &ONE, desc, inout_gpu,
+                                        &ZERO, desc, inout_gpu));
     }
 }

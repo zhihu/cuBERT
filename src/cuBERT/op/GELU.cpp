@@ -2,6 +2,7 @@
 // Created by 田露 on 2019/1/21.
 //
 
+#include "cuBERT/common.h"
 #include "GELU.h"
 
 namespace cuBERT {
@@ -13,11 +14,11 @@ namespace cuBERT {
         float *inout_gpu;
         cudaMalloc(&inout_gpu, sizeof(float) * N);
 
-        cudaMemcpyAsync(inout_gpu, inout, sizeof(float) * N, cudaMemcpyHostToDevice, stream);
+        CUDA_CHECK(cudaMemcpyAsync(inout_gpu, inout, sizeof(float) * N, cudaMemcpyHostToDevice, stream));
         compute_(N, inout_gpu, stream);
 
         // sync
-        cudaMemcpy(inout, inout_gpu, sizeof(float) * N, cudaMemcpyDeviceToHost);
-        cudaFree(inout_gpu);
+        CUDA_CHECK(cudaMemcpy(inout, inout_gpu, sizeof(float) * N, cudaMemcpyDeviceToHost));
+        CUDA_CHECK(cudaFree(inout_gpu));
     }
 }

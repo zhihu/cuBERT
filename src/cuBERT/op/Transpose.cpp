@@ -1,6 +1,7 @@
 //
 // Created by 田露 on 2019/1/17.
 //
+#include "cuBERT/common.h"
 
 #include "Transpose.h"
 
@@ -35,13 +36,13 @@ namespace cuBERT {
             }
         }
 
-        cudnnCreateTensorDescriptor(&desc_in);
-        cudnnCreateTensorDescriptor(&desc_out);
+        CUDNN_CHECK(cudnnCreateTensorDescriptor(&desc_in));
+        CUDNN_CHECK(cudnnCreateTensorDescriptor(&desc_out));
     }
 
     Transpose::~Transpose() {
-        cudnnDestroyTensorDescriptor(desc_out);
-        cudnnDestroyTensorDescriptor(desc_in);
+        CUDNN_CHECK(cudnnDestroyTensorDescriptor(desc_out));
+        CUDNN_CHECK(cudnnDestroyTensorDescriptor(desc_in));
     }
 
     void Transpose::compute(size_t batch_size, float *in_gpu, float *out_gpu) {
@@ -50,15 +51,15 @@ namespace cuBERT {
         std::vector<int> dims_out(this->dims_out);
         dims_out[0] = batch_size;
 
-        cudnnSetTensorNdDescriptor(desc_in, CUDNN_DATA_FLOAT, ndim, dims_out.data(), stride_in.data());
-        cudnnSetTensorNdDescriptor(desc_out, CUDNN_DATA_FLOAT, ndim, dims_out.data(), stride_out.data());
+        CUDNN_CHECK(cudnnSetTensorNdDescriptor(desc_in, CUDNN_DATA_FLOAT, ndim, dims_out.data(), stride_in.data()));
+        CUDNN_CHECK(cudnnSetTensorNdDescriptor(desc_out, CUDNN_DATA_FLOAT, ndim, dims_out.data(), stride_out.data()));
 
-        cudnnTransformTensor(handle, &ONE, desc_in, in_gpu, &ZERO, desc_out, out_gpu);
+        CUDNN_CHECK(cudnnTransformTensor(handle, &ONE, desc_in, in_gpu, &ZERO, desc_out, out_gpu));
     }
 
     void Transpose::compute_cpu(size_t batch_size, float *in, float *out) {
         cudaStream_t stream = nullptr;
-        cudnnGetStream(handle, &stream);
+        CUDNN_CHECK(cudnnGetStream(handle, &stream));
 
         size_t size = batch_size;
         for (int i = 1; i < dims_in.size(); ++i) {
@@ -67,16 +68,16 @@ namespace cuBERT {
 
         float *in_gpu;
         float *out_gpu;
-        cudaMalloc(&in_gpu, size * sizeof(float));
-        cudaMalloc(&out_gpu, size * sizeof(float));
+        CUDA_CHECK(cudaMalloc(&in_gpu, size * sizeof(float)));
+        CUDA_CHECK(cudaMalloc(&out_gpu, size * sizeof(float)));
 
-        cudaMemcpyAsync(in_gpu, in, size * sizeof(float), cudaMemcpyHostToDevice, stream);
+        CUDA_CHECK(cudaMemcpyAsync(in_gpu, in, size * sizeof(float), cudaMemcpyHostToDevice, stream));
 
         compute(batch_size, in_gpu, out_gpu);
 
         // sync
-        cudaMemcpy(out, out_gpu, size * sizeof(float), cudaMemcpyDeviceToHost);
-        cudaFree(out_gpu);
-        cudaFree(in_gpu);
+        CUDA_CHECK(cudaMemcpy(out, out_gpu, size * sizeof(float), cudaMemcpyDeviceToHost));
+        CUDA_CHECK(cudaFree(out_gpu));
+        CUDA_CHECK(cudaFree(in_gpu));
     }
 }

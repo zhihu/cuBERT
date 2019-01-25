@@ -4,6 +4,7 @@
 #include <cmath>
 #include <cuda_runtime.h>
 
+#include "cuBERT/common.h"
 #include "AttentionSelf.h"
 
 namespace cuBERT {
@@ -56,28 +57,25 @@ namespace cuBERT {
                                     {-1, num_attention_heads, seq_length, size_per_head},
                                     {0, 2, 1, 3});
 
-        cudaMalloc(&query_layer_out, sizeof(float) * max_batch_size * seq_length * num_attention_heads * size_per_head);
-        cudaMalloc(&key_layer_out, sizeof(float) * max_batch_size * seq_length * num_attention_heads * size_per_head);
-        cudaMalloc(&value_layer_out, sizeof(float) * max_batch_size * seq_length * num_attention_heads * size_per_head);
-        cudaMalloc(&context_layer_out,
-                   sizeof(float) * max_batch_size * seq_length * num_attention_heads * size_per_head);
-        cudaMalloc(&query_layer_out_t,
-                   sizeof(float) * max_batch_size * seq_length * num_attention_heads * size_per_head);
-        cudaMalloc(&key_layer_out_t, sizeof(float) * max_batch_size * seq_length * num_attention_heads * size_per_head);
-        cudaMalloc(&value_layer_out_t,
-                   sizeof(float) * max_batch_size * seq_length * num_attention_heads * size_per_head);
-        cudaMalloc(&attention_scores, sizeof(float) * max_batch_size * num_attention_heads * seq_length * seq_length);
+        CUDA_CHECK(cudaMalloc(&query_layer_out, sizeof(float) * max_batch_size * seq_length * num_attention_heads * size_per_head));
+        CUDA_CHECK(cudaMalloc(&key_layer_out, sizeof(float) * max_batch_size * seq_length * num_attention_heads * size_per_head));
+        CUDA_CHECK(cudaMalloc(&value_layer_out, sizeof(float) * max_batch_size * seq_length * num_attention_heads * size_per_head));
+        CUDA_CHECK(cudaMalloc(&context_layer_out, sizeof(float) * max_batch_size * seq_length * num_attention_heads * size_per_head));
+        CUDA_CHECK(cudaMalloc(&query_layer_out_t, sizeof(float) * max_batch_size * seq_length * num_attention_heads * size_per_head));
+        CUDA_CHECK(cudaMalloc(&key_layer_out_t, sizeof(float) * max_batch_size * seq_length * num_attention_heads * size_per_head));
+        CUDA_CHECK(cudaMalloc(&value_layer_out_t, sizeof(float) * max_batch_size * seq_length * num_attention_heads * size_per_head));
+        CUDA_CHECK(cudaMalloc(&attention_scores, sizeof(float) * max_batch_size * num_attention_heads * seq_length * seq_length));
     }
 
     AttentionSelf::~AttentionSelf() {
-        cudaFree(attention_scores);
-        cudaFree(value_layer_out_t);
-        cudaFree(key_layer_out_t);
-        cudaFree(query_layer_out_t);
-        cudaFree(context_layer_out);
-        cudaFree(value_layer_out);
-        cudaFree(key_layer_out);
-        cudaFree(query_layer_out);
+        CUDA_CHECK(cudaFree(attention_scores));
+        CUDA_CHECK(cudaFree(value_layer_out_t));
+        CUDA_CHECK(cudaFree(key_layer_out_t));
+        CUDA_CHECK(cudaFree(query_layer_out_t));
+        CUDA_CHECK(cudaFree(context_layer_out));
+        CUDA_CHECK(cudaFree(value_layer_out));
+        CUDA_CHECK(cudaFree(key_layer_out));
+        CUDA_CHECK(cudaFree(query_layer_out));
 
         delete transpose_1;
         delete bmm_1;
@@ -91,7 +89,7 @@ namespace cuBERT {
 
     void AttentionSelf::compute(size_t batch_size, float *in_gpu, float *neg_attention_mask, float *out_gpu) {
         cudaStream_t stream = nullptr;
-        cublasGetStream_v2(cublas, &stream);
+        CUBLAS_CHECK(cublasGetStream_v2(cublas, &stream));
 
         query_layer->compute(batch_size * seq_length, in_gpu, query_layer_out);
         key_layer->compute(batch_size * seq_length, in_gpu, key_layer_out);
@@ -101,10 +99,11 @@ namespace cuBERT {
         transpose_0->compute(batch_size, key_layer_out, key_layer_out_t);
         transpose_0->compute(batch_size, value_layer_out, value_layer_out_t);
 
-        cudaMemcpyAsync(attention_scores, neg_attention_mask,
-                        sizeof(float) * batch_size * num_attention_heads * seq_length * seq_length,
-                        cudaMemcpyDeviceToDevice,
-                        stream);
+        CUDA_CHECK(cudaMemcpyAsync(
+                attention_scores, neg_attention_mask,
+                sizeof(float) * batch_size * num_attention_heads * seq_length * seq_length,
+                cudaMemcpyDeviceToDevice,
+                stream));
 
         bmm_0->compute(batch_size * num_attention_heads, query_layer_out_t, key_layer_out_t, attention_scores);
         softmax->compute_(batch_size * num_attention_heads * seq_length, attention_scores);

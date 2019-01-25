@@ -4,6 +4,7 @@
 
 #include <cstring>
 
+#include "cuBERT/common.h"
 #include "Embedding.h"
 
 namespace cuBERT {
@@ -13,9 +14,8 @@ namespace cuBERT {
         this->embedding_table = new float[vocab_size * embedding_size];
         std::memcpy(this->embedding_table, embedding_table, vocab_size * embedding_size * sizeof(float));
 
-        cudaMalloc(&this->embedding_table_gpu, vocab_size * embedding_size * sizeof(float));
-        cudaMemcpy(this->embedding_table_gpu, embedding_table, vocab_size * embedding_size * sizeof(float),
-                   cudaMemcpyHostToDevice);
+        CUDA_CHECK(cudaMalloc(&this->embedding_table_gpu, vocab_size * embedding_size * sizeof(float)));
+        CUDA_CHECK(cudaMemcpy(this->embedding_table_gpu, embedding_table, vocab_size * embedding_size * sizeof(float), cudaMemcpyHostToDevice));
     }
 
     Embedding::~Embedding() {

@@ -4,6 +4,7 @@
 #include <cuda_runtime.h>
 #include <algorithm>
 
+#include "cuBERT/common.h"
 #include "BertEmbeddings.h"
 
 namespace cuBERT {
@@ -27,23 +28,22 @@ namespace cuBERT {
                                          var.at("bert/embeddings/LayerNorm/gamma"));
 
         float *full_position_embeddings = var.at("bert/embeddings/position_embeddings");
-        cudaMalloc(&this->position_embeddings_gpu, sizeof(float) * seq_length * hidden_size);
-        cudaMemcpy(this->position_embeddings_gpu, full_position_embeddings, sizeof(float) * seq_length * hidden_size,
-                   cudaMemcpyHostToDevice);
+        CUDA_CHECK(cudaMalloc(&this->position_embeddings_gpu, sizeof(float) * seq_length * hidden_size));
+        CUDA_CHECK(cudaMemcpy(this->position_embeddings_gpu, full_position_embeddings, sizeof(float) * seq_length * hidden_size, cudaMemcpyHostToDevice));
 
         auto *ones = new float[max_batch_size];
         std::fill_n(ones, max_batch_size, 1.f);
-        cudaMalloc(&this->ones_gpu, sizeof(float) * max_batch_size);
-        cudaMemcpy(this->ones_gpu, ones, sizeof(float) * max_batch_size, cudaMemcpyHostToDevice);
+        CUDA_CHECK(cudaMalloc(&this->ones_gpu, sizeof(float) * max_batch_size));
+        CUDA_CHECK(cudaMemcpy(this->ones_gpu, ones, sizeof(float) * max_batch_size, cudaMemcpyHostToDevice));
         delete[] ones;
 
-        cudaMalloc(&this->token_type_embeddings_out_gpu, sizeof(float) * max_batch_size * seq_length * hidden_size);
+        CUDA_CHECK(cudaMalloc(&this->token_type_embeddings_out_gpu, sizeof(float) * max_batch_size * seq_length * hidden_size));
     }
 
     BertEmbeddings::~BertEmbeddings() {
-        cudaFree(this->token_type_embeddings_out_gpu);
-        cudaFree(this->ones_gpu);
-        cudaFree(this->position_embeddings_gpu);
+        CUDA_CHECK(cudaFree(this->token_type_embeddings_out_gpu));
+        CUDA_CHECK(cudaFree(this->ones_gpu));
+        CUDA_CHECK(cudaFree(this->position_embeddings_gpu));
 
         delete layer_norm;
         delete token_type_embeddings;
@@ -52,20 +52,20 @@ namespace cuBERT {
 
     void BertEmbeddings::compute(size_t batch_size, int *input_ids_gpu, char *token_type_ids_gpu, float *out_gpu) {
         cudaStream_t stream = nullptr;
-        cublasGetStream_v2(handle, &stream);
+        CUBLAS_CHECK(cublasGetStream_v2(handle, &stream));
 
         word_embeddings->compute(input_ids_gpu, batch_size * seq_length, out_gpu, stream);
         token_type_embeddings->compute(token_type_ids_gpu, batch_size * seq_length, token_type_embeddings_out_gpu,
                                        stream);
 
-        cublasSgemm_v2(handle,
-                       CUBLAS_OP_N, CUBLAS_OP_N,
-                       seq_length * hidden_size, batch_size, 1,
-                       &ONE,
-                       position_embeddings_gpu, seq_length * hidden_size,
-                       ones_gpu, 1,
-                       &ONE,
-                       out_gpu, seq_length * hidden_size);
+        CUBLAS_CHECK(cublasSgemm_v2(handle,
+                                    CUBLAS_OP_N, CUBLAS_OP_N,
+                                    seq_length * hidden_size, batch_size, 1,
+                                    &ONE,
+                                    position_embeddings_gpu, seq_length * hidden_size,
+                                    ones_gpu, 1,
+                                    &ONE,
+                                    out_gpu, seq_length * hidden_size));
 
         layer_norm->compute_(batch_size * seq_length, token_type_embeddings_out_gpu, out_gpu, stream);
     }
