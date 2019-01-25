@@ -5,11 +5,13 @@ if(NOT CMAKE_VERSION VERSION_LESS 3.1)
     set(CMAKE_CXX_STANDARD 11)
 else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+    set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};-std=c++11)
 endif()
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/)
 
-FIND_PACKAGE(CUDA)
+find_package(Threads REQUIRED)
+find_package(CUDA)
 
 # use cmake internal CUDA_ARCH_NAME switch
 # e.g. CUDA_ARCH_NAME="Auto" will autodetect
@@ -84,6 +86,6 @@ add_executable(cuBERT_test test/unit_test.cpp
         test/cuBERT/bert/BertTest.cpp
         test/cuBERT/mgpu/BertMGPUTest.cpp
         test/cuBERT_test.cpp)
-target_link_libraries(cuBERT_test cuBERT ${googletest_STATIC_LIBRARIES})
+target_link_libraries(cuBERT_test cuBERT ${googletest_STATIC_LIBRARIES} pthread)
 target_include_directories(cuBERT_test PUBLIC ${googletest_INCLUDE_DIRS})
 add_test(UnitTest cuBERT_test)
