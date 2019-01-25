@@ -42,7 +42,7 @@ void tf_close(TF_Session *session) {
     TF_DeleteSession(session, nullptr);
 }
 
-void random_input(const std::default_random_engine& e,
+void random_input(std::default_random_engine& e,
                   TF_Tensor* tf_input_ids, TF_Tensor* tf_input_mask, TF_Tensor* tf_segment_ids, size_t length) {
     std::uniform_int_distribution<int> id_dist(0, 21120);
     std::uniform_int_distribution<int> zo_dist(0, 1);

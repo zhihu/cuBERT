@@ -6,7 +6,7 @@
 
 #include "cuBERT.h"
 
-void random_input(const std::default_random_engine& e,
+void random_input(std::default_random_engine& e,
                   int* input_ids, char* input_mask, char* segment_ids, size_t length) {
     std::uniform_int_distribution<int> id_dist(0, 21120);
     std::uniform_int_distribution<int> zo_dist(0, 1);
