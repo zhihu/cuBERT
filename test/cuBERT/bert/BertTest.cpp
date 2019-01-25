@@ -1,7 +1,3 @@
-//
-// Created by 田露 on 2019/1/24.
-//
-
 #include "gtest/gtest.h"
 #include <unordered_map>
 

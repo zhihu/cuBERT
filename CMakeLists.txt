@@ -75,7 +75,8 @@ add_executable(cuBERT_test test/unit_test.cpp
         test/cuBERT/bert/BertPoolerTest.cpp
         test/cuBERT/bert/AdditionalOutputLayerTest.cpp
         test/cuBERT/bert/BertTest.cpp
-        test/cuBERT/mgpu/BertMGPUTest.cpp)
+        test/cuBERT/mgpu/BertMGPUTest.cpp
+        test/cuBERT_test.cpp)
 target_link_libraries(cuBERT_test cuBERT ${googletest_STATIC_LIBRARIES})
 target_include_directories(cuBERT_test PUBLIC ${googletest_INCLUDE_DIRS})
 add_test(UnitTest cuBERT_test)
