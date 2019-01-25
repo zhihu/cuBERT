@@ -56,7 +56,10 @@ target_link_libraries(cuBERT
         ${cudnn_LIBRARY})
 
 add_executable(cuBERT_benchmark benchmark.cpp)
-target_link_libraries(cuBERT_benchmark cuBERT tensorflow)
+target_link_libraries(cuBERT_benchmark cuBERT)
+
+add_executable(tfBERT_benchmark benchmark_tf.cpp)
+target_link_libraries(tfBERT_benchmark tensorflow)
 
 enable_testing()
 include(googletest)
