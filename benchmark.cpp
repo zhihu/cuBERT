@@ -12,7 +12,10 @@ TF_Output t_output;
 TF_Session* open_tf(const char* export_dir) {
     const char* tag = "serve";
     TF_Status* status = TF_NewStatus();
+
     TF_SessionOptions* opts = TF_NewSessionOptions();
+    unsigned char config[16] = {0x10, 8, 0x28, 8, 0x32, 0x02, 0x20, 1, 0x38, 0x01, 0x52, 0x04, 0x1a, 0x02, 0x28, 0};
+    TF_SetConfig(opts, config, 16, status);
 
     TF_Graph* graph = TF_NewGraph();
     TF_Session* session = TF_LoadSessionFromSavedModel(opts, nullptr, export_dir, &tag, 1, graph, nullptr, status);
