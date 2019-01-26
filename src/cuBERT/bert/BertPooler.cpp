@@ -17,7 +17,7 @@ namespace cuBERT {
         this->seq_length = seq_length;
 
         CUDA_CHECK(cudaMalloc(&this->kernel_gpu, sizeof(float) * hidden_size * hidden_size));
-        CUDA_CHECK(cudaMemcpy(kernel_gpu, kernel, sizeof(float) * hidden_size * hidden_size, cudaMemcpyHostToDevice);
+        CUDA_CHECK(cudaMemcpy(kernel_gpu, kernel, sizeof(float) * hidden_size * hidden_size, cudaMemcpyHostToDevice));
 
         auto *bias_broadcast = new float[hidden_size * max_batch_size];
         for (int i = 0; i < max_batch_size; ++i) {
