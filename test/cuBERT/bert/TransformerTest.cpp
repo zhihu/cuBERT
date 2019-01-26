@@ -138,7 +138,7 @@ TEST_F(TransformerTest, compute) {
     float *out_gpu = transformer.compute(batch_size, tensor_gpu, mask_gpu);
 
     cudaMemcpy(out, out_gpu, sizeof(float) * 48, cudaMemcpyDeviceToHost);
-    cudaFree(out_gpu);
+    cudaFree(tensor_gpu);
     cudaFree(mask_gpu);
 
     EXPECT_FLOAT_EQ(out[0], -1.655961);
@@ -229,7 +229,7 @@ TEST_F(TransformerTest, compute_complex) {
     float *out_gpu = transformer.compute(batch_size, tensor_gpu, mask_gpu);
 
     cudaMemcpy(out, out_gpu, sizeof(float) * 48, cudaMemcpyDeviceToHost);
-    cudaFree(out_gpu);
+    cudaFree(tensor_gpu);
     cudaFree(mask_gpu);
 
     EXPECT_NEAR(out[0], -1.6749241, 1e-5);
