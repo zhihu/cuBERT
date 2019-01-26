@@ -2,7 +2,6 @@
 
 #include "Bert.h"
 
-
 namespace cuBERT {
     Bert::Bert(const std::unordered_map<std::string, float *> &var,
                size_t max_batch_size,
@@ -71,9 +70,9 @@ namespace cuBERT {
         cudaStream_t streamId = nullptr;
         CUBLAS_CHECK(cublasGetStream_v2(cublas, &streamId));
 
-        CUDA_CHECK(cudaMemcpyAsync(input_ids_gpu, input_ids, sizeof(int) * batch_size * seq_length, cudaMemcpyHostToDevice, streamId);
-        CUDA_CHECK(cudaMemcpyAsync(input_mask_gpu, input_mask, sizeof(char) * batch_size * seq_length, cudaMemcpyHostToDevice, streamId);
-        CUDA_CHECK(cudaMemcpyAsync(segment_ids_gpu, segment_ids, sizeof(char) * batch_size * seq_length, cudaMemcpyHostToDevice, streamId);
+        CUDA_CHECK(cudaMemcpyAsync(input_ids_gpu, input_ids, sizeof(int) * batch_size * seq_length, cudaMemcpyHostToDevice, streamId));
+        CUDA_CHECK(cudaMemcpyAsync(input_mask_gpu, input_mask, sizeof(char) * batch_size * seq_length, cudaMemcpyHostToDevice, streamId));
+        CUDA_CHECK(cudaMemcpyAsync(segment_ids_gpu, segment_ids, sizeof(char) * batch_size * seq_length, cudaMemcpyHostToDevice, streamId));
 
         // bert/embeddings
         bert_embeddings->compute(batch_size, input_ids_gpu, segment_ids_gpu, embedding_output_gpu);
@@ -102,7 +101,7 @@ namespace cuBERT {
         CUDA_CHECK(cudaMemcpyAsync(embedding_output,
                            embedding_output_gpu,
                            sizeof(float) * batch_size * seq_length * hidden_size,
-                           cudaMemcpyDeviceToHost, streamId);
+                           cudaMemcpyDeviceToHost, streamId));
         CUDA_CHECK(cudaStreamSynchronize(streamId));
     }
 }
