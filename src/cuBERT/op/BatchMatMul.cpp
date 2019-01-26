@@ -16,16 +16,6 @@ namespace cuBERT {
         this->M = M;
         this->N = N;
         this->K = K;
-
-        CUDA_CHECK(cudaMalloc(&in_A_array_gpu, max_batch_size * sizeof(float *)));
-        CUDA_CHECK(cudaMalloc(&in_B_array_gpu, max_batch_size * sizeof(float *)));
-        CUDA_CHECK(cudaMalloc(&out_array_gpu, max_batch_size * sizeof(float *)));
-    }
-
-    BatchMatMul::~BatchMatMul() {
-        CUDA_CHECK(cudaFree(out_array_gpu));
-        CUDA_CHECK(cudaFree(in_B_array_gpu));
-        CUDA_CHECK(cudaFree(in_A_array_gpu));
     }
 
     void BatchMatMul::compute(size_t batch_size, const float *in_A_gpu, const float *in_B_gpu, float *out_gpu) {

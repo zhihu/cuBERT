@@ -50,8 +50,9 @@ set(SOURCE_FILES
         src/cuBERT/bert/BertPooler.cpp src/cuBERT/bert/BertPooler.cu
         src/cuBERT/bert/Transformer.cpp
         src/cuBERT/bert/Bert.cpp
+        src/cuBERT/bert/BertBatchMatMul.cpp
         src/cuBERT/bert/AdditionalOutputLayer.cpp
-        src/cuBERT/mgpu/BertMGPU.h src/cuBERT/mgpu/BertMGPU.cpp)
+        src/cuBERT/mgpu/BertMGPU.cpp)
 
 cuda_add_library(cuBERT SHARED ${SOURCE_FILES})
 set_target_properties(cuBERT PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
@@ -77,6 +78,7 @@ add_executable(cuBERT_test test/unit_test.cpp
         test/cuBERT/op/SoftmaxTest.cpp
         test/cuBERT/op/GELUTest.cpp
         test/cuBERT/op/EmbeddingTest.cpp
+        test/cuBERT/bert/BertBatchMatMulTest.cpp
         test/cuBERT/bert/AttentionSelfTest.cpp
         test/cuBERT/bert/TransformerTest.cpp
         test/cuBERT/bert/BertEmbeddingsTest.cpp

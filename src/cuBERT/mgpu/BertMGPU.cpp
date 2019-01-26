@@ -42,6 +42,7 @@ namespace cuBERT {
         uint8_t count = rr++;
         unsigned int choice = count % bert_instances.size();
 
+        cudaSetDevice(choice);
         Bert *bert_instance = bert_instances[choice];
         std::mutex *mutex_instance = mutex_instances[choice];
 

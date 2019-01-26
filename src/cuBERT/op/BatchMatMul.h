@@ -23,7 +23,7 @@ namespace cuBERT {
                              size_t max_batch_size,
                              float alpha = 1, float beta = 0);
 
-        virtual ~BatchMatMul();
+        virtual ~BatchMatMul() = default;
 
         void compute(size_t batch_size, const float *in_A_gpu, const float *in_B_gpu, float *out_gpu);
 
@@ -39,10 +39,6 @@ namespace cuBERT {
 
         const float alpha;
         const float beta;
-
-        const float **in_A_array_gpu;
-        const float **in_B_array_gpu;
-        float **out_array_gpu;
     };
 
 }
