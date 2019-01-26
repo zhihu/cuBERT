@@ -52,9 +52,6 @@ TEST_F(AttentionSelfTest, compute) {
     size_t size_per_head = 3;
     size_t seq_length = 2;
 
-    AttentionSelf attention_self(cublas, cudnn, "attention/self", var, 32,
-                                 seq_length, num_attention_heads * size_per_head, num_attention_heads, size_per_head);
-
     float tensor[30] = {0, 1, 2, 3, 4, 5,
                         6, 7, 8, 9, 10, 11,
                         12, 13, 14, 15, 16, 17,
@@ -80,7 +77,10 @@ TEST_F(AttentionSelfTest, compute) {
     cudaMemcpy(mask_gpu, mask, sizeof(float) * 20, cudaMemcpyHostToDevice);
 
     // compute
-    attention_self.compute(batch_size, tensor_gpu, mask_gpu, out_gpu);
+    AttentionSelf attention_self(cublas, cudnn, "attention/self", var, 32, seq_length,
+                                 out_gpu,
+                                 num_attention_heads * size_per_head, num_attention_heads, size_per_head);
+    attention_self.compute(batch_size, tensor_gpu, mask_gpu);
 
     cudaMemcpy(out, out_gpu, sizeof(float) * 30, cudaMemcpyDeviceToHost);
 
@@ -160,9 +160,6 @@ TEST_F(AttentionSelfTest, compute_complex) {
     size_t size_per_head = 3;
     size_t seq_length = 4;
 
-    AttentionSelf attention_self(cublas, cudnn, "attention/self", var, 32,
-                                 seq_length, num_attention_heads * size_per_head, num_attention_heads, size_per_head);
-
     float tensor[48] = {0, 1, 2, 3, 4, 5,
                         6, 7, 8, 9, 10, 11,
                         12, 13, 14, 15, 16, 17,
@@ -189,7 +186,10 @@ TEST_F(AttentionSelfTest, compute_complex) {
     cudaMemcpy(mask_gpu, mask, sizeof(float) * 64, cudaMemcpyHostToDevice);
 
     // compute
-    attention_self.compute(batch_size, tensor_gpu, mask_gpu, out_gpu);
+    AttentionSelf attention_self(cublas, cudnn, "attention/self", var, 32, seq_length,
+                                 out_gpu,
+                                 num_attention_heads * size_per_head, num_attention_heads, size_per_head);
+    attention_self.compute(batch_size, tensor_gpu, mask_gpu);
 
     cudaMemcpy(out, out_gpu, sizeof(float) * 48, cudaMemcpyDeviceToHost);
     cudaFree(out_gpu);

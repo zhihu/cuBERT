@@ -20,12 +20,14 @@ namespace cuBERT {
     class BertQK {
     public:
         explicit BertQK(cublasHandle_t handle,
+                        size_t max_batch_size,
                         size_t seq_length, size_t num_attention_heads, size_t size_per_head,
+                        float* query, float* key, float* out,
                         float alpha = 1, float beta = 0);
 
-        virtual ~BertQK() = default;
+        virtual ~BertQK();
 
-        void compute(size_t batch_size, float* query, float* key, float* out);
+        void compute(size_t batch_size);
 
     private:
         cublasHandle_t handle;
@@ -36,6 +38,37 @@ namespace cuBERT {
 
         float alpha;
         float beta;
+
+        const float **query_array_gpu;
+        const float **key_array_gpu;
+        float **out_array_gpu;
+    };
+
+    class BertQKV {
+    public:
+        explicit BertQKV(cublasHandle_t handle,
+                         size_t max_batch_size,
+                         size_t seq_length, size_t num_attention_heads, size_t size_per_head,
+                         float* qk, float* value, float* out,
+                         float alpha = 1, float beta = 0);
+
+        virtual ~BertQKV();
+
+        void compute(size_t batch_size);
+
+    private:
+        cublasHandle_t handle;
+
+        size_t seq_length;
+        size_t num_attention_heads;
+        size_t size_per_head;
+
+        float alpha;
+        float beta;
+
+        const float **qk_array_gpu;
+        const float **value_array_gpu;
+        float **out_array_gpu;
     };
 }
 

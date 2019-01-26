@@ -39,12 +39,19 @@ namespace cuBERT {
         CUDA_CHECK(cudaMalloc(&this->neg_attention_mask_buffer, sizeof(float) * max_batch_size * num_attention_heads * seq_length * seq_length));
 
         for (int layer_idx = 0; layer_idx < num_hidden_layers; ++layer_idx) {
+            // buffers
+            CUDA_CHECK(cudaMalloc(&attention_heads[layer_idx], sizeof(float) * max_batch_size * seq_length * hidden_size));
+            CUDA_CHECK(cudaMalloc(&attention_output[layer_idx], sizeof(float) * max_batch_size * seq_length * hidden_size));
+            CUDA_CHECK(cudaMalloc(&intermediate_output[layer_idx], sizeof(float) * max_batch_size * seq_length * intermediate_size));
+            CUDA_CHECK(cudaMalloc(&layer_output[layer_idx], sizeof(float) * max_batch_size * seq_length * hidden_size));
+
             attention_self[layer_idx] = new AttentionSelf(cublas, cudnn,
                                                           var_prefix + "/layer_" + std::to_string(layer_idx) +
                                                           "/attention/self",
                                                           var,
                                                           max_batch_size,
                                                           seq_length,
+                                                          attention_heads[layer_idx],
                                                           hidden_size, num_attention_heads, attention_head_size);
 
             float *attention_output_dense_kernel = var.at(
@@ -88,22 +95,11 @@ namespace cuBERT {
                     var_prefix + "/layer_" + std::to_string(layer_idx) + "/output/LayerNorm/gamma");
             output_layer_norm[layer_idx] = new LayerNorm(hidden_size,
                                                          output_norm_beta, output_norm_gamma);
-
-            // buffers
-            CUDA_CHECK(cudaMalloc(&attention_heads[layer_idx], sizeof(float) * max_batch_size * seq_length * hidden_size));
-            CUDA_CHECK(cudaMalloc(&attention_output[layer_idx], sizeof(float) * max_batch_size * seq_length * hidden_size));
-            CUDA_CHECK(cudaMalloc(&intermediate_output[layer_idx], sizeof(float) * max_batch_size * seq_length * intermediate_size));
-            CUDA_CHECK(cudaMalloc(&layer_output[layer_idx], sizeof(float) * max_batch_size * seq_length * hidden_size));
         }
     }
 
     Transformer::~Transformer() {
         for (int i = 0; i < num_hidden_layers; ++i) {
-            CUDA_CHECK(cudaFree(layer_output[i]));
-            CUDA_CHECK(cudaFree(intermediate_output[i]));
-            CUDA_CHECK(cudaFree(attention_output[i]));
-            CUDA_CHECK(cudaFree(attention_heads[i]));
-
             delete output_layer_norm[i];
             delete output_dense[i];
             delete intermediate_act_fn[i];
@@ -111,6 +107,11 @@ namespace cuBERT {
             delete attention_output_norm[i];
             delete attention_output_dense[i];
             delete attention_self[i];
+
+            CUDA_CHECK(cudaFree(layer_output[i]));
+            CUDA_CHECK(cudaFree(intermediate_output[i]));
+            CUDA_CHECK(cudaFree(attention_output[i]));
+            CUDA_CHECK(cudaFree(attention_heads[i]));
         }
 
         CUDA_CHECK(cudaFree(neg_attention_mask_buffer));
@@ -130,7 +131,7 @@ namespace cuBERT {
             float *layer_input = prev_output;
 
             // attention/self
-            attention_self[i]->compute(batch_size, layer_input, neg_attention_mask_buffer, attention_heads[i]);
+            attention_self[i]->compute(batch_size, layer_input, neg_attention_mask_buffer);
 
             // attention/output
             attention_output_dense[i]->compute(batch_size * seq_length, attention_heads[i], attention_output[i]);

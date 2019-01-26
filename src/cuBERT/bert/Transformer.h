@@ -5,6 +5,9 @@
 #ifndef CUBERT_TRANSFORMER_H
 #define CUBERT_TRANSFORMER_H
 
+#include <vector>
+#include <unordered_map>
+
 #include "cuBERT/op/Dense.h"
 #include "cuBERT/op/LayerNorm.h"
 #include "cuBERT/op/GELU.h"

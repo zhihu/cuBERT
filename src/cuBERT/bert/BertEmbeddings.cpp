@@ -55,8 +55,7 @@ namespace cuBERT {
         CUBLAS_CHECK(cublasGetStream_v2(handle, &stream));
 
         word_embeddings->compute(input_ids_gpu, batch_size * seq_length, out_gpu, stream);
-        token_type_embeddings->compute(token_type_ids_gpu, batch_size * seq_length, token_type_embeddings_out_gpu,
-                                       stream);
+        token_type_embeddings->compute(token_type_ids_gpu, batch_size * seq_length, token_type_embeddings_out_gpu, stream);
 
         CUBLAS_CHECK(cublasSgemm_v2(handle,
                                     CUBLAS_OP_N, CUBLAS_OP_N,

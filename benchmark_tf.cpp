@@ -56,8 +56,8 @@ void random_input(std::default_random_engine& e,
 int main() {
     std::default_random_engine e(0);
 
-    int max_batch_size = 512;
-    int batch_size = 400;
+    int max_batch_size = 128;
+    int batch_size = 128;
     int seq_length = 32;
 
     // tensorflow
@@ -109,5 +109,5 @@ int main() {
     TF_DeleteTensor(tf_input_ids);
 
     result.close();
-    tf_close(tf_model);
+//    tf_close(tf_model);
 }
