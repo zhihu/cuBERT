@@ -5,48 +5,35 @@
 #include <cublas_v2.h>
 #include <cudnn.h>
 
-#include <iostream>
+#include <cstdlib>
+#include <cstdio>
 
 namespace cuBERT {
 
-#define CUDA_CHECK(error) { cuda_check((error), __FILE__, __LINE__); }
-    inline void cuda_check(cudaError_t error, const char *file, int line, bool abort=true) {
-        if (error != cudaSuccess) {
-            std::cerr << "Error at: "
-                      << file << ":"
-                      << line << ": "
-                      << cudaGetErrorString(error) << std::endl;
-            if (abort) {
-                exit(error);
-            }
-        }
-    }
+#define CUDA_CHECK(call) do {                                           \
+    cudaError_t err = call;                                             \
+    if (cudaSuccess != err) {                                           \
+        fprintf(stderr, "Cuda error in file '%s' in line %i : %s.\n",   \
+                __FILE__, __LINE__, cudaGetErrorString(err));           \
+        exit(EXIT_FAILURE);                                             \
+    } } while(0)
 
-#define CUBLAS_CHECK(error) { cublas_check((error), __FILE__, __LINE__); }
-    inline void cublas_check(cublasStatus_t error, const char *file, int line, bool abort=true) {
-        if (error != CUBLAS_STATUS_SUCCESS) {
-            std::cerr << "Error at: "
-                      << file << ":"
-                      << line << ": "
-                      << error << std::endl;
-            if (abort) {
-                exit(error);
-            }
-        }
-    }
+#define CUBLAS_CHECK(call) do {                                         \
+    cublasStatus_t err = call;                                          \
+    if (CUBLAS_STATUS_SUCCESS != err) {                                 \
+        fprintf(stderr, "Cublas error in file '%s' in line %i.\n",      \
+                __FILE__, __LINE__);                                    \
+        exit(EXIT_FAILURE);                                             \
+    } } while(0)
 
-#define CUDNN_CHECK(error) { cudnn_check((error), __FILE__, __LINE__); }
-    inline void cudnn_check(cudnnStatus_t error, const char *file, int line, bool abort=true) {
-        if (error != CUDNN_STATUS_SUCCESS) {
-            std::cerr << "Error at: "
-                      << file << ":"
-                      << line << ": "
-                      << error << std::endl;
-            if (abort) {
-                exit(error);
-            }
-        }
-    }
+#define CUDNN_CHECK(call) do {                                          \
+    cudnnStatus_t err = call;                                           \
+    if (CUDNN_STATUS_SUCCESS != err) {                                  \
+        fprintf(stderr, "Cudnn error in file '%s' in line %i.\n",       \
+                __FILE__, __LINE__);                                    \
+        exit(EXIT_FAILURE);                                             \
+    } } while(0)
+
 }
 
 #endif //CUBERT_COMMON_H
