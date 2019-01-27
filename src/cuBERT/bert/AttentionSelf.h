@@ -36,6 +36,8 @@ namespace cuBERT {
          */
         void compute(size_t batch_size, float *in_gpu, float *neg_attention_mask);
 
+        Softmax *softmax;
+
     private:
         cublasHandle_t cublas;
         cudnnHandle_t cudnn;
@@ -47,7 +49,6 @@ namespace cuBERT {
         Dense *query_layer;
         Dense *key_layer;
         Dense *value_layer;
-        Softmax *softmax;
         BertQK *bqk;
         BertQKV *bqkv;
 

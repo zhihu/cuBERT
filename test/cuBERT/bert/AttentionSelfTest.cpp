@@ -80,6 +80,7 @@ TEST_F(AttentionSelfTest, compute) {
     AttentionSelf attention_self(cublas, cudnn, "attention/self", var, 32, seq_length,
                                  out_gpu,
                                  num_attention_heads * size_per_head, num_attention_heads, size_per_head);
+    attention_self.softmax->accurate = true;
     attention_self.compute(batch_size, tensor_gpu, mask_gpu);
 
     cudaMemcpy(out, out_gpu, sizeof(float) * 30, cudaMemcpyDeviceToHost);
