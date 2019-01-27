@@ -13,14 +13,10 @@ using namespace cuBERT;
 class SoftmaxTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        cudnnCreate(&handle);
     }
 
     void TearDown() override {
-        cudnnDestroy(handle);
     }
-
-    cudnnHandle_t handle;
 };
 
 TEST_F(SoftmaxTest, compute_) {
@@ -30,8 +26,8 @@ TEST_F(SoftmaxTest, compute_) {
     cudaMalloc(&inout_gpu, sizeof(float) * 6);
     cudaMemcpy(inout_gpu, inout, sizeof(float) * 6, cudaMemcpyHostToDevice);
 
-    Softmax softmax(handle, 3);
-    softmax.compute_(2, inout_gpu);
+    Softmax softmax(4, 3);
+    softmax.compute_(2, inout_gpu, nullptr);
 
     cudaMemcpy(inout, inout_gpu, sizeof(float) * 6, cudaMemcpyDeviceToHost);
     cudaFree(inout_gpu);

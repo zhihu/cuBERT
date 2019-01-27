@@ -44,7 +44,7 @@ namespace cuBERT {
                                 value_layer_kernel, value_layer_bias,
                                 max_batch_size * seq_length);
 
-        softmax = new Softmax(cudnn, seq_length);
+        softmax = new Softmax(max_batch_size * num_attention_heads * seq_length, seq_length);
 
         CUDA_CHECK(cudaMalloc(&query_layer_out, sizeof(float) * max_batch_size * seq_length * num_attention_heads * size_per_head));
         CUDA_CHECK(cudaMalloc(&key_layer_out, sizeof(float) * max_batch_size * seq_length * num_attention_heads * size_per_head));
@@ -89,7 +89,7 @@ namespace cuBERT {
                 stream));
 
         bqk->compute(batch_size);
-        softmax->compute_(batch_size * num_attention_heads * seq_length, attention_scores);
+        softmax->compute_(batch_size * num_attention_heads * seq_length, attention_scores, stream);
 
         bqkv->compute(batch_size);
     }

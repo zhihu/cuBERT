@@ -42,7 +42,7 @@ set(SOURCE_FILES
         src/cuBERT/op/Embedding.cpp src/cuBERT/op/Embedding.cu
         src/cuBERT/op/Transpose.cpp
         src/cuBERT/op/BatchMatMul.cpp
-        src/cuBERT/op/Softmax.cpp
+        src/cuBERT/op/Softmax.cpp src/cuBERT/op/Softmax.cu
         src/cuBERT/op/LayerNorm.cpp src/cuBERT/op/LayerNorm.cu
         src/cuBERT/bert/BertEmbeddings.cpp
         src/cuBERT/bert/AttentionSelf.cpp

@@ -2,27 +2,30 @@
 #define CUBERT_SOFTMAX_H
 
 
-#include <cudnn.h>
+#include <cuda_runtime.h>
 
 namespace cuBERT {
+
+    __host__ void softmax_(float *inout,
+                           const int batch_size,
+                           const int channel,
+                           float *sum_gpu,
+                           cudaStream_t stream);
+
 /**
  * Performance is expected to be highest with NCHW fully-packed tensors.
  */
     class Softmax {
     public:
-        explicit Softmax(cudnnHandle_t handle, size_t channel, bool accurate = false);
+        explicit Softmax(size_t max_batch_size, size_t channel);
 
         virtual ~Softmax();
 
-        void compute_(size_t batch_size, float *inout_gpu);
-
-        bool accurate;
+        void compute_(size_t batch_size, float *inout_gpu, cudaStream_t stream);
     private:
-        cudnnHandle_t handle;
-
         size_t channel;
 
-        cudnnTensorDescriptor_t desc;
+        float* sum_gpu;
     };
 }
 
