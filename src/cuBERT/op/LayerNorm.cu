@@ -1,4 +1,5 @@
 #include "math.h"
+#include "cub/cub.cuh"
 #include <cuda_runtime.h>
 
 namespace cuBERT {
@@ -44,31 +45,33 @@ namespace cuBERT {
         kernel_layer_norm_ << < blocks, 128, 0, stream >> > (inout, batch_size, channel, beta, gamma);
     }
 
-    __global__ void kernel_momentum(const float *__restrict__ in,
-                                    const float *__restrict__ inout,
-                                    const int batch_size,
-                                    const int channel,
-                                    float* mean_out,
-                                    float* var_out) {
-        int batch_idx = blockIdx.x * blockDim.x + threadIdx.x;
-        if (batch_idx >= batch_size) {
-            return;
+    __global__ void kernel_momentum_cub(const float *__restrict__ in,
+                                        const float *__restrict__ inout,
+                                        const int batch_size,
+                                        const int channel,
+                                        float *mean_out,
+                                        float *var_out) {
+        __shared__ typename cub::BlockReduce<float, 128>::TempStorage m_storage;
+        __shared__ typename cub::BlockReduce<float, 128>::TempStorage v_storage;
+        const float scale = 1.f / channel;
+        for (int i = blockIdx.x; i < batch_size; i += gridDim.x) {
+            float m_val = 0;
+            float v_val = 0;
+            for (int j = threadIdx.x; j < channel; j += blockDim.x) {
+                const int X_index = i * channel + j;
+                const float t = __ldg(in + X_index) + __ldg(inout + X_index);
+                m_val += t;
+                v_val += t * t;
+            }
+            m_val = cub::BlockReduce<float, 128>(m_storage).Sum(m_val);
+            v_val = cub::BlockReduce<float, 128>(v_storage).Sum(v_val);
+            if (threadIdx.x == 0) {
+                const float mu = m_val * scale;
+                mean_out[i] = mu;
+                var_out[i] = v_val * scale - mu * mu;
+            }
+            __syncthreads();
         }
-
-        // channel data: [batch_idx * channel, (batch_idx + 1) * channel)
-        float mean = 0;
-        float var = 0;
-#pragma unroll
-        for (int i = batch_idx * channel; i < (batch_idx + 1) * channel; ++i) {
-            float t = __ldg(inout + i) + __ldg(in + i);
-            mean += t;
-            var += t * t;
-        }
-        mean = mean / channel;
-        var = var / channel - mean * mean;
-
-        mean_out[batch_idx] = mean;
-        var_out[batch_idx] = var;
     }
 
     __global__ void kernel_batchnorm_(const float *__restrict__ in,
@@ -106,8 +109,7 @@ namespace cuBERT {
                               float *beta,
                               float *gamma,
                               cudaStream_t stream) {
-        const int batch_blocks = (batch_size + 127) / 128;
-        kernel_momentum <<<batch_blocks, 128, 0, stream>>> (in, inout, batch_size, channel, mean_gpu, var_gpu);
+        kernel_momentum_cub <<<batch_size, 128, 0, stream>>> (in, inout, batch_size, channel, mean_gpu, var_gpu);
 
         const int all_blocks = (batch_size * channel + 127) / 128;
         kernel_batchnorm_ <<<all_blocks, 128, 0, stream>>> (in, inout, batch_size, channel, mean_gpu, var_gpu, beta, gamma);
