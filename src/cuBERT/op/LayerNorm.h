@@ -20,13 +20,15 @@ namespace cuBERT {
                               float *inout,
                               const int batch_size,
                               const int channel,
+                              float *mean_gpu,
+                              float *var_gpu,
                               float *beta,
                               float *gamma,
                               cudaStream_t stream);
 
     class LayerNorm {
     public:
-        explicit LayerNorm(size_t channels, float *beta, float *gamma);
+        explicit LayerNorm(size_t max_batch_size, size_t channels, float *beta, float *gamma);
 
         virtual ~LayerNorm();
 
@@ -42,6 +44,9 @@ namespace cuBERT {
         size_t channels;
         float *beta_gpu;
         float *gamma_gpu;
+
+        float *mean_gpu;
+        float *var_gpu;
     };
 }
 

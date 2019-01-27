@@ -23,7 +23,7 @@ namespace cuBERT {
                                               var.at("bert/embeddings/word_embeddings"));
         this->token_type_embeddings = new Embedding(type_vocab_size, hidden_size,
                                                     var.at("bert/embeddings/token_type_embeddings"));
-        this->layer_norm = new LayerNorm(hidden_size,
+        this->layer_norm = new LayerNorm(max_batch_size * seq_length, hidden_size,
                                          var.at("bert/embeddings/LayerNorm/beta"),
                                          var.at("bert/embeddings/LayerNorm/gamma"));
 

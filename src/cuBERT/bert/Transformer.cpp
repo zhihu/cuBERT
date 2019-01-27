@@ -1,6 +1,3 @@
-//
-// Created by 田露 on 2019/1/21.
-//
 #include <string>
 
 #include "cuBERT/common.h"
@@ -67,7 +64,7 @@ namespace cuBERT {
                     var_prefix + "/layer_" + std::to_string(layer_idx) + "/attention/output/LayerNorm/beta");
             float *attention_output_norm_gamma = var.at(
                     var_prefix + "/layer_" + std::to_string(layer_idx) + "/attention/output/LayerNorm/gamma");
-            attention_output_norm[layer_idx] = new LayerNorm(hidden_size,
+            attention_output_norm[layer_idx] = new LayerNorm(max_batch_size * seq_length, hidden_size,
                                                              attention_output_norm_beta, attention_output_norm_gamma);
 
             float *intermediate_dense_kernel = var.at(
@@ -93,7 +90,7 @@ namespace cuBERT {
                     var_prefix + "/layer_" + std::to_string(layer_idx) + "/output/LayerNorm/beta");
             float *output_norm_gamma = var.at(
                     var_prefix + "/layer_" + std::to_string(layer_idx) + "/output/LayerNorm/gamma");
-            output_layer_norm[layer_idx] = new LayerNorm(hidden_size,
+            output_layer_norm[layer_idx] = new LayerNorm(max_batch_size * seq_length, hidden_size,
                                                          output_norm_beta, output_norm_gamma);
         }
     }

@@ -16,7 +16,8 @@ TEST_F(LayerNormTest, compute_) {
     float beta[3] = {-1, 0, 1};
     float gamma[3] = {1, 2, 3};
 
-    LayerNorm layer_norm(3, beta, gamma);
+    size_t max_batch_size = 2;
+    LayerNorm layer_norm(max_batch_size, 3, beta, gamma);
 
     float inout[6] = {9, 10, 11, 5, 4, 3};
 
@@ -41,7 +42,8 @@ TEST_F(LayerNormTest, compute_cpu_) {
     float beta[3] = {-1, 0, 1};
     float gamma[3] = {1, 2, 3};
 
-    LayerNorm layer_norm(3, beta, gamma);
+    size_t max_batch_size = 2;
+    LayerNorm layer_norm(max_batch_size, 3, beta, gamma);
 
     float inout[6] = {9, 10, 11, 5, 4, 3};
     layer_norm.compute_cpu_(2, inout, nullptr);
@@ -58,7 +60,8 @@ TEST_F(LayerNormTest, compute_cpu_ext_) {
     float beta[3] = {-1, 0, 1};
     float gamma[3] = {1, 2, 3};
 
-    LayerNorm layer_norm(3, beta, gamma);
+    size_t max_batch_size = 2;
+    LayerNorm layer_norm(max_batch_size, 3, beta, gamma);
 
     float in[6] = {8, 8, 8, 2, 2, 2};
     float inout[6] = {1, 2, 3, 3, 2, 1};
