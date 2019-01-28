@@ -1,16 +1,14 @@
-//
-// Created by 田露 on 2019/1/25.
-//
-
 #include "Graph.h"
 
 #include <fstream>
+#include <iostream>
 
 namespace cuBERT {
     Graph::Graph(const char *filename) {
         std::ifstream input(filename);
         graphDef.ParseFromIstream(&input);
         input.close();
+        std::cout << "model loaded from: " << filename << std::endl;
 
         for (const auto &nodeDef : graphDef.node()) {
             if (!nodeDef.attr().count("value")) {

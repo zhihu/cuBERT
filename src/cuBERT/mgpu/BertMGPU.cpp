@@ -1,5 +1,6 @@
 #include <cuda_runtime.h>
 #include <fstream>
+#include <iostream>
 
 #include "tensorflow/core/framework/graph.pb.h"
 #include "BertMGPU.h"
@@ -26,6 +27,8 @@ namespace cuBERT {
             bert_instances.push_back(bert);
 
             mutex_instances.push_back(new std::mutex());
+
+            std::cout << "device setup: " << count << std::endl;
         }
     }
 
