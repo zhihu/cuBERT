@@ -4,7 +4,7 @@
 #include "Transformer.h"
 
 namespace cuBERT {
-    Transformer::Transformer(cublasHandle_t cublas, cudnnHandle_t cudnn,
+    Transformer::Transformer(cublasHandle_t cublas,
                              const std::string &var_prefix,
                              const std::unordered_map<std::string, float *> &var,
                              size_t max_batch_size,
@@ -25,7 +25,6 @@ namespace cuBERT {
               intermediate_output(num_hidden_layers),
               layer_output(num_hidden_layers) {
         this->cublas = cublas;
-        this->cudnn = cudnn;
         this->num_hidden_layers = num_hidden_layers;
         this->seq_length = seq_length;
         this->intermediate_size = intermediate_size;
@@ -42,7 +41,7 @@ namespace cuBERT {
             CUDA_CHECK(cudaMalloc(&intermediate_output[layer_idx], sizeof(float) * max_batch_size * seq_length * intermediate_size));
             CUDA_CHECK(cudaMalloc(&layer_output[layer_idx], sizeof(float) * max_batch_size * seq_length * hidden_size));
 
-            attention_self[layer_idx] = new AttentionSelf(cublas, cudnn,
+            attention_self[layer_idx] = new AttentionSelf(cublas,
                                                           var_prefix + "/layer_" + std::to_string(layer_idx) +
                                                           "/attention/self",
                                                           var,

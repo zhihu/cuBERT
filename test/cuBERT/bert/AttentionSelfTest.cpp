@@ -1,11 +1,6 @@
-//
-// Created by 田露 on 2019/1/21.
-//
-
 #include "gtest/gtest.h"
 #include <cuda_runtime.h>
 #include <cublas_v2.h>
-#include <cudnn.h>
 #include <algorithm>
 
 #include "cuBERT/bert/AttentionSelf.h"
@@ -15,16 +10,13 @@ class AttentionSelfTest : public ::testing::Test {
 protected:
     void SetUp() override {
         cublasCreate_v2(&cublas);
-        cudnnCreate(&cudnn);
     }
 
     void TearDown() override {
         cublasDestroy_v2(cublas);
-        cudnnDestroy(cudnn);
     }
 
     cublasHandle_t cublas;
-    cudnnHandle_t cudnn;
 };
 
 
@@ -77,7 +69,7 @@ TEST_F(AttentionSelfTest, compute) {
     cudaMemcpy(mask_gpu, mask, sizeof(float) * 20, cudaMemcpyHostToDevice);
 
     // compute
-    AttentionSelf attention_self(cublas, cudnn, "attention/self", var, 32, seq_length,
+    AttentionSelf attention_self(cublas, "attention/self", var, 32, seq_length,
                                  out_gpu,
                                  num_attention_heads * size_per_head, num_attention_heads, size_per_head);
     attention_self.compute(batch_size, tensor_gpu, mask_gpu);
@@ -186,7 +178,7 @@ TEST_F(AttentionSelfTest, compute_complex) {
     cudaMemcpy(mask_gpu, mask, sizeof(float) * 64, cudaMemcpyHostToDevice);
 
     // compute
-    AttentionSelf attention_self(cublas, cudnn, "attention/self", var, 32, seq_length,
+    AttentionSelf attention_self(cublas, "attention/self", var, 32, seq_length,
                                  out_gpu,
                                  num_attention_heads * size_per_head, num_attention_heads, size_per_head);
     attention_self.compute(batch_size, tensor_gpu, mask_gpu);

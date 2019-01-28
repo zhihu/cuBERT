@@ -1,6 +1,3 @@
-//
-// Created by 田露 on 2019/1/18.
-//
 #include <cmath>
 #include <cuda_runtime.h>
 
@@ -8,7 +5,7 @@
 #include "AttentionSelf.h"
 
 namespace cuBERT {
-    AttentionSelf::AttentionSelf(cublasHandle_t cublas, cudnnHandle_t cudnn,
+    AttentionSelf::AttentionSelf(cublasHandle_t cublas,
                                  const std::string &var_prefix,
                                  const std::unordered_map<std::string, float *> &var,
                                  size_t max_batch_size,
@@ -16,7 +13,6 @@ namespace cuBERT {
                                  float *context_layer_out,
                                  size_t width, size_t num_attention_heads, size_t size_per_head) {
         this->cublas = cublas;
-        this->cudnn = cudnn;
         this->seq_length = seq_length;
         this->num_attention_heads = num_attention_heads;
         this->size_per_head = size_per_head;

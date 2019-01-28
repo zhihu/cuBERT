@@ -3,7 +3,6 @@
 
 
 #include <cublas_v2.h>
-#include <cudnn.h>
 
 #include "./BertEmbeddings.h"
 #include "./Transformer.h"
@@ -33,7 +32,6 @@ namespace cuBERT {
 
     private:
         cublasHandle_t cublas;
-        cudnnHandle_t cudnn;
         cudaStream_t stream;
 
         size_t seq_length;

@@ -1,11 +1,6 @@
-//
-// Created by 田露 on 2019/1/22.
-//
-
 #include "gtest/gtest.h"
 #include <cuda_runtime.h>
 #include <cublas_v2.h>
-#include <cudnn.h>
 #include <algorithm>
 
 #include "cuBERT/bert/Transformer.h"
@@ -15,16 +10,13 @@ class TransformerTest : public ::testing::Test {
 protected:
     void SetUp() override {
         cublasCreate_v2(&cublas);
-        cudnnCreate(&cudnn);
     }
 
     void TearDown() override {
         cublasDestroy_v2(cublas);
-        cudnnDestroy(cudnn);
     }
 
     cublasHandle_t cublas;
-    cudnnHandle_t cudnn;
 
     float query_kernel[36] = {-0.07848196, -0.18097023, 0.06933199, -0.07760319, 0.11389876, 0.05236414,
                               -0.02015782, 0.00233333, -0.00281469, -0.01525305, 0.17362033, -0.01600084,
@@ -108,7 +100,7 @@ TEST_F(TransformerTest, compute) {
 
     size_t hidden_size = num_attention_heads * size_per_head;
 
-    Transformer transformer(cublas, cudnn, "encoder", var, 32,
+    Transformer transformer(cublas, "encoder", var, 32,
                             seq_length, hidden_size, 1, num_attention_heads, intermediate_size);
 
     float tensor[48] = {0, 1, 2, 3, 4, 5,
@@ -143,7 +135,7 @@ TEST_F(TransformerTest, compute) {
 
     EXPECT_FLOAT_EQ(out[0], -1.655961);
     EXPECT_FLOAT_EQ(out[1], -0.5762695);
-    EXPECT_FLOAT_EQ(out[2], 0.019856449);
+    EXPECT_NEAR(out[2], 0.019856449, 1e-6);
     EXPECT_FLOAT_EQ(out[3], 0.22128667);
     EXPECT_FLOAT_EQ(out[4], 0.5440447);
     EXPECT_FLOAT_EQ(out[5], 1.5205542);
@@ -199,7 +191,7 @@ TEST_F(TransformerTest, compute_complex) {
 
     size_t hidden_size = num_attention_heads * size_per_head;
 
-    Transformer transformer(cublas, cudnn, "encoder", var, 32,
+    Transformer transformer(cublas, "encoder", var, 32,
                             seq_length, hidden_size, 2, num_attention_heads, intermediate_size);
 
     float tensor[48] = {0, 1, 2, 3, 4, 5,

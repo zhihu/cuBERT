@@ -17,14 +17,12 @@ namespace cuBERT {
 
         CUDA_CHECK(cudaStreamCreate(&this->stream));
         CUBLAS_CHECK(cublasCreate_v2(&this->cublas));
-        CUDNN_CHECK(cudnnCreate(&this->cudnn));
         CUBLAS_CHECK(cublasSetStream_v2(cublas, stream));
-        CUDNN_CHECK(cudnnSetStream(cudnn, stream));
 
         this->bert_embeddings = new BertEmbeddings(cublas, var, max_batch_size,
                                                    vocab_size, type_vocab_size, hidden_size, seq_length);
 
-        this->transformer = new Transformer(cublas, cudnn, "bert/encoder", var,
+        this->transformer = new Transformer(cublas, "bert/encoder", var,
                                             max_batch_size, seq_length,
                                             hidden_size, num_hidden_layers, num_attention_heads, intermediate_size);
 
@@ -64,7 +62,6 @@ namespace cuBERT {
         delete transformer;
         delete bert_embeddings;
 
-        CUDNN_CHECK(cudnnDestroy(cudnn));
         CUBLAS_CHECK(cublasDestroy_v2(cublas));
         CUDA_CHECK(cudaStreamDestroy(stream));
     }

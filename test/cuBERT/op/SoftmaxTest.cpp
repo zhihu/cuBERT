@@ -1,11 +1,6 @@
-//
-// Created by 田露 on 2019/1/18.
-//
-
 #include "gtest/gtest.h"
 #include <vector>
 #include <cuda_runtime.h>
-#include <cudnn.h>
 
 #include "cuBERT/op/Softmax.h"
 using namespace cuBERT;

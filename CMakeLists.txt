@@ -5,7 +5,7 @@ if(NOT CMAKE_VERSION VERSION_LESS 3.1)
     set(CMAKE_CXX_STANDARD 11)
 else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-    set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};-std=c++11)
+    set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};-std c++11)
 endif()
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/)
@@ -22,25 +22,17 @@ find_package(CUDA)
 set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};-gencode arch=compute_60,code=sm_60)
 
 set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};--expt-relaxed-constexpr)
-set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};-ftz=true)  # Flush denormals to zero
-
-if (APPLE)
-    find_library(cudnn_LIBRARY NAMES libcudnn.dylib PATHS /usr/local/cuda/lib/ ${CUDA_TOOLKIT_ROOT_DIR})
-else ()
-    find_library(cudnn_LIBRARY NAMES libcudnn.so PATHS /usr/local/cuda/lib64/ ${CUDA_TOOLKIT_ROOT_DIR})
-endif ()
-message(STATUS "cudnn library: ${cudnn_LIBRARY}")
+set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};-O3;-use_fast_math;-Xptxas -O3;-Xcompiler -O3)  # Flush denormals to zero
 
 include_directories(src external ${CUDA_INCLUDE_DIRS})
 add_subdirectory(external)
 
 set(SOURCE_FILES
-        cuBERT.cpp cuBERT.h
+        cuBERT.cpp
         src/cuBERT/tf/Graph.cpp
         src/cuBERT/op/GELU.cu
         src/cuBERT/op/Dense.cpp
         src/cuBERT/op/Embedding.cpp src/cuBERT/op/Embedding.cu
-        src/cuBERT/op/Transpose.cpp
         src/cuBERT/op/BatchMatMul.cpp
         src/cuBERT/op/Softmax.cpp src/cuBERT/op/Softmax.cu
         src/cuBERT/op/LayerNorm.cpp src/cuBERT/op/LayerNorm.cu
@@ -59,8 +51,7 @@ set_target_properties(cuBERT PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 target_link_libraries(cuBERT
         external
         ${CUDA_LIBRARIES}
-        ${CUDA_CUBLAS_LIBRARIES}
-        ${cudnn_LIBRARY})
+        ${CUDA_CUBLAS_LIBRARIES})
 
 add_executable(cuBERT_benchmark benchmark.cpp)
 target_link_libraries(cuBERT_benchmark cuBERT)
@@ -73,7 +64,6 @@ include(googletest)
 add_executable(cuBERT_test test/unit_test.cpp
         test/cuBERT/op/DenseTest.cpp
         test/cuBERT/op/LayerNormTest.cpp
-        test/cuBERT/op/TransposeTest.cpp
         test/cuBERT/op/BatchMatMulTest.cpp
         test/cuBERT/op/SoftmaxTest.cpp
         test/cuBERT/op/GELUTest.cpp

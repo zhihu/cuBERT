@@ -13,7 +13,7 @@
 namespace cuBERT {
     class Transformer {
     public:
-        explicit Transformer(cublasHandle_t cublas, cudnnHandle_t cudnn,
+        explicit Transformer(cublasHandle_t cublas,
                              const std::string &var_prefix,
                              const std::unordered_map<std::string, float *> &var,
                              size_t max_batch_size,
@@ -39,7 +39,6 @@ namespace cuBERT {
 
     private:
         cublasHandle_t cublas;
-        cudnnHandle_t cudnn;
 
         size_t num_hidden_layers;
         size_t seq_length;

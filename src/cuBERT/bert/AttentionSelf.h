@@ -1,13 +1,7 @@
-//
-// Created by 田露 on 2019/1/18.
-//
-
 #ifndef CUBERT_ATTENTIONSELF_H
 #define CUBERT_ATTENTIONSELF_H
 
-
 #include <cublas_v2.h>
-#include <cudnn.h>
 #include <string>
 #include <unordered_map>
 
@@ -18,7 +12,7 @@
 namespace cuBERT {
     class AttentionSelf {
     public:
-        explicit AttentionSelf(cublasHandle_t cublas, cudnnHandle_t cudnn,
+        explicit AttentionSelf(cublasHandle_t cublas,
                                const std::string &var_prefix,
                                const std::unordered_map<std::string, float *> &var,
                                size_t max_batch_size,
@@ -42,7 +36,6 @@ namespace cuBERT {
 
     private:
         cublasHandle_t cublas;
-        cudnnHandle_t cudnn;
 
         size_t seq_length;
         size_t num_attention_heads;
