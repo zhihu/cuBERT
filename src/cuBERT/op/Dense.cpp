@@ -39,20 +39,8 @@ namespace cuBERT {
     }
 
     void Dense::compute(size_t batch_size, float *input_gpu, float *output_gpu) {
-        cudaStream_t streamId = nullptr;
-        CUBLAS_CHECK(cublasGetStream_v2(handle, &streamId));
-
-        CUDA_CHECK(cudaMemcpyAsync(output_gpu, bias_gpu, units * batch_size * sizeof(float), cudaMemcpyDeviceToDevice, streamId));
-
-        CUBLAS_CHECK(cublasSgemm_v2(
-                handle,
-                CUBLAS_OP_N, CUBLAS_OP_N,
-                units, batch_size, inputs,
-                &ONE,
-                kernel_gpu, units,
-                input_gpu, inputs,
-                &ONE,
-                output_gpu, units));
+        _pre_compute(batch_size, output_gpu);
+        _in_compute(batch_size, input_gpu, output_gpu);
     }
 
     void Dense::compute_cpu(size_t batch_size, float *input_cpu, float *output_cpu) {
@@ -73,5 +61,23 @@ namespace cuBERT {
 
         CUDA_CHECK(cudaFree(output_gpu));
         CUDA_CHECK(cudaFree(input_gpu));
+    }
+
+    void Dense::_pre_compute(size_t batch_size, float *output_gpu) {
+        cudaStream_t streamId = nullptr;
+        CUBLAS_CHECK(cublasGetStream_v2(handle, &streamId));
+        CUDA_CHECK(cudaMemcpyAsync(output_gpu, bias_gpu, units * batch_size * sizeof(float), cudaMemcpyDeviceToDevice, streamId));
+    }
+
+    void Dense::_in_compute(size_t batch_size, float *input_gpu, float *output_gpu) {
+        CUBLAS_CHECK(cublasSgemm_v2(
+                handle,
+                CUBLAS_OP_N, CUBLAS_OP_N,
+                units, batch_size, inputs,
+                &ONE,
+                kernel_gpu, units,
+                input_gpu, inputs,
+                &ONE,
+                output_gpu, units));
     }
 }

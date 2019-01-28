@@ -1,7 +1,3 @@
-//
-// Created by 田露 on 2019/1/21.
-//
-
 #ifndef CUBERT_TRANSFORMER_H
 #define CUBERT_TRANSFORMER_H
 
@@ -36,6 +32,10 @@ namespace cuBERT {
          * @param output_gpu
          */
         float *compute(size_t batch_size, float *input_gpu, char *attention_mask);
+
+        void _pre_compute(size_t batch_size);
+
+        float *_in_compute(size_t batch_size, float *input_gpu, char *attention_mask);
 
     private:
         cublasHandle_t cublas;

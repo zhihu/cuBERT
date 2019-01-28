@@ -54,6 +54,10 @@ namespace cuBERT {
         float *pooled_output_gpu;
 
         float *logits_gpu;
+
+        // for pre-compute
+        // FIXME: sequence_output_gpu will be flushed
+        bool buffer_filled;
     };
 }
 

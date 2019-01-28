@@ -1,7 +1,3 @@
-//
-// Created by 田露 on 2019/1/26.
-//
-
 #include "BertBatchMatMul.h"
 #include "cuBERT/common.h"
 

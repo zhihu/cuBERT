@@ -116,6 +116,20 @@ namespace cuBERT {
     }
 
     float *Transformer::compute(size_t batch_size, float *input_gpu, char *attention_mask) {
+        _pre_compute(batch_size);
+        return _in_compute(batch_size, input_gpu, attention_mask);
+    }
+
+    void Transformer::_pre_compute(size_t batch_size) {
+        for (int i = 0; i < num_hidden_layers; ++i) {
+            attention_self[i]->_pre_compute(batch_size);
+            attention_output_dense[i]->_pre_compute(batch_size * seq_length, attention_output[i]);
+            intermediate_dense[i]->_pre_compute(batch_size * seq_length, intermediate_output[i]);
+            output_dense[i]->_pre_compute(batch_size * seq_length, layer_output[i]);
+        }
+    }
+
+    float *Transformer::_in_compute(size_t batch_size, float *input_gpu, char *attention_mask) {
         cudaStream_t stream = nullptr;
         CUBLAS_CHECK(cublasGetStream_v2(cublas, &stream));
 
@@ -128,18 +142,18 @@ namespace cuBERT {
             float *layer_input = prev_output;
 
             // attention/self
-            attention_self[i]->compute(batch_size, layer_input, neg_attention_mask_buffer);
+            attention_self[i]->_in_compute(batch_size, layer_input, neg_attention_mask_buffer);
 
             // attention/output
-            attention_output_dense[i]->compute(batch_size * seq_length, attention_heads[i], attention_output[i]);
+            attention_output_dense[i]->_in_compute(batch_size * seq_length, attention_heads[i], attention_output[i]);
             attention_output_norm[i]->compute_(batch_size * seq_length, layer_input, attention_output[i], stream);
 
             // intermediate
-            intermediate_dense[i]->compute(batch_size * seq_length, attention_output[i], intermediate_output[i]);
+            intermediate_dense[i]->_in_compute(batch_size * seq_length, attention_output[i], intermediate_output[i]);
             intermediate_act_fn[i]->compute_(batch_size * seq_length * intermediate_size, intermediate_output[i], stream);
 
             // output
-            output_dense[i]->compute(batch_size * seq_length, intermediate_output[i], layer_output[i]);
+            output_dense[i]->_in_compute(batch_size * seq_length, intermediate_output[i], layer_output[i]);
             output_layer_norm[i]->compute_(batch_size * seq_length, attention_output[i], layer_output[i], stream);
 
             prev_output = layer_output[i];

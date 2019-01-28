@@ -75,18 +75,32 @@ namespace cuBERT {
     }
 
     void AttentionSelf::compute(size_t batch_size, float *in_gpu, float *neg_attention_mask) {
+        _pre_compute(batch_size);
+        _in_compute(batch_size, in_gpu, neg_attention_mask);
+    }
+
+    void AttentionSelf::_pre_compute(size_t batch_size) {
         cudaStream_t stream = nullptr;
         CUBLAS_CHECK(cublasGetStream_v2(cublas, &stream));
 
-        query_layer->compute(batch_size * seq_length, in_gpu, query_layer_out);
-        key_layer->compute(batch_size * seq_length, in_gpu, key_layer_out);
-        value_layer->compute(batch_size * seq_length, in_gpu, value_layer_out);
+        query_layer->_pre_compute(batch_size * seq_length, query_layer_out);
+        key_layer->_pre_compute(batch_size * seq_length, key_layer_out);
+        value_layer->_pre_compute(batch_size * seq_length, value_layer_out);
+    }
+
+    void AttentionSelf::_in_compute(size_t batch_size, float *in_gpu, float *neg_attention_mask) {
+        cudaStream_t stream = nullptr;
+        CUBLAS_CHECK(cublasGetStream_v2(cublas, &stream));
 
         CUDA_CHECK(cudaMemcpyAsync(
                 attention_scores, neg_attention_mask,
                 sizeof(float) * batch_size * num_attention_heads * seq_length * seq_length,
                 cudaMemcpyDeviceToDevice,
                 stream));
+
+        query_layer->_in_compute(batch_size * seq_length, in_gpu, query_layer_out);
+        key_layer->_in_compute(batch_size * seq_length, in_gpu, key_layer_out);
+        value_layer->_in_compute(batch_size * seq_length, in_gpu, value_layer_out);
 
         bqk->compute(batch_size);
         softmax->compute_(batch_size * num_attention_heads * seq_length, attention_scores, stream);

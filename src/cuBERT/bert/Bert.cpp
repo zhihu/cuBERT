@@ -43,6 +43,10 @@ namespace cuBERT {
         CUDA_CHECK(cudaMalloc(&this->input_ids_gpu, sizeof(int) * max_batch_size * seq_length));
         CUDA_CHECK(cudaMalloc(&this->input_mask_gpu, sizeof(char) * max_batch_size * seq_length));
         CUDA_CHECK(cudaMalloc(&this->segment_ids_gpu, sizeof(char) * max_batch_size * seq_length));
+
+        // pre-compute buffers
+        transformer->_pre_compute(max_batch_size);
+        this->buffer_filled = true;
     }
 
     Bert::~Bert() {
@@ -74,16 +78,25 @@ namespace cuBERT {
         CUDA_CHECK(cudaMemcpyAsync(input_mask_gpu, input_mask, sizeof(char) * batch_size * seq_length, cudaMemcpyHostToDevice, streamId));
         CUDA_CHECK(cudaMemcpyAsync(segment_ids_gpu, segment_ids, sizeof(char) * batch_size * seq_length, cudaMemcpyHostToDevice, streamId));
 
+        // pre-compute buffers
+        if (!buffer_filled) {
+            transformer->_pre_compute(batch_size);
+            buffer_filled = true;
+        }
+
         // bert/embeddings
         bert_embeddings->compute(batch_size, input_ids_gpu, segment_ids_gpu, embedding_output_gpu);
 
         // bert/encoder
-        sequence_output_gpu = transformer->compute(batch_size, embedding_output_gpu, input_mask_gpu);
+        sequence_output_gpu = transformer->_in_compute(batch_size, embedding_output_gpu, input_mask_gpu);
 
         // bert/pooler
         bert_pooler->compute(batch_size, sequence_output_gpu, pooled_output_gpu);
 
         additional_output_layer->compute(batch_size, pooled_output_gpu, logits_gpu);
+
+        // buffers should be re-computed in the next request
+        buffer_filled = false;
     }
 
     void Bert::logits(size_t batch_size, float *logits) {
@@ -92,6 +105,11 @@ namespace cuBERT {
 
         CUDA_CHECK(cudaMemcpyAsync(logits, logits_gpu, sizeof(float) * batch_size, cudaMemcpyDeviceToHost, streamId));
         CUDA_CHECK(cudaStreamSynchronize(streamId));
+
+        if (!buffer_filled) {
+            transformer->_pre_compute(batch_size);
+            buffer_filled = true;
+        }
     }
 
     void Bert::embedding_output(size_t batch_size, float *embedding_output) {
@@ -103,5 +121,10 @@ namespace cuBERT {
                            sizeof(float) * batch_size * seq_length * hidden_size,
                            cudaMemcpyDeviceToHost, streamId));
         CUDA_CHECK(cudaStreamSynchronize(streamId));
+
+        if (!buffer_filled) {
+            transformer->_pre_compute(batch_size);
+            buffer_filled = true;
+        }
     }
 }

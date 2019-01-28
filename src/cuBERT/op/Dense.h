@@ -25,6 +25,10 @@ namespace cuBERT {
 
         virtual ~Dense();
 
+        void _pre_compute(size_t batch_size, float *output_gpu);
+
+        void _in_compute(size_t batch_size, float *input_gpu, float *output_gpu);
+
         void compute(size_t batch_size, float *input_gpu, float *output_gpu);
 
         void compute_cpu(size_t batch_size, float *input_cpu, float *output_cpu);
