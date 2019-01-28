@@ -28,7 +28,7 @@ namespace cuBERT {
 
             mutex_instances.push_back(new std::mutex());
 
-            std::cout << "device setup: " << count << std::endl;
+            std::cout << "device setup: " << device << std::endl;
         }
     }
 
