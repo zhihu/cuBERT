@@ -1,22 +1,16 @@
 #include <cuda_runtime.h>
+#include <thrust/device_ptr.h>
+#include <thrust/transform.h>
+#include <thrust/functional.h>
+#include <thrust/system/cuda/execution_policy.h>
 
 namespace cuBERT {
-    __global__ void kernel_not(const char *__restrict__ in,
-                               float *out,
-                               const int N) {
-        int idx = blockIdx.x * blockDim.x + threadIdx.x;
-        if (idx >= N) {
-            return;
-        }
-
-        out[idx] = (float) !__ldg(in + idx);
-    }
-
     __host__ void _not(const char *in,
                        float *out,
                        const int N,
                        cudaStream_t stream) {
-        const int blocks = (N + 127) / 128;
-        kernel_not << < blocks, 128, 0, stream >> > (in, out, N);
+        thrust::device_ptr<const char> in_ptr(in);
+        thrust::device_ptr<float> out_ptr(out);
+        thrust::transform(thrust::cuda::par.on(stream), in_ptr, in_ptr + N, out_ptr, thrust::logical_not<const char>());
     }
 }

@@ -37,7 +37,7 @@ add_subdirectory(external)
 set(SOURCE_FILES
         cuBERT.cpp cuBERT.h
         src/cuBERT/tf/Graph.cpp
-        src/cuBERT/op/GELU.cpp src/cuBERT/op/GELU.cu
+        src/cuBERT/op/GELU.cu
         src/cuBERT/op/Dense.cpp
         src/cuBERT/op/Embedding.cpp src/cuBERT/op/Embedding.cu
         src/cuBERT/op/Transpose.cpp

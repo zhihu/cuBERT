@@ -13,7 +13,8 @@ namespace cuBERT {
         }
 
         T input_id = __ldg(input_ids + idx);
-        memcpy(output + embedding_size * idx, embedding_table + embedding_size * input_id,
+        memcpy(output + embedding_size * idx,
+               embedding_table + embedding_size * input_id,
                embedding_size * sizeof(float));
     }
 
@@ -25,8 +26,11 @@ namespace cuBERT {
                             float *output,
                             cudaStream_t stream) {
         const int blocks = (input_ids_len + 127) / 128;
-        kernel_embedding<T> << < blocks, 128, 0, stream >> >
-                                                 (input_ids, input_ids_len, embedding_table, embedding_size, output);
+        kernel_embedding<T> << < blocks, 128, 0, stream >> > (input_ids,
+                input_ids_len,
+                embedding_table,
+                embedding_size,
+                output);
     }
 
     template
