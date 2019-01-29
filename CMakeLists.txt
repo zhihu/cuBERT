@@ -11,7 +11,14 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/)
 
 find_package(Threads REQUIRED)
-find_package(CUDA)
+find_package(CUDA REQUIRED)
+
+find_package(OpenMP)
+if (OPENMP_FOUND)
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+endif()
 
 # use cmake internal CUDA_ARCH_NAME switch
 # e.g. CUDA_ARCH_NAME="Auto" will autodetect
@@ -35,7 +42,7 @@ add_subdirectory(external)
 set(SOURCE_FILES
         cuBERT.cpp
         src/cuBERT/tf/Graph.cpp
-        src/cuBERT/op/GELU.cu
+        src/cuBERT/op/GELU.cpp src/cuBERT/op/GELU.cu
         src/cuBERT/op/Dense.cpp
         src/cuBERT/op/Embedding.cpp src/cuBERT/op/Embedding.cu
         src/cuBERT/op/BatchMatMul.cpp

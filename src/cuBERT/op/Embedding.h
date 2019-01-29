@@ -27,7 +27,8 @@ namespace cuBERT {
         template<typename T>
         void compute(const T *input_ids_gpu, size_t input_ids_len, float *output_gpu, cudaStream_t stream);
 
-        void compute_cpu(const int *input_ids, size_t input_ids_len, float *output);
+        template<typename T>
+        void compute_cpu(const T *input_ids, size_t input_ids_len, float *output);
 
     private:
         size_t vocab_size;

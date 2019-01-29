@@ -1,7 +1,3 @@
-//
-// Created by 田露 on 2019/1/22.
-//
-
 #include <cstring>
 
 #include "cuBERT/common.h"
@@ -28,7 +24,8 @@ namespace cuBERT {
         embedding(input_ids_gpu, input_ids_len, embedding_table_gpu, embedding_size, output_gpu, stream);
     }
 
-    void Embedding::compute_cpu(const int *input_ids, size_t input_ids_len, float *output) {
+    template<typename T>
+    void Embedding::compute_cpu(const T *input_ids, size_t input_ids_len, float *output) {
         for (int i = 0; i < input_ids_len; ++i) {
             std::memcpy(output, embedding_table + embedding_size * input_ids[i], embedding_size * sizeof(float));
             output += embedding_size;
@@ -40,4 +37,10 @@ namespace cuBERT {
 
     template void
     Embedding::compute(const char *input_ids_gpu, size_t input_ids_len, float *output_gpu, cudaStream_t stream);
+
+    template void
+    Embedding::compute_cpu(const int *input_ids, size_t input_ids_len, float *output);
+
+    template void
+    Embedding::compute_cpu(const char *input_ids, size_t input_ids_len, float *output);
 }

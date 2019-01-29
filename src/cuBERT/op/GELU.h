@@ -10,7 +10,7 @@ namespace cuBERT {
     public:
         void compute_(size_t N, float *inout_gpu, cudaStream_t stream);
 
-        void compute_cpu_(size_t N, float *inout, cudaStream_t stream);
+        void compute_cpu_(size_t N, float *inout);
     };
 }
 

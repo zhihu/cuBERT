@@ -21,7 +21,7 @@ TEST_F(GELUTest, compute_cpu_) {
     }
 
     GELU gelu;
-    gelu.compute_cpu_(5, inout, nullptr);
+    gelu.compute_cpu_(5, inout);
 
     EXPECT_NEAR(inout[0], expect[0], 1e-5);
     EXPECT_NEAR(inout[1], expect[1], 1e-5);
