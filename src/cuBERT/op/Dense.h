@@ -31,6 +31,10 @@ namespace cuBERT {
 
         void compute(size_t batch_size, float *input_gpu, float *output_gpu);
 
+        void _pre_compute_cpu(size_t batch_size, float *output_cpu);
+
+        void _in_compute_cpu(size_t batch_size, float *input_cpu, float *output_cpu);
+
         void compute_cpu(size_t batch_size, float *input_cpu, float *output_cpu);
 
     private:
@@ -39,8 +43,13 @@ namespace cuBERT {
         size_t inputs;
         size_t units;
 
+        // gpu buffer
         float *kernel_gpu;
         float *bias_gpu;
+
+        // cpu buffer
+        float *kernel_cpu;
+        float *bias_cpu;
     };
 }
 

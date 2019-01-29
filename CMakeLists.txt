@@ -27,7 +27,9 @@ set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};-gencode arch=compute_70,code=sm_70)
 set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};--expt-relaxed-constexpr)
 set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};-O3;-use_fast_math;-Xptxas -O3;-Xcompiler -O3)  # Flush denormals to zero
 
-include_directories(src external ${CUDA_INCLUDE_DIRS})
+include(mkl)
+
+include_directories(src external ${CUDA_INCLUDE_DIRS} ${mkl_INCLUDE_DIRS})
 add_subdirectory(external)
 
 set(SOURCE_FILES
@@ -51,10 +53,12 @@ set(SOURCE_FILES
 
 cuda_add_library(cuBERT SHARED ${SOURCE_FILES})
 set_target_properties(cuBERT PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+add_dependencies(cuBERT mkl_copy_shared_to_destination)
 target_link_libraries(cuBERT
         external
         ${CUDA_LIBRARIES}
-        ${CUDA_CUBLAS_LIBRARIES})
+        ${CUDA_CUBLAS_LIBRARIES}
+        ${mkl_SHARED_LIBRARIES})
 
 add_executable(cuBERT_benchmark benchmark.cpp)
 target_link_libraries(cuBERT_benchmark cuBERT)
