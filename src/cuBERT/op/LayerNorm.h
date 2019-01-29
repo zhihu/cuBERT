@@ -1,7 +1,3 @@
-//
-// Created by 田露 on 2019/1/15.
-//
-
 #ifndef CUBERT_LAYERNORM_H
 #define CUBERT_LAYERNORM_H
 
@@ -36,17 +32,23 @@ namespace cuBERT {
 
         void compute_(size_t batch_size, float *in_gpu, float *inout_gpu, cudaStream_t stream);
 
-        void compute_cpu_(size_t batch_size, float *inout, cudaStream_t stream);
+        void compute_cpu_(size_t batch_size, float *inout);
 
-        void compute_cpu_(size_t batch_size, float *in, float *inout, cudaStream_t stream);
+        void compute_cpu_(size_t batch_size, float *in, float *inout);
 
     private:
         size_t channels;
+
+        // gpu buffer
         float *beta_gpu;
         float *gamma_gpu;
 
         float *mean_gpu;
         float *var_gpu;
+
+        // cpu buffer
+        float *beta_cpu;
+        float *gamma_cpu;
     };
 }
 

@@ -22,6 +22,9 @@ namespace cuBERT {
         virtual ~Softmax();
 
         void compute_(size_t batch_size, float *inout_gpu, cudaStream_t stream);
+
+        void compute_cpu_(size_t batch_size, float *inout_cpu);
+
     private:
         size_t channel;
 

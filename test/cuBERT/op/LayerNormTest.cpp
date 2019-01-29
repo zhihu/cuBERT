@@ -46,7 +46,7 @@ TEST_F(LayerNormTest, compute_cpu_) {
     LayerNorm layer_norm(max_batch_size, 3, beta, gamma);
 
     float inout[6] = {9, 10, 11, 5, 4, 3};
-    layer_norm.compute_cpu_(2, inout, nullptr);
+    layer_norm.compute_cpu_(2, inout);
 
     EXPECT_NEAR(inout[0], -2.224744871391589, 1e-5);
     EXPECT_FLOAT_EQ(inout[1], 0);
@@ -65,7 +65,7 @@ TEST_F(LayerNormTest, compute_cpu_ext_) {
 
     float in[6] = {8, 8, 8, 2, 2, 2};
     float inout[6] = {1, 2, 3, 3, 2, 1};
-    layer_norm.compute_cpu_(2, in, inout, nullptr);
+    layer_norm.compute_cpu_(2, in, inout);
 
     EXPECT_NEAR(inout[0], -2.224744871391589, 1e-5);
     EXPECT_FLOAT_EQ(inout[1], 0);

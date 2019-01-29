@@ -1,5 +1,8 @@
 #include <algorithm>
+#include <cstring>
+#include <cmath>
 #include <cuda_runtime.h>
+#include <omp.h>
 
 #include "cuBERT/common.h"
 #include "LayerNorm.h"
@@ -16,9 +19,17 @@ namespace cuBERT {
 
         CUDA_CHECK(cudaMalloc(&this->mean_gpu, max_batch_size * sizeof(float)));
         CUDA_CHECK(cudaMalloc(&this->var_gpu, max_batch_size * sizeof(float)));
+
+        this->beta_cpu = new float[channels];
+        this->gamma_cpu = new float[channels];
+        std::memcpy(beta_cpu, beta, channels * sizeof(float));
+        std::memcpy(gamma_cpu, gamma, channels * sizeof(float));
     }
 
     LayerNorm::~LayerNorm() {
+        delete[] gamma_cpu;
+        delete[] beta_cpu;
+
         CUDA_CHECK(cudaFree(var_gpu));
         CUDA_CHECK(cudaFree(mean_gpu));
 
@@ -37,31 +48,53 @@ namespace cuBERT {
                     beta_gpu, gamma_gpu, stream);
     }
 
-    void LayerNorm::compute_cpu_(size_t batch_size, float *inout, cudaStream_t stream) {
-        float *inout_gpu;
-        CUDA_CHECK(cudaMalloc(&inout_gpu, batch_size * channels * sizeof(float)));
-        CUDA_CHECK(cudaMemcpyAsync(inout_gpu, inout, batch_size * channels * sizeof(float), cudaMemcpyHostToDevice, stream));
+    void LayerNorm::compute_cpu_(size_t batch_size, float *inout) {
+#pragma omp parallel for
+        for (int batch_idx = 0; batch_idx < batch_size; ++batch_idx) {
+            float mean = 0;
+            float var = 0;
+#pragma unroll
+            for (int i = batch_idx * channels; i < (batch_idx + 1) * channels; ++i) {
+                float t = inout[i];
+                mean += t;
+                var += t * t;
+            }
+            mean = mean / channels;
+            var = var / channels - mean * mean;
 
-        compute_(batch_size, inout_gpu, stream);
+            // 1 / sqrt(var)
+            var = 1.f / sqrtf(var + 1e-12f);
 
-        // sync
-        CUDA_CHECK(cudaMemcpy(inout, inout_gpu, batch_size * channels * sizeof(float), cudaMemcpyDeviceToHost));
-        CUDA_CHECK(cudaFree(inout_gpu));
+#pragma unroll
+            for (int i = 0; i < channels; ++i) {
+                int j = batch_idx * channels + i;
+                inout[j] = beta_cpu[i] + gamma_cpu[i] * var * (inout[j] - mean);
+            }
+        }
     }
 
-    void LayerNorm::compute_cpu_(size_t batch_size, float *in, float *inout, cudaStream_t stream) {
-        float *in_gpu;
-        float *inout_gpu;
-        CUDA_CHECK(cudaMalloc(&in_gpu, batch_size * channels * sizeof(float)));
-        CUDA_CHECK(cudaMalloc(&inout_gpu, batch_size * channels * sizeof(float)));
-        CUDA_CHECK(cudaMemcpyAsync(in_gpu, in, batch_size * channels * sizeof(float), cudaMemcpyHostToDevice, stream));
-        CUDA_CHECK(cudaMemcpyAsync(inout_gpu, inout, batch_size * channels * sizeof(float), cudaMemcpyHostToDevice, stream));
+    void LayerNorm::compute_cpu_(size_t batch_size, float *in, float *inout) {
+#pragma omp parallel for
+        for (int batch_idx = 0; batch_idx < batch_size; ++batch_idx) {
+            float mean = 0;
+            float var = 0;
+#pragma unroll
+            for (int i = batch_idx * channels; i < (batch_idx + 1) * channels; ++i) {
+                float t = inout[i] + in[i];
+                mean += t;
+                var += t * t;
+            }
+            mean = mean / channels;
+            var = var / channels - mean * mean;
 
-        compute_(batch_size, in_gpu, inout_gpu, stream);
+            // 1 / sqrt(var)
+            var = 1.f / sqrtf(var + 1e-12f);
 
-        // sync
-        CUDA_CHECK(cudaMemcpy(inout, inout_gpu, batch_size * channels * sizeof(float), cudaMemcpyDeviceToHost));
-        CUDA_CHECK(cudaFree(inout_gpu));
-        CUDA_CHECK(cudaFree(in_gpu));
+#pragma unroll
+            for (int i = 0; i < channels; ++i) {
+                int j = batch_idx * channels + i;
+                inout[j] = beta_cpu[i] + gamma_cpu[i] * var * (inout[j] + in[j] - mean);
+            }
+        }
     }
 }

@@ -1,3 +1,6 @@
+#include <cmath>
+#include <omp.h>
+
 #include "cuBERT/common.h"
 #include "Softmax.h"
 
@@ -14,5 +17,20 @@ namespace cuBERT {
 
     void Softmax::compute_(size_t batch_size, float *inout_gpu, cudaStream_t stream) {
         softmax_(inout_gpu, batch_size, channel, sum_gpu, stream);
+    }
+
+    void Softmax::compute_cpu_(size_t batch_size, float *inout_cpu) {
+#pragma omp parallel for
+        for (int batch_idx = 0; batch_idx < batch_size; ++batch_idx) {
+            float sum = 0;
+            for (int i = batch_idx * channel; i < (batch_idx + 1) * channel; ++i) {
+                inout_cpu[i] = expf(inout_cpu[i]);
+                sum += inout_cpu[i];
+            }
+
+            for (int i = batch_idx * channel; i < (batch_idx + 1) * channel; ++i) {
+                inout_cpu[i] = inout_cpu[i] / sum;
+            }
+        }
     }
 }
