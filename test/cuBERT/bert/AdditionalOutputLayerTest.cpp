@@ -47,3 +47,22 @@ TEST_F(AdditionalOutputLayerTest, compute) {
     EXPECT_FLOAT_EQ(out[0], 1);
     EXPECT_FLOAT_EQ(out[1], 6);
 }
+
+
+TEST_F(AdditionalOutputLayerTest, compute_cpu) {
+    size_t hidden_size = 3;
+    float output_weights[3] = {-1, 0, 1};
+
+    AdditionalOutputLayer aol(handle, hidden_size, output_weights);
+
+    float in[6] = {
+            2, 8, 3,
+            -4, 1, 2,
+    };
+    float out[2];
+
+    aol.compute_cpu(2, in, out);
+
+    EXPECT_FLOAT_EQ(out[0], 1);
+    EXPECT_FLOAT_EQ(out[1], 6);
+}

@@ -34,6 +34,12 @@ namespace cuBERT {
 
         void _in_compute(size_t batch_size, float *in_gpu, float *neg_attention_mask);
 
+        void compute_cpu(size_t batch_size, float *in_cpu, float *neg_attention_mask);
+
+        void _pre_compute_cpu(size_t batch_size);
+
+        void _in_compute_cpu(size_t batch_size, float *in_cpu, float *neg_attention_mask);
+
     private:
         cublasHandle_t cublas;
 
@@ -44,15 +50,25 @@ namespace cuBERT {
         Dense *query_layer;
         Dense *key_layer;
         Dense *value_layer;
-        BertQK *bqk;
-        BertQKV *bqkv;
         Softmax *softmax;
 
-        // buffers
-        float *query_layer_out;
-        float *key_layer_out;
-        float *value_layer_out;
-        float *attention_scores;
+        BertQK *bqk_gpu;
+        BertQKV *bqkv_gpu;
+
+        BertQK *bqk_cpu;
+        BertQKV *bqkv_cpu;
+
+        // gpu buffers
+        float *query_layer_out_gpu;
+        float *key_layer_out_gpu;
+        float *value_layer_out_gpu;
+        float *attention_scores_gpu;
+
+        // cpu buffers
+        float *query_layer_out_cpu;
+        float *key_layer_out_cpu;
+        float *value_layer_out_cpu;
+        float *attention_scores_cpu;
 
         // output
         float *context_layer_out;

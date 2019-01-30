@@ -1,4 +1,6 @@
 #include <cuda_runtime.h>
+#include <mkl.h>
+#include <cstring>
 
 #include "cuBERT/common.h"
 #include "AdditionalOutputLayer.h"
@@ -13,9 +15,14 @@ namespace cuBERT {
 
         CUDA_CHECK(cudaMalloc(&this->output_weights_gpu, sizeof(float) * hidden_size));
         CUDA_CHECK(cudaMemcpy(output_weights_gpu, output_weights, sizeof(float) * hidden_size, cudaMemcpyHostToDevice));
+
+        this->output_weights_cpu = new float[hidden_size];
+        std::memcpy(output_weights_cpu, output_weights, sizeof(float) * hidden_size);
     }
 
     AdditionalOutputLayer::~AdditionalOutputLayer() {
+        delete []output_weights_cpu;
+
         CUDA_CHECK(cudaFree(output_weights_gpu));
     }
 
@@ -29,5 +36,16 @@ namespace cuBERT {
                                     in_gpu, hidden_size,
                                     &ZERO,
                                     out_gpu, 1));
+    }
+
+    void AdditionalOutputLayer::compute_cpu(size_t batch_size, float *in_cpu, float *out_cpu) {
+        cblas_sgemm(CblasColMajor,
+                    CblasNoTrans, CblasNoTrans,
+                    1, batch_size, hidden_size,
+                    ONE,
+                    output_weights_cpu, 1,
+                    in_cpu, hidden_size,
+                    ZERO,
+                    out_cpu, 1);
     }
 }

@@ -1,7 +1,3 @@
-//
-// Created by 田露 on 2019/1/22.
-//
-
 #ifndef CUBERT_BERTEMBEDDINGS_H
 #define CUBERT_BERTEMBEDDINGS_H
 
@@ -26,6 +22,8 @@ namespace cuBERT {
 
         void compute(size_t batch_size, int *input_ids_gpu, char *token_type_ids_gpu, float *out_gpu);
 
+        void compute_cpu(size_t batch_size, int *input_ids_cpu, char *token_type_ids_cpu, float *out_cpu);
+
     private:
         cublasHandle_t handle;
 
@@ -36,9 +34,15 @@ namespace cuBERT {
         Embedding *token_type_embeddings;
         LayerNorm *layer_norm;
 
+        // gpu buffer
         float *position_embeddings_gpu;
         float *ones_gpu;
         float *token_type_embeddings_out_gpu;
+
+        // cpu buffer
+        float *position_embeddings_cpu;
+        float *ones_cpu;
+        float *token_type_embeddings_out_cpu;
     };
 }
 

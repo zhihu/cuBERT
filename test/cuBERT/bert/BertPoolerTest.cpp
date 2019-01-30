@@ -57,3 +57,31 @@ TEST_F(BertPoolerTest, compute) {
     EXPECT_FLOAT_EQ(out[2], tanhf(4));
     EXPECT_FLOAT_EQ(out[3], tanhf(2));
 }
+
+TEST_F(BertPoolerTest, compute_cpu) {
+    size_t seq_length = 3;
+    size_t hidden_size = 2;
+
+    float kernel[] = {-1, 0,
+                      0, 1};
+    float bias[] = {2, 3};
+
+    BertPooler pooler(handle, seq_length, hidden_size, kernel, bias, 32);
+
+    float in[12] = {
+            0, 1,
+            1, 1,
+            2, 1,
+            -2, -1,
+            3, 2,
+            0, 5,
+    };
+    float out[4];
+
+    pooler.compute_cpu(2, in, out);
+
+    EXPECT_FLOAT_EQ(out[0], tanhf(2));
+    EXPECT_FLOAT_EQ(out[1], tanhf(4));
+    EXPECT_FLOAT_EQ(out[2], tanhf(4));
+    EXPECT_FLOAT_EQ(out[3], tanhf(2));
+}

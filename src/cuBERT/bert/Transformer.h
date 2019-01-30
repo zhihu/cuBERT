@@ -37,6 +37,12 @@ namespace cuBERT {
 
         float *_in_compute(size_t batch_size, float *input_gpu, char *attention_mask);
 
+        float *compute_cpu(size_t batch_size, float *input_cpu, char *attention_mask);
+
+        void _pre_compute_cpu(size_t batch_size);
+
+        float *_in_compute_cpu(size_t batch_size, float *input_cpu, char *attention_mask);
+
     private:
         cublasHandle_t cublas;
 
@@ -45,7 +51,6 @@ namespace cuBERT {
         size_t intermediate_size;
 
         AttentionMask *attention_mask;
-        std::vector<AttentionSelf *> attention_self;
         std::vector<Dense *> attention_output_dense;
         std::vector<LayerNorm *> attention_output_norm;
         std::vector<Dense *> intermediate_dense;
@@ -53,12 +58,22 @@ namespace cuBERT {
         std::vector<Dense *> output_dense;
         std::vector<LayerNorm *> output_layer_norm;
 
-        // buffer
-        float *neg_attention_mask_buffer;
-        std::vector<float *> attention_heads;
-        std::vector<float *> attention_output;
-        std::vector<float *> intermediate_output;
-        std::vector<float *> layer_output;
+        std::vector<AttentionSelf *> attention_self_gpu;
+        std::vector<AttentionSelf *> attention_self_cpu;
+
+        // gpu buffer
+        float *neg_attention_mask_buffer_gpu;
+        std::vector<float *> attention_heads_gpu;
+        std::vector<float *> attention_output_gpu;
+        std::vector<float *> intermediate_output_gpu;
+        std::vector<float *> layer_output_gpu;
+
+        // cpu buffer
+        float *neg_attention_mask_buffer_cpu;
+        std::vector<float *> attention_heads_cpu;
+        std::vector<float *> attention_output_cpu;
+        std::vector<float *> intermediate_output_cpu;
+        std::vector<float *> layer_output_cpu;
     };
 }
 

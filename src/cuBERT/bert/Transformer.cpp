@@ -13,17 +13,22 @@ namespace cuBERT {
                              size_t num_hidden_layers,
                              size_t num_attention_heads,
                              size_t intermediate_size)
-            : attention_self(num_hidden_layers),
+            : attention_self_gpu(num_hidden_layers),
+              attention_self_cpu(num_hidden_layers),
               attention_output_dense(num_hidden_layers),
               attention_output_norm(num_hidden_layers),
               intermediate_dense(num_hidden_layers),
               intermediate_act_fn(num_hidden_layers),
               output_dense(num_hidden_layers),
               output_layer_norm(num_hidden_layers),
-              attention_heads(num_hidden_layers),
-              attention_output(num_hidden_layers),
-              intermediate_output(num_hidden_layers),
-              layer_output(num_hidden_layers) {
+              attention_heads_gpu(num_hidden_layers),
+              attention_output_gpu(num_hidden_layers),
+              intermediate_output_gpu(num_hidden_layers),
+              layer_output_gpu(num_hidden_layers),
+              attention_heads_cpu(num_hidden_layers),
+              attention_output_cpu(num_hidden_layers),
+              intermediate_output_cpu(num_hidden_layers),
+              layer_output_cpu(num_hidden_layers){
         this->cublas = cublas;
         this->num_hidden_layers = num_hidden_layers;
         this->seq_length = seq_length;
@@ -32,23 +37,38 @@ namespace cuBERT {
         size_t attention_head_size = hidden_size / num_attention_heads;
 
         this->attention_mask = new AttentionMask(cublas, seq_length, num_attention_heads, max_batch_size);
-        CUDA_CHECK(cudaMalloc(&this->neg_attention_mask_buffer, sizeof(float) * max_batch_size * num_attention_heads * seq_length * seq_length));
+
+        this->neg_attention_mask_buffer_cpu = new float[max_batch_size * num_attention_heads * seq_length * seq_length];
+        CUDA_CHECK(cudaMalloc(&this->neg_attention_mask_buffer_gpu, sizeof(float) * max_batch_size * num_attention_heads * seq_length * seq_length));
 
         for (int layer_idx = 0; layer_idx < num_hidden_layers; ++layer_idx) {
             // buffers
-            CUDA_CHECK(cudaMalloc(&attention_heads[layer_idx], sizeof(float) * max_batch_size * seq_length * hidden_size));
-            CUDA_CHECK(cudaMalloc(&attention_output[layer_idx], sizeof(float) * max_batch_size * seq_length * hidden_size));
-            CUDA_CHECK(cudaMalloc(&intermediate_output[layer_idx], sizeof(float) * max_batch_size * seq_length * intermediate_size));
-            CUDA_CHECK(cudaMalloc(&layer_output[layer_idx], sizeof(float) * max_batch_size * seq_length * hidden_size));
+            this->attention_heads_cpu[layer_idx] = new float[max_batch_size * seq_length * hidden_size];
+            this->attention_output_cpu[layer_idx] = new float[max_batch_size * seq_length * hidden_size];
+            this->intermediate_output_cpu[layer_idx] = new float[max_batch_size * seq_length * intermediate_size];
+            this->layer_output_cpu[layer_idx] = new float[max_batch_size * seq_length * hidden_size];
 
-            attention_self[layer_idx] = new AttentionSelf(cublas,
-                                                          var_prefix + "/layer_" + std::to_string(layer_idx) +
-                                                          "/attention/self",
-                                                          var,
-                                                          max_batch_size,
-                                                          seq_length,
-                                                          attention_heads[layer_idx],
-                                                          hidden_size, num_attention_heads, attention_head_size);
+            CUDA_CHECK(cudaMalloc(&attention_heads_gpu[layer_idx], sizeof(float) * max_batch_size * seq_length * hidden_size));
+            CUDA_CHECK(cudaMalloc(&attention_output_gpu[layer_idx], sizeof(float) * max_batch_size * seq_length * hidden_size));
+            CUDA_CHECK(cudaMalloc(&intermediate_output_gpu[layer_idx], sizeof(float) * max_batch_size * seq_length * intermediate_size));
+            CUDA_CHECK(cudaMalloc(&layer_output_gpu[layer_idx], sizeof(float) * max_batch_size * seq_length * hidden_size));
+
+            attention_self_gpu[layer_idx] = new AttentionSelf(cublas,
+                                                              var_prefix + "/layer_" + std::to_string(layer_idx) +
+                                                              "/attention/self",
+                                                              var,
+                                                              max_batch_size,
+                                                              seq_length,
+                                                              attention_heads_gpu[layer_idx],
+                                                              hidden_size, num_attention_heads, attention_head_size);
+            attention_self_cpu[layer_idx] = new AttentionSelf(cublas,
+                                                              var_prefix + "/layer_" + std::to_string(layer_idx) +
+                                                              "/attention/self",
+                                                              var,
+                                                              max_batch_size,
+                                                              seq_length,
+                                                              attention_heads_cpu[layer_idx],
+                                                              hidden_size, num_attention_heads, attention_head_size);
 
             float *attention_output_dense_kernel = var.at(
                     var_prefix + "/layer_" + std::to_string(layer_idx) + "/attention/output/dense/kernel");
@@ -102,15 +122,24 @@ namespace cuBERT {
             delete intermediate_dense[i];
             delete attention_output_norm[i];
             delete attention_output_dense[i];
-            delete attention_self[i];
 
-            CUDA_CHECK(cudaFree(layer_output[i]));
-            CUDA_CHECK(cudaFree(intermediate_output[i]));
-            CUDA_CHECK(cudaFree(attention_output[i]));
-            CUDA_CHECK(cudaFree(attention_heads[i]));
+            delete attention_self_gpu[i];
+            delete attention_self_cpu[i];
+
+            CUDA_CHECK(cudaFree(layer_output_gpu[i]));
+            CUDA_CHECK(cudaFree(intermediate_output_gpu[i]));
+            CUDA_CHECK(cudaFree(attention_output_gpu[i]));
+            CUDA_CHECK(cudaFree(attention_heads_gpu[i]));
+
+            delete[] layer_output_cpu[i];
+            delete[] intermediate_output_cpu[i];
+            delete[] attention_output_cpu[i];
+            delete[] attention_heads_cpu[i];
         }
 
-        CUDA_CHECK(cudaFree(neg_attention_mask_buffer));
+        CUDA_CHECK(cudaFree(neg_attention_mask_buffer_gpu));
+        delete[] neg_attention_mask_buffer_cpu;
+
         delete attention_mask;
     }
 
@@ -121,10 +150,10 @@ namespace cuBERT {
 
     void Transformer::_pre_compute(size_t batch_size) {
         for (int i = 0; i < num_hidden_layers; ++i) {
-            attention_self[i]->_pre_compute(batch_size);
-            attention_output_dense[i]->_pre_compute(batch_size * seq_length, attention_output[i]);
-            intermediate_dense[i]->_pre_compute(batch_size * seq_length, intermediate_output[i]);
-            output_dense[i]->_pre_compute(batch_size * seq_length, layer_output[i]);
+            attention_self_gpu[i]->_pre_compute(batch_size);
+            attention_output_dense[i]->_pre_compute(batch_size * seq_length, attention_output_gpu[i]);
+            intermediate_dense[i]->_pre_compute(batch_size * seq_length, intermediate_output_gpu[i]);
+            output_dense[i]->_pre_compute(batch_size * seq_length, layer_output_gpu[i]);
         }
     }
 
@@ -133,7 +162,7 @@ namespace cuBERT {
         CUBLAS_CHECK(cublasGetStream_v2(cublas, &stream));
 
         // broadcast neg_attention_mask
-        this->attention_mask->compute(batch_size, attention_mask, neg_attention_mask_buffer);
+        this->attention_mask->compute(batch_size, attention_mask, neg_attention_mask_buffer_gpu);
 
         float *prev_output = input_gpu;
 
@@ -141,21 +170,64 @@ namespace cuBERT {
             float *layer_input = prev_output;
 
             // attention/self
-            attention_self[i]->_in_compute(batch_size, layer_input, neg_attention_mask_buffer);
+            attention_self_gpu[i]->_in_compute(batch_size, layer_input, neg_attention_mask_buffer_gpu);
 
             // attention/output
-            attention_output_dense[i]->_in_compute(batch_size * seq_length, attention_heads[i], attention_output[i]);
-            attention_output_norm[i]->compute_(batch_size * seq_length, layer_input, attention_output[i], stream);
+            attention_output_dense[i]->_in_compute(batch_size * seq_length, attention_heads_gpu[i], attention_output_gpu[i]);
+            attention_output_norm[i]->compute_(batch_size * seq_length, layer_input, attention_output_gpu[i], stream);
 
             // intermediate
-            intermediate_dense[i]->_in_compute(batch_size * seq_length, attention_output[i], intermediate_output[i]);
-            intermediate_act_fn[i]->compute_(batch_size * seq_length * intermediate_size, intermediate_output[i], stream);
+            intermediate_dense[i]->_in_compute(batch_size * seq_length, attention_output_gpu[i], intermediate_output_gpu[i]);
+            intermediate_act_fn[i]->compute_(batch_size * seq_length * intermediate_size, intermediate_output_gpu[i], stream);
 
             // output
-            output_dense[i]->_in_compute(batch_size * seq_length, intermediate_output[i], layer_output[i]);
-            output_layer_norm[i]->compute_(batch_size * seq_length, attention_output[i], layer_output[i], stream);
+            output_dense[i]->_in_compute(batch_size * seq_length, intermediate_output_gpu[i], layer_output_gpu[i]);
+            output_layer_norm[i]->compute_(batch_size * seq_length, attention_output_gpu[i], layer_output_gpu[i], stream);
 
-            prev_output = layer_output[i];
+            prev_output = layer_output_gpu[i];
+        }
+
+        return prev_output;
+    }
+
+    float *Transformer::compute_cpu(size_t batch_size, float *input_cpu, char *attention_mask) {
+        _pre_compute_cpu(batch_size);
+        return _in_compute_cpu(batch_size, input_cpu, attention_mask);
+    }
+
+    void Transformer::_pre_compute_cpu(size_t batch_size) {
+        for (int i = 0; i < num_hidden_layers; ++i) {
+            attention_self_cpu[i]->_pre_compute_cpu(batch_size);
+            attention_output_dense[i]->_pre_compute_cpu(batch_size * seq_length, attention_output_cpu[i]);
+            intermediate_dense[i]->_pre_compute_cpu(batch_size * seq_length, intermediate_output_cpu[i]);
+            output_dense[i]->_pre_compute_cpu(batch_size * seq_length, layer_output_cpu[i]);
+        }
+    }
+
+    float *Transformer::_in_compute_cpu(size_t batch_size, float *input_cpu, char *attention_mask) {
+        this->attention_mask->compute_cpu(batch_size, attention_mask, neg_attention_mask_buffer_cpu);
+
+        float *prev_output = input_cpu;
+
+        for (int i = 0; i < num_hidden_layers; ++i) {
+            float *layer_input = prev_output;
+
+            // attention/self
+            attention_self_cpu[i]->_in_compute_cpu(batch_size, layer_input, neg_attention_mask_buffer_cpu);
+
+            // attention/output
+            attention_output_dense[i]->_in_compute_cpu(batch_size * seq_length, attention_heads_cpu[i], attention_output_cpu[i]);
+            attention_output_norm[i]->compute_cpu_(batch_size * seq_length, layer_input, attention_output_cpu[i]);
+
+            // intermediate
+            intermediate_dense[i]->_in_compute_cpu(batch_size * seq_length, attention_output_cpu[i], intermediate_output_cpu[i]);
+            intermediate_act_fn[i]->compute_cpu_(batch_size * seq_length * intermediate_size, intermediate_output_cpu[i]);
+
+            // output
+            output_dense[i]->_in_compute_cpu(batch_size * seq_length, intermediate_output_cpu[i], layer_output_cpu[i]);
+            output_layer_norm[i]->compute_cpu_(batch_size * seq_length, attention_output_cpu[i], layer_output_cpu[i]);
+
+            prev_output = layer_output_cpu[i];
         }
 
         return prev_output;

@@ -50,7 +50,7 @@ namespace cuBERT {
         std::mutex *mutex_instance = mutex_instances[choice];
 
         std::lock_guard<std::mutex> lg(*mutex_instance);
-        bert_instance->compute_cpu(batch_size, input_ids, input_mask, segment_ids);
+        bert_instance->compute(batch_size, input_ids, input_mask, segment_ids);
         bert_instance->logits(batch_size, logits);
 
         return choice;

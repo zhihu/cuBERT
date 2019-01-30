@@ -1,4 +1,5 @@
 #include <cmath>
+#include <cstring>
 #include <cuda_runtime.h>
 
 #include "cuBERT/common.h"
@@ -42,27 +43,47 @@ namespace cuBERT {
 
         softmax = new Softmax(max_batch_size * num_attention_heads * seq_length, seq_length);
 
-        CUDA_CHECK(cudaMalloc(&query_layer_out, sizeof(float) * max_batch_size * seq_length * num_attention_heads * size_per_head));
-        CUDA_CHECK(cudaMalloc(&key_layer_out, sizeof(float) * max_batch_size * seq_length * num_attention_heads * size_per_head));
-        CUDA_CHECK(cudaMalloc(&value_layer_out, sizeof(float) * max_batch_size * seq_length * num_attention_heads * size_per_head));
-        CUDA_CHECK(cudaMalloc(&attention_scores, sizeof(float) * max_batch_size * num_attention_heads * seq_length * seq_length));
+        CUDA_CHECK(cudaMalloc(&query_layer_out_gpu, sizeof(float) * max_batch_size * seq_length * num_attention_heads * size_per_head));
+        CUDA_CHECK(cudaMalloc(&key_layer_out_gpu, sizeof(float) * max_batch_size * seq_length * num_attention_heads * size_per_head));
+        CUDA_CHECK(cudaMalloc(&value_layer_out_gpu, sizeof(float) * max_batch_size * seq_length * num_attention_heads * size_per_head));
+        CUDA_CHECK(cudaMalloc(&attention_scores_gpu, sizeof(float) * max_batch_size * num_attention_heads * seq_length * seq_length));
 
-        bqk = new BertQK(cublas, max_batch_size, seq_length, num_attention_heads, size_per_head,
-                         query_layer_out, key_layer_out, attention_scores,
+        bqk_gpu = new BertQK(cublas, max_batch_size, seq_length, num_attention_heads, size_per_head,
+                         query_layer_out_gpu, key_layer_out_gpu, attention_scores_gpu,
                          1.0 / std::sqrt(size_per_head), -10000.0f);
 
-        bqkv = new BertQKV(cublas, max_batch_size, seq_length, num_attention_heads, size_per_head,
-                           attention_scores, value_layer_out, context_layer_out);
+        bqkv_gpu = new BertQKV(cublas, max_batch_size, seq_length, num_attention_heads, size_per_head,
+                           attention_scores_gpu, value_layer_out_gpu, context_layer_out);
+
+        this->query_layer_out_cpu = new float[max_batch_size * seq_length * num_attention_heads * size_per_head];
+        this->key_layer_out_cpu = new float[max_batch_size * seq_length * num_attention_heads * size_per_head];
+        this->value_layer_out_cpu = new float[max_batch_size * seq_length * num_attention_heads * size_per_head];
+        this->attention_scores_cpu = new float[max_batch_size * seq_length * num_attention_heads * size_per_head];
+
+        bqk_cpu = new BertQK(cublas, max_batch_size, seq_length, num_attention_heads, size_per_head,
+                             query_layer_out_cpu, key_layer_out_cpu, attention_scores_cpu,
+                             1.0 / std::sqrt(size_per_head), -10000.0f);
+
+        bqkv_cpu = new BertQKV(cublas, max_batch_size, seq_length, num_attention_heads, size_per_head,
+                               attention_scores_cpu, value_layer_out_cpu, context_layer_out);
     }
 
     AttentionSelf::~AttentionSelf() {
-        delete bqkv;
-        delete bqk;
+        delete bqkv_cpu;
+        delete bqk_cpu;
 
-        CUDA_CHECK(cudaFree(attention_scores));
-        CUDA_CHECK(cudaFree(value_layer_out));
-        CUDA_CHECK(cudaFree(key_layer_out));
-        CUDA_CHECK(cudaFree(query_layer_out));
+        delete[] attention_scores_cpu;
+        delete[] value_layer_out_cpu;
+        delete[] key_layer_out_cpu;
+        delete[] query_layer_out_cpu;
+
+        delete bqkv_gpu;
+        delete bqk_gpu;
+
+        CUDA_CHECK(cudaFree(attention_scores_gpu));
+        CUDA_CHECK(cudaFree(value_layer_out_gpu));
+        CUDA_CHECK(cudaFree(key_layer_out_gpu));
+        CUDA_CHECK(cudaFree(query_layer_out_gpu));
 
         delete softmax;
         delete value_layer;
@@ -79,9 +100,9 @@ namespace cuBERT {
         cudaStream_t stream = nullptr;
         CUBLAS_CHECK(cublasGetStream_v2(cublas, &stream));
 
-        query_layer->_pre_compute(batch_size * seq_length, query_layer_out);
-        key_layer->_pre_compute(batch_size * seq_length, key_layer_out);
-        value_layer->_pre_compute(batch_size * seq_length, value_layer_out);
+        query_layer->_pre_compute(batch_size * seq_length, query_layer_out_gpu);
+        key_layer->_pre_compute(batch_size * seq_length, key_layer_out_gpu);
+        value_layer->_pre_compute(batch_size * seq_length, value_layer_out_gpu);
     }
 
     void AttentionSelf::_in_compute(size_t batch_size, float *in_gpu, float *neg_attention_mask) {
@@ -89,18 +110,43 @@ namespace cuBERT {
         CUBLAS_CHECK(cublasGetStream_v2(cublas, &stream));
 
         CUDA_CHECK(cudaMemcpyAsync(
-                attention_scores, neg_attention_mask,
+                attention_scores_gpu, neg_attention_mask,
                 sizeof(float) * batch_size * num_attention_heads * seq_length * seq_length,
                 cudaMemcpyDeviceToDevice,
                 stream));
 
-        query_layer->_in_compute(batch_size * seq_length, in_gpu, query_layer_out);
-        key_layer->_in_compute(batch_size * seq_length, in_gpu, key_layer_out);
-        value_layer->_in_compute(batch_size * seq_length, in_gpu, value_layer_out);
+        query_layer->_in_compute(batch_size * seq_length, in_gpu, query_layer_out_gpu);
+        key_layer->_in_compute(batch_size * seq_length, in_gpu, key_layer_out_gpu);
+        value_layer->_in_compute(batch_size * seq_length, in_gpu, value_layer_out_gpu);
 
-        bqk->compute(batch_size);
-        softmax->compute_(batch_size * num_attention_heads * seq_length, attention_scores, stream);
+        bqk_gpu->compute(batch_size);
+        softmax->compute_(batch_size * num_attention_heads * seq_length, attention_scores_gpu, stream);
 
-        bqkv->compute(batch_size);
+        bqkv_gpu->compute(batch_size);
+    }
+
+    void AttentionSelf::compute_cpu(size_t batch_size, float *in_cpu, float *neg_attention_mask) {
+        _pre_compute_cpu(batch_size);
+        _in_compute_cpu(batch_size, in_cpu, neg_attention_mask);
+    }
+
+    void AttentionSelf::_pre_compute_cpu(size_t batch_size) {
+        query_layer->_pre_compute_cpu(batch_size * seq_length, query_layer_out_cpu);
+        key_layer->_pre_compute_cpu(batch_size * seq_length, key_layer_out_cpu);
+        value_layer->_pre_compute_cpu(batch_size * seq_length, value_layer_out_cpu);
+    }
+
+    void AttentionSelf::_in_compute_cpu(size_t batch_size, float *in_cpu, float *neg_attention_mask) {
+        std::memcpy(attention_scores_cpu, neg_attention_mask,
+                    sizeof(float) * batch_size * num_attention_heads * seq_length * seq_length);
+
+        query_layer->_in_compute_cpu(batch_size * seq_length, in_cpu, query_layer_out_cpu);
+        key_layer->_in_compute_cpu(batch_size * seq_length, in_cpu, key_layer_out_cpu);
+        value_layer->_in_compute_cpu(batch_size * seq_length, in_cpu, value_layer_out_cpu);
+
+        bqk_cpu->compute_cpu(batch_size);
+        softmax->compute_cpu_(batch_size * num_attention_heads * seq_length, attention_scores_cpu);
+
+        bqkv_cpu->compute_cpu(batch_size);
     }
 }

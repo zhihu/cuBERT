@@ -23,14 +23,21 @@ namespace cuBERT {
 
         void compute(size_t batch_size, char *in_gpu, float *out_gpu);
 
+        void compute_cpu(size_t batch_size, char *in_cpu, float *out_cpu);
+
     private:
         cublasHandle_t handle;
 
         size_t seq_length;
         size_t num_attention_heads;
 
+        // gpu buffer
         float *ones_gpu;
         float *neg_gpu;
+
+        // cpu buffer
+        float *ones_cpu;
+        float *neg_cpu;
     };
 }
 

@@ -1,3 +1,4 @@
+#include <cstring>
 #include "cuBERT/common.h"
 
 #include "Bert.h"
@@ -33,9 +34,12 @@ namespace cuBERT {
 
         this->additional_output_layer = new AdditionalOutputLayer(cublas, hidden_size, var.at("output_weights"));
 
+        this->embedding_output_cpu = new float[max_batch_size * seq_length * hidden_size];
+        this->pooled_output_cpu = new float[max_batch_size * hidden_size];
+        this->logits_cpu = new float[max_batch_size];
+
         CUDA_CHECK(cudaMalloc(&this->embedding_output_gpu, sizeof(float) * max_batch_size * seq_length * hidden_size));
         CUDA_CHECK(cudaMalloc(&this->pooled_output_gpu, sizeof(float) * max_batch_size * hidden_size));
-
         CUDA_CHECK(cudaMalloc(&this->logits_gpu, sizeof(float) * max_batch_size));
 
         CUDA_CHECK(cudaMalloc(&this->input_ids_gpu, sizeof(int) * max_batch_size * seq_length));
@@ -53,9 +57,12 @@ namespace cuBERT {
         CUDA_CHECK(cudaFree(input_ids_gpu));
 
         CUDA_CHECK(cudaFree(logits_gpu));
-
         CUDA_CHECK(cudaFree(pooled_output_gpu));
         CUDA_CHECK(cudaFree(embedding_output_gpu));
+
+        delete[] logits_cpu;
+        delete[] pooled_output_cpu;
+        delete[] embedding_output_cpu;
 
         delete additional_output_layer;
         delete bert_pooler;
@@ -66,7 +73,7 @@ namespace cuBERT {
         CUDA_CHECK(cudaStreamDestroy(stream));
     }
 
-    void Bert::compute_cpu(size_t batch_size, int *input_ids, char *input_mask, char *segment_ids) {
+    void Bert::compute(size_t batch_size, int *input_ids, char *input_mask, char *segment_ids) {
         // copy inputs
         cudaStream_t streamId = nullptr;
         CUBLAS_CHECK(cublasGetStream_v2(cublas, &streamId));
@@ -96,6 +103,22 @@ namespace cuBERT {
         buffer_filled = false;
     }
 
+    void Bert::compute_cpu(size_t batch_size, int *input_ids, char *input_mask, char *segment_ids) {
+        // pre-compute buffers
+        transformer->_pre_compute_cpu(batch_size);
+
+        // bert/embeddings
+        bert_embeddings->compute_cpu(batch_size, input_ids, segment_ids, embedding_output_cpu);
+
+        // bert/encoder
+        sequence_output_cpu = transformer->_in_compute_cpu(batch_size, embedding_output_cpu, input_mask);
+
+        // bert/pooler
+        bert_pooler->compute_cpu(batch_size, sequence_output_cpu, pooled_output_cpu);
+
+        additional_output_layer->compute_cpu(batch_size, pooled_output_cpu, logits_cpu);
+    }
+
     void Bert::logits(size_t batch_size, float *logits) {
         cudaStream_t streamId = nullptr;
         CUBLAS_CHECK(cublasGetStream_v2(cublas, &streamId));
@@ -123,5 +146,13 @@ namespace cuBERT {
             transformer->_pre_compute(batch_size);
             buffer_filled = true;
         }
+    }
+
+    float *Bert::get_logits_cpu() {
+        return this->logits_cpu;
+    }
+
+    float *Bert::get_embedding_output_cpu() {
+        return this->embedding_output_cpu;
     }
 }

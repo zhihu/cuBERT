@@ -24,11 +24,17 @@ namespace cuBERT {
 
         virtual ~Bert();
 
-        void compute_cpu(size_t batch_size, int *input_ids, char *input_mask, char *segment_ids);
+        void compute(size_t batch_size, int *input_ids, char *input_mask, char *segment_ids);
 
         void logits(size_t batch_size, float *logits);
 
         void embedding_output(size_t batch_size, float *embedding_output);
+
+        void compute_cpu(size_t batch_size, int *input_ids, char *input_mask, char *segment_ids);
+
+        float *get_logits_cpu();
+
+        float *get_embedding_output_cpu();
 
     private:
         cublasHandle_t cublas;
@@ -47,11 +53,18 @@ namespace cuBERT {
         char *input_mask_gpu;
         char *segment_ids_gpu;
 
+        // gpu buffers
         float *embedding_output_gpu;
         float *sequence_output_gpu;
         float *pooled_output_gpu;
-
         float *logits_gpu;
+
+        // cpu buffers
+        float *embedding_output_cpu;
+        float *sequence_output_cpu;
+        float *pooled_output_cpu;
+
+        float *logits_cpu;
 
         // for pre-compute
         // FIXME: sequence_output_gpu will be flushed

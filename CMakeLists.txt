@@ -70,6 +70,9 @@ target_link_libraries(cuBERT
 add_executable(cuBERT_benchmark benchmark.cpp)
 target_link_libraries(cuBERT_benchmark cuBERT)
 
+add_executable(mklBERT_benchmark benchmark_mkl.cpp)
+target_link_libraries(mklBERT_benchmark cuBERT)
+
 add_executable(tfBERT_benchmark benchmark_tf.cpp)
 target_link_libraries(tfBERT_benchmark tensorflow)
 

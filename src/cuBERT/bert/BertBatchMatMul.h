@@ -1,7 +1,3 @@
-//
-// Created by 田露 on 2019/1/26.
-//
-
 #ifndef CUBERT_BERTQK_H
 #define CUBERT_BERTQK_H
 
@@ -29,6 +25,8 @@ namespace cuBERT {
 
         void compute(size_t batch_size);
 
+        void compute_cpu(size_t batch_size);
+
     private:
         cublasHandle_t handle;
 
@@ -39,9 +37,15 @@ namespace cuBERT {
         float alpha;
         float beta;
 
+        // gpu buffer
         const float **query_array_gpu;
         const float **key_array_gpu;
         float **out_array_gpu;
+
+        // cpu buffer
+        const float **query_array_cpu;
+        const float **key_array_cpu;
+        float **out_array_cpu;
     };
 
     class BertQKV {
@@ -56,6 +60,8 @@ namespace cuBERT {
 
         void compute(size_t batch_size);
 
+        void compute_cpu(size_t batch_size);
+
     private:
         cublasHandle_t handle;
 
@@ -66,9 +72,15 @@ namespace cuBERT {
         float alpha;
         float beta;
 
+        // gpu buffer
         const float **qk_array_gpu;
         const float **value_array_gpu;
         float **out_array_gpu;
+
+        // cpu buffer
+        const float **qk_array_cpu;
+        const float **value_array_cpu;
+        float **out_array_cpu;
     };
 }
 
