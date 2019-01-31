@@ -2,13 +2,12 @@
 #define CUBERT_ATTENTIONMASK_H
 
 #include <cstddef>
-#include <cublas_v2.h>
 
 namespace cuBERT {
-    __host__ void _not(const char *in,
-                       float *out,
-                       const int N,
-                       cudaStream_t stream);
+    void _not(const char *in,
+              float *out,
+              const int N,
+              void *stream);
 
 /**
  * 1. compute: 1 - in_gpu
@@ -16,28 +15,22 @@ namespace cuBERT {
  */
     class AttentionMask {
     public:
-        explicit AttentionMask(cublasHandle_t handle, size_t seq_length, size_t num_attention_heads,
+        explicit AttentionMask(void* handle, size_t seq_length, size_t num_attention_heads,
                                size_t max_batch_size);
 
         virtual ~AttentionMask();
 
         void compute(size_t batch_size, char *in_gpu, float *out_gpu);
 
-        void compute_cpu(size_t batch_size, char *in_cpu, float *out_cpu);
-
     private:
-        cublasHandle_t handle;
+        void* handle;
 
         size_t seq_length;
         size_t num_attention_heads;
 
-        // gpu buffer
-        float *ones_gpu;
-        float *neg_gpu;
-
-        // cpu buffer
-        float *ones_cpu;
-        float *neg_cpu;
+        // cpu/gpu buffer
+        float *ones;
+        float *neg;
     };
 }
 

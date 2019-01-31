@@ -5,7 +5,6 @@
 #include <cstddef>
 #include <unordered_map>
 #include <string>
-#include <cublas_v2.h>
 
 #include "cuBERT/op/Embedding.h"
 #include "cuBERT/op/LayerNorm.h"
@@ -13,7 +12,7 @@
 namespace cuBERT {
     class BertEmbeddings {
     public:
-        explicit BertEmbeddings(cublasHandle_t handle,
+        explicit BertEmbeddings(void* handle,
                                 const std::unordered_map<std::string, float *> &var,
                                 size_t max_batch_size,
                                 size_t vocab_size, size_t type_vocab_size, size_t hidden_size, size_t seq_length);
@@ -22,10 +21,8 @@ namespace cuBERT {
 
         void compute(size_t batch_size, int *input_ids_gpu, char *token_type_ids_gpu, float *out_gpu);
 
-        void compute_cpu(size_t batch_size, int *input_ids_cpu, char *token_type_ids_cpu, float *out_cpu);
-
     private:
-        cublasHandle_t handle;
+        void* handle;
 
         size_t seq_length;
         size_t hidden_size;
@@ -35,14 +32,9 @@ namespace cuBERT {
         LayerNorm *layer_norm;
 
         // gpu buffer
-        float *position_embeddings_gpu;
-        float *ones_gpu;
-        float *token_type_embeddings_out_gpu;
-
-        // cpu buffer
-        float *position_embeddings_cpu;
-        float *ones_cpu;
-        float *token_type_embeddings_out_cpu;
+        float *position_embeddings;
+        float *ones;
+        float *token_type_embeddings_out;
     };
 }
 

@@ -13,7 +13,7 @@
 namespace cuBERT {
     class Transformer {
     public:
-        explicit Transformer(cublasHandle_t cublas,
+        explicit Transformer(void* cublas,
                              const std::string &var_prefix,
                              const std::unordered_map<std::string, float *> &var,
                              size_t max_batch_size,
@@ -37,14 +37,8 @@ namespace cuBERT {
 
         float *_in_compute(size_t batch_size, float *input_gpu, char *attention_mask);
 
-        float *compute_cpu(size_t batch_size, float *input_cpu, char *attention_mask);
-
-        void _pre_compute_cpu(size_t batch_size);
-
-        float *_in_compute_cpu(size_t batch_size, float *input_cpu, char *attention_mask);
-
     private:
-        cublasHandle_t cublas;
+        void* cublas;
 
         size_t num_hidden_layers;
         size_t seq_length;
@@ -57,23 +51,14 @@ namespace cuBERT {
         std::vector<GELU *> intermediate_act_fn;
         std::vector<Dense *> output_dense;
         std::vector<LayerNorm *> output_layer_norm;
-
-        std::vector<AttentionSelf *> attention_self_gpu;
-        std::vector<AttentionSelf *> attention_self_cpu;
+        std::vector<AttentionSelf *> attention_self;
 
         // gpu buffer
-        float *neg_attention_mask_buffer_gpu;
-        std::vector<float *> attention_heads_gpu;
-        std::vector<float *> attention_output_gpu;
-        std::vector<float *> intermediate_output_gpu;
-        std::vector<float *> layer_output_gpu;
-
-        // cpu buffer
-        float *neg_attention_mask_buffer_cpu;
-        std::vector<float *> attention_heads_cpu;
-        std::vector<float *> attention_output_cpu;
-        std::vector<float *> intermediate_output_cpu;
-        std::vector<float *> layer_output_cpu;
+        float *neg_attention_mask_buffer;
+        std::vector<float *> attention_heads;
+        std::vector<float *> attention_output;
+        std::vector<float *> intermediate_output;
+        std::vector<float *> layer_output;
     };
 }
 

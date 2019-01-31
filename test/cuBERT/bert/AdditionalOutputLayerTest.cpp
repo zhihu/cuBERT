@@ -2,6 +2,7 @@
 #include <cuda_runtime.h>
 #include <cublas_v2.h>
 
+#include "cuBERT/common.h"
 #include "cuBERT/bert/AdditionalOutputLayer.h"
 using namespace cuBERT;
 
@@ -9,10 +10,12 @@ class AdditionalOutputLayerTest : public ::testing::Test {
 protected:
     void SetUp() override {
         cublasCreate_v2(&handle);
+        cuBERT::initialize();
     }
 
     void TearDown() override {
         cublasDestroy_v2(handle);
+        cuBERT::finalize();
     }
 
     cublasHandle_t handle;
@@ -48,12 +51,22 @@ TEST_F(AdditionalOutputLayerTest, compute) {
     EXPECT_FLOAT_EQ(out[1], 6);
 }
 
+class AdditionalOutputLayerCPUTest : public ::testing::Test {
+protected:
+    void SetUp() override {
+        cuBERT::initialize(true);
+    }
 
-TEST_F(AdditionalOutputLayerTest, compute_cpu) {
+    void TearDown() override {
+        cuBERT::finalize();
+    }
+};
+
+TEST_F(AdditionalOutputLayerCPUTest, compute_cpu) {
     size_t hidden_size = 3;
     float output_weights[3] = {-1, 0, 1};
 
-    AdditionalOutputLayer aol(handle, hidden_size, output_weights);
+    AdditionalOutputLayer aol(nullptr, hidden_size, output_weights);
 
     float in[6] = {
             2, 8, 3,
@@ -61,7 +74,7 @@ TEST_F(AdditionalOutputLayerTest, compute_cpu) {
     };
     float out[2];
 
-    aol.compute_cpu(2, in, out);
+    aol.compute(2, in, out);
 
     EXPECT_FLOAT_EQ(out[0], 1);
     EXPECT_FLOAT_EQ(out[1], 6);

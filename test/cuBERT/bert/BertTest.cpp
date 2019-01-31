@@ -1,6 +1,7 @@
 #include "gtest/gtest.h"
 #include <unordered_map>
 
+#include "cuBERT/common.h"
 #include "cuBERT/bert/Bert.h"
 #include "cuBERT/tf/Graph.h"
 using namespace cuBERT;
@@ -9,10 +10,12 @@ class BertTest : public ::testing::Test {
 protected:
     void SetUp() override {
         graph = new Graph("bert_frozen_seq32.pb");
+        cuBERT::initialize();
     }
 
     void TearDown() override {
         delete graph;
+        cuBERT::finalize();
     }
 
     Graph* graph;
@@ -51,7 +54,22 @@ TEST_F(BertTest, compute) {
     EXPECT_FLOAT_EQ(logits[1], -1.4876306);
 }
 
-TEST_F(BertTest, compute_cpu) {
+class BertCPUTest : public ::testing::Test {
+protected:
+    void SetUp() override {
+        graph = new Graph("bert_frozen_seq32.pb");
+        cuBERT::initialize(true);
+    }
+
+    void TearDown() override {
+        delete graph;
+        cuBERT::finalize();
+    }
+
+    Graph* graph;
+};
+
+TEST_F(BertCPUTest, compute_cpu) {
     Bert bert(graph->var, 128, 32, graph->vocab_size, graph->type_vocab_size);
 
     int input_ids[] = {
@@ -67,9 +85,9 @@ TEST_F(BertTest, compute_cpu) {
             1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0, 1, 0,
             0, 1, 1, 0, 0, 1, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 1, 1, 1, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 0};
 
-    bert.compute_cpu(2, input_ids, input_mask, segment_ids);
+    bert.compute(2, input_ids, input_mask, segment_ids);
 
-    float* embedding_output = bert.get_embedding_output_cpu();
+    float* embedding_output = bert.get_embedding_output();
     EXPECT_FLOAT_EQ(embedding_output[0], 0.1593448);
     EXPECT_FLOAT_EQ(embedding_output[1], 0.21887021);
     EXPECT_FLOAT_EQ(embedding_output[2], -0.3861023);
@@ -77,7 +95,7 @@ TEST_F(BertTest, compute_cpu) {
     EXPECT_FLOAT_EQ(embedding_output[49150], -0.029199962);
     EXPECT_FLOAT_EQ(embedding_output[49151], 0.33240327);
 
-    float* logits = bert.get_logits_cpu();
+    float* logits = bert.get_logits();
     EXPECT_FLOAT_EQ(logits[0], -2.9427543);
     EXPECT_FLOAT_EQ(logits[1], -1.4876313);
 }

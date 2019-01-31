@@ -1,15 +1,19 @@
-//
-// Created by 田露 on 2019/1/22.
-//
-
 #include "gtest/gtest.h"
 #include <cuda_runtime.h>
 
+#include "cuBERT/common.h"
 #include "cuBERT/op/Embedding.h"
 using namespace cuBERT;
 
 class EmbeddingTest : public ::testing::Test {
+protected:
+    void SetUp() override {
+        cuBERT::initialize();
+    }
 
+    void TearDown() override {
+        cuBERT::finalize();
+    }
 };
 
 TEST_F(EmbeddingTest, compute) {
@@ -52,7 +56,18 @@ TEST_F(EmbeddingTest, compute) {
     EXPECT_FLOAT_EQ(out[8], 5);
 }
 
-TEST_F(EmbeddingTest, compute_cpu) {
+class EmbeddingCPUTest : public ::testing::Test {
+protected:
+    void SetUp() override {
+        cuBERT::initialize(true);
+    }
+
+    void TearDown() override {
+        cuBERT::finalize();
+    }
+};
+
+TEST_F(EmbeddingCPUTest, compute_cpu) {
     size_t vocab_size = 4;
     size_t embedding_size = 3;
 
@@ -68,7 +83,7 @@ TEST_F(EmbeddingTest, compute_cpu) {
     int input_ids[3] = {2, 2, 1};
     float out[9];
 
-    embedding.compute_cpu(input_ids, 3, out);
+    embedding.compute(input_ids, 3, out, nullptr);
 
     EXPECT_FLOAT_EQ(out[0], 6);
     EXPECT_FLOAT_EQ(out[1], 7);

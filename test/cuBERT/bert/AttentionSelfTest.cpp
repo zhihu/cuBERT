@@ -3,6 +3,7 @@
 #include <cublas_v2.h>
 #include <algorithm>
 
+#include "cuBERT/common.h"
 #include "cuBERT/bert/AttentionSelf.h"
 using namespace cuBERT;
 
@@ -10,10 +11,12 @@ class AttentionSelfTest : public ::testing::Test {
 protected:
     void SetUp() override {
         cublasCreate_v2(&cublas);
+        cuBERT::initialize();
     }
 
     void TearDown() override {
         cublasDestroy_v2(cublas);
+        cuBERT::finalize();
     }
 
     cublasHandle_t cublas;
@@ -108,7 +111,19 @@ TEST_F(AttentionSelfTest, compute) {
     EXPECT_FLOAT_EQ(out[47], -1.3139831);
 }
 
-TEST_F(AttentionSelfTest, compute_cpu) {
+
+class AttentionSelfCPUTest : public ::testing::Test {
+protected:
+    void SetUp() override {
+        cuBERT::initialize(true);
+    }
+
+    void TearDown() override {
+        cuBERT::finalize();
+    }
+};
+
+TEST_F(AttentionSelfCPUTest, compute_cpu) {
     float query_kernel[] = {-0.07848196, -0.18097023, 0.06933199, -0.07760319, 0.11389876, 0.05236414,
                             -0.02015782, 0.00233333, -0.00281469, -0.01525305, 0.17362033, -0.01600084,
                             0.00521428, 0.06063714, -0.10533229, 0.0228875, -0.00108843, -0.05974746,
@@ -163,10 +178,10 @@ TEST_F(AttentionSelfTest, compute_cpu) {
     float out[48];
 
     // compute
-    AttentionSelf attention_self(cublas, "attention/self", var, 32, seq_length,
+    AttentionSelf attention_self(nullptr, "attention/self", var, 32, seq_length,
                                  out,
                                  num_attention_heads * size_per_head, num_attention_heads, size_per_head);
-    attention_self.compute_cpu(batch_size, tensor, mask);
+    attention_self.compute(batch_size, tensor, mask);
 
     EXPECT_FLOAT_EQ(out[0], 3.1048317);
     EXPECT_FLOAT_EQ(out[1], 0.9379833);

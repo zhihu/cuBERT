@@ -24,9 +24,9 @@ namespace cuBERT {
                             const float *embedding_table,
                             const int embedding_size,
                             float *output,
-                            cudaStream_t stream) {
+                            void* stream) {
         const int blocks = (input_ids_len + 127) / 128;
-        kernel_embedding<T> << < blocks, 128, 0, stream >> > (input_ids,
+        kernel_embedding<T> << < blocks, 128, 0, (cudaStream_t) stream >> > (input_ids,
                 input_ids_len,
                 embedding_table,
                 embedding_size,
@@ -39,7 +39,7 @@ namespace cuBERT {
                                  const float *embedding_table,
                                  const int embedding_size,
                                  float *output,
-                                 cudaStream_t stream);
+                                 void* stream);
 
     template
     __host__ void embedding<char>(const char *input_ids,
@@ -47,5 +47,5 @@ namespace cuBERT {
                                   const float *embedding_table,
                                   const int embedding_size,
                                   float *output,
-                                  cudaStream_t stream);
+                                  void* stream);
 }

@@ -3,7 +3,6 @@
 
 
 #include <cstddef>
-#include <cublas_v2.h>
 
 namespace cuBERT {
 /**
@@ -16,7 +15,7 @@ namespace cuBERT {
  */
     class Dense {
     public:
-        explicit Dense(cublasHandle_t handle,
+        explicit Dense(void* handle,
                        size_t inputs,
                        size_t units,
                        float *kernel,
@@ -25,31 +24,21 @@ namespace cuBERT {
 
         virtual ~Dense();
 
-        void _pre_compute(size_t batch_size, float *output_gpu);
+        void _pre_compute(size_t batch_size, float *output);
 
-        void _in_compute(size_t batch_size, float *input_gpu, float *output_gpu);
+        void _in_compute(size_t batch_size, float *input, float *output);
 
-        void compute(size_t batch_size, float *input_gpu, float *output_gpu);
-
-        void _pre_compute_cpu(size_t batch_size, float *output_cpu);
-
-        void _in_compute_cpu(size_t batch_size, float *input_cpu, float *output_cpu);
-
-        void compute_cpu(size_t batch_size, float *input_cpu, float *output_cpu);
+        void compute(size_t batch_size, float *input, float *output);
 
     private:
-        cublasHandle_t handle;
+        void* handle;
 
         size_t inputs;
         size_t units;
 
-        // gpu buffer
-        float *kernel_gpu;
-        float *bias_gpu;
-
-        // cpu buffer
-        float *kernel_cpu;
-        float *bias_cpu;
+        // gpu/cpu buffer
+        float *kernel;
+        float *bias;
     };
 }
 

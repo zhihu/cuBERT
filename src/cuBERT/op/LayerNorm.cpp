@@ -1,7 +1,4 @@
-#include <algorithm>
-#include <cstring>
 #include <cmath>
-#include <cuda_runtime.h>
 #include <omp.h>
 
 #include "cuBERT/common.h"
@@ -11,44 +8,29 @@ namespace cuBERT {
     LayerNorm::LayerNorm(size_t max_batch_size, size_t channels, float *beta, float *gamma) {
         this->channels = channels;
 
-        CUDA_CHECK(cudaMalloc(&this->beta_gpu, channels * sizeof(float)));
-        CUDA_CHECK(cudaMalloc(&this->gamma_gpu, channels * sizeof(float)));
+        this->mean_gpu = static_cast<float *>(cuBERT::malloc(max_batch_size * sizeof(float)));
+        this->var_gpu = static_cast<float *>(cuBERT::malloc(max_batch_size * sizeof(float)));
 
-        CUDA_CHECK(cudaMemcpy(beta_gpu, beta, channels * sizeof(float), cudaMemcpyHostToDevice));
-        CUDA_CHECK(cudaMemcpy(gamma_gpu, gamma, channels * sizeof(float), cudaMemcpyHostToDevice));
-
-        CUDA_CHECK(cudaMalloc(&this->mean_gpu, max_batch_size * sizeof(float)));
-        CUDA_CHECK(cudaMalloc(&this->var_gpu, max_batch_size * sizeof(float)));
-
-        this->beta_cpu = new float[channels];
-        this->gamma_cpu = new float[channels];
-        std::memcpy(beta_cpu, beta, channels * sizeof(float));
-        std::memcpy(gamma_cpu, gamma, channels * sizeof(float));
+        this->beta = static_cast<float *>(cuBERT::malloc(channels * sizeof(float)));
+        this->gamma = static_cast<float *>(cuBERT::malloc(channels * sizeof(float)));
+        cuBERT::memcpy(this->beta, beta, channels * sizeof(float), 1);
+        cuBERT::memcpy(this->gamma, gamma, channels * sizeof(float), 1);
     }
 
     LayerNorm::~LayerNorm() {
-        delete[] gamma_cpu;
-        delete[] beta_cpu;
+        cuBERT::free(gamma);
+        cuBERT::free(beta);
 
-        CUDA_CHECK(cudaFree(var_gpu));
-        CUDA_CHECK(cudaFree(mean_gpu));
-
-        CUDA_CHECK(cudaFree(gamma_gpu));
-        CUDA_CHECK(cudaFree(beta_gpu));
+        cuBERT::free(var_gpu);
+        cuBERT::free(mean_gpu);
     }
 
-    void LayerNorm::compute_(size_t batch_size, float *inout_gpu, cudaStream_t stream) {
-        layer_norm_(inout_gpu, batch_size, channels, beta_gpu, gamma_gpu, stream);
-    }
+    void LayerNorm::compute_(size_t batch_size, float *inout, void* stream) {
+        if (cuBERT::gpu()) {
+            layer_norm_(inout, batch_size, channels, beta, gamma, stream);
+            return;
+        }
 
-    void LayerNorm::compute_(size_t batch_size, float *in_gpu, float *inout_gpu, cudaStream_t stream) {
-        layer_norm_(in_gpu, inout_gpu,
-                    batch_size, channels,
-                    mean_gpu, var_gpu,
-                    beta_gpu, gamma_gpu, stream);
-    }
-
-    void LayerNorm::compute_cpu_(size_t batch_size, float *inout) {
 #pragma omp parallel for
         for (int batch_idx = 0; batch_idx < batch_size; ++batch_idx) {
             float mean = 0;
@@ -68,12 +50,17 @@ namespace cuBERT {
 #pragma unroll
             for (int i = 0; i < channels; ++i) {
                 int j = batch_idx * channels + i;
-                inout[j] = beta_cpu[i] + gamma_cpu[i] * var * (inout[j] - mean);
+                inout[j] = beta[i] + gamma[i] * var * (inout[j] - mean);
             }
         }
     }
 
-    void LayerNorm::compute_cpu_(size_t batch_size, float *in, float *inout) {
+    void LayerNorm::compute_(size_t batch_size, float *in, float *inout, void* stream) {
+        if (cuBERT::gpu()) {
+            layer_norm_(in, inout, batch_size, channels, mean_gpu, var_gpu, beta, gamma, stream);
+            return;
+        }
+
 #pragma omp parallel for
         for (int batch_idx = 0; batch_idx < batch_size; ++batch_idx) {
             float mean = 0;
@@ -93,7 +80,7 @@ namespace cuBERT {
 #pragma unroll
             for (int i = 0; i < channels; ++i) {
                 int j = batch_idx * channels + i;
-                inout[j] = beta_cpu[i] + gamma_cpu[i] * var * (inout[j] + in[j] - mean);
+                inout[j] = beta[i] + gamma[i] * var * (inout[j] + in[j] - mean);
             }
         }
     }

@@ -10,15 +10,15 @@
 #include "cuBERT/tf/Graph.h"
 
 namespace cuBERT {
-    class BertMGPU {
+    class BertM {
     public:
-        explicit BertMGPU(const char *model_file,
+        explicit BertM(const char *model_file,
                           size_t max_batch_size,
                           size_t seq_length,
                           size_t num_hidden_layers = 12,
                           size_t num_attention_heads = 12);
 
-        virtual ~BertMGPU();
+        virtual ~BertM();
 
         unsigned int compute_cpu(size_t batch_size, int *input_ids, char *input_mask, char *segment_ids, float *logits);
 

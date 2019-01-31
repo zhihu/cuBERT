@@ -1,8 +1,8 @@
 #ifndef CUBERT_BERT_H
 #define CUBERT_BERT_H
 
-
-#include <cublas_v2.h>
+#include <string>
+#include <unordered_map>
 
 #include "./BertEmbeddings.h"
 #include "./Transformer.h"
@@ -26,19 +26,19 @@ namespace cuBERT {
 
         void compute(size_t batch_size, int *input_ids, char *input_mask, char *segment_ids);
 
-        void logits(size_t batch_size, float *logits);
+        // ouput methods
 
+        // cpu/gpu outputs
+        void logits(size_t batch_size, float *logits);
         void embedding_output(size_t batch_size, float *embedding_output);
 
-        void compute_cpu(size_t batch_size, int *input_ids, char *input_mask, char *segment_ids);
-
-        float *get_logits_cpu();
-
-        float *get_embedding_output_cpu();
+        // cpu fast outputs
+        float *get_logits();
+        float *get_embedding_output();
 
     private:
-        cublasHandle_t cublas;
-        cudaStream_t stream;
+        void* cublas;
+        void* stream;
 
         size_t seq_length;
         size_t hidden_size;
@@ -48,26 +48,19 @@ namespace cuBERT {
         BertPooler *bert_pooler;
         AdditionalOutputLayer *additional_output_layer;
 
-        // buffer
-        int *input_ids_gpu;
-        char *input_mask_gpu;
-        char *segment_ids_gpu;
+        // input buffer
+        int *input_ids_buf;
+        char *input_mask_buf;
+        char *segment_ids_buf;
 
-        // gpu buffers
-        float *embedding_output_gpu;
-        float *sequence_output_gpu;
-        float *pooled_output_gpu;
-        float *logits_gpu;
-
-        // cpu buffers
-        float *embedding_output_cpu;
-        float *sequence_output_cpu;
-        float *pooled_output_cpu;
-
-        float *logits_cpu;
+        // cpu/gpu output buffers
+        float *_embedding_output;
+        float *_sequence_output;
+        float *_pooled_output;
+        float *_logits;
 
         // for pre-compute
-        // FIXME: sequence_output_gpu will be flushed
+        // FIXME: _sequence_output will be flushed
         bool buffer_filled;
     };
 }

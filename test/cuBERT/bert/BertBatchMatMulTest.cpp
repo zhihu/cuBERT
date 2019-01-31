@@ -2,6 +2,7 @@
 #include <cuda_runtime.h>
 #include <cublas_v2.h>
 
+#include "cuBERT/common.h"
 #include "cuBERT/bert/BertBatchMatMul.h"
 using namespace cuBERT;
 
@@ -9,10 +10,12 @@ class BertBatchMatMulTest : public ::testing::Test {
 protected:
     void SetUp() override {
         cublasCreate_v2(&handle);
+        cuBERT::initialize();
     }
 
     void TearDown() override {
         cublasDestroy_v2(handle);
+        cuBERT::finalize();
     }
 
     cublasHandle_t handle;
@@ -117,8 +120,18 @@ TEST_F(BertBatchMatMulTest, qk) {
     EXPECT_FLOAT_EQ(out[31], 0);
 }
 
+class BertBatchMatMulCPUTest : public ::testing::Test {
+protected:
+    void SetUp() override {
+        cuBERT::initialize(true);
+    }
 
-TEST_F(BertBatchMatMulTest, qk_cpu) {
+    void TearDown() override {
+        cuBERT::finalize();
+    }
+};
+
+TEST_F(BertBatchMatMulCPUTest, qk) {
     size_t seq_length = 2;
     size_t num_attention_heads = 4;
     size_t size_per_head = 3;
@@ -167,8 +180,8 @@ TEST_F(BertBatchMatMulTest, qk_cpu) {
     };
     float out[32];
 
-    BertQK bqk(handle, 2, seq_length, num_attention_heads, size_per_head, query, key, out);
-    bqk.compute_cpu(2);
+    BertQK bqk(nullptr, 2, seq_length, num_attention_heads, size_per_head, query, key, out);
+    bqk.compute(2);
 
     EXPECT_FLOAT_EQ(out[0], -2);
     EXPECT_FLOAT_EQ(out[1], 3);
@@ -321,7 +334,7 @@ TEST_F(BertBatchMatMulTest, qkv) {
 }
 
 
-TEST_F(BertBatchMatMulTest, qkv_compute) {
+TEST_F(BertBatchMatMulCPUTest, qkv_compute) {
     size_t seq_length = 2;
     size_t num_attention_heads = 4;
     size_t size_per_head = 3;
@@ -370,8 +383,8 @@ TEST_F(BertBatchMatMulTest, qkv_compute) {
     };
     float out[48];
 
-    BertQKV bqkv(handle, 2, seq_length, num_attention_heads, size_per_head, qk, value, out);
-    bqkv.compute_cpu(2);
+    BertQKV bqkv(nullptr, 2, seq_length, num_attention_heads, size_per_head, qk, value, out);
+    bqkv.compute(2);
 
     EXPECT_FLOAT_EQ(out[0], -2);
     EXPECT_FLOAT_EQ(out[1], 3);

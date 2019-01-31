@@ -1,7 +1,6 @@
 #ifndef CUBERT_ATTENTIONSELF_H
 #define CUBERT_ATTENTIONSELF_H
 
-#include <cublas_v2.h>
 #include <string>
 #include <unordered_map>
 
@@ -12,7 +11,7 @@
 namespace cuBERT {
     class AttentionSelf {
     public:
-        explicit AttentionSelf(cublasHandle_t cublas,
+        explicit AttentionSelf(void* cublas,
                                const std::string &var_prefix,
                                const std::unordered_map<std::string, float *> &var,
                                size_t max_batch_size,
@@ -34,14 +33,8 @@ namespace cuBERT {
 
         void _in_compute(size_t batch_size, float *in_gpu, float *neg_attention_mask);
 
-        void compute_cpu(size_t batch_size, float *in_cpu, float *neg_attention_mask);
-
-        void _pre_compute_cpu(size_t batch_size);
-
-        void _in_compute_cpu(size_t batch_size, float *in_cpu, float *neg_attention_mask);
-
     private:
-        cublasHandle_t cublas;
+        void* cublas;
 
         size_t seq_length;
         size_t num_attention_heads;
@@ -51,24 +44,14 @@ namespace cuBERT {
         Dense *key_layer;
         Dense *value_layer;
         Softmax *softmax;
+        BertQK *bqk;
+        BertQKV *bqkv;
 
-        BertQK *bqk_gpu;
-        BertQKV *bqkv_gpu;
-
-        BertQK *bqk_cpu;
-        BertQKV *bqkv_cpu;
-
-        // gpu buffers
-        float *query_layer_out_gpu;
-        float *key_layer_out_gpu;
-        float *value_layer_out_gpu;
-        float *attention_scores_gpu;
-
-        // cpu buffers
-        float *query_layer_out_cpu;
-        float *key_layer_out_cpu;
-        float *value_layer_out_cpu;
-        float *attention_scores_cpu;
+        // cpu/gpu buffers
+        float *query_layer_out;
+        float *key_layer_out;
+        float *value_layer_out;
+        float *attention_scores;
 
         // output
         float *context_layer_out;

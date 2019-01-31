@@ -13,8 +13,8 @@ namespace cuBERT {
 
     __host__ void tanh_(float *inout,
                         const int N,
-                        cudaStream_t stream) {
+                        void* stream) {
         thrust::device_ptr<float> dev_ptr(inout);
-        thrust::transform(thrust::cuda::par.on(stream), dev_ptr, dev_ptr + N, dev_ptr, tanh_functor());
+        thrust::transform(thrust::cuda::par.on((cudaStream_t) stream), dev_ptr, dev_ptr + N, dev_ptr, tanh_functor());
     }
 }

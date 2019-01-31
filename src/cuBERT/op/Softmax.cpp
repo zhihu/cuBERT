@@ -8,28 +8,29 @@ namespace cuBERT {
 
     Softmax::Softmax(size_t max_batch_size, size_t channel) {
         this->channel = channel;
-        CUDA_CHECK(cudaMalloc(&this->sum_gpu, sizeof(float) * max_batch_size));
+        this->sum_gpu = static_cast<float *>(cuBERT::malloc(sizeof(float) * max_batch_size));
     }
 
     Softmax::~Softmax() {
-        CUDA_CHECK(cudaFree(sum_gpu));
+        cuBERT::free(sum_gpu);
     }
 
-    void Softmax::compute_(size_t batch_size, float *inout_gpu, cudaStream_t stream) {
-        softmax_(inout_gpu, batch_size, channel, sum_gpu, stream);
-    }
+    void Softmax::compute_(size_t batch_size, float *inout_gpu, void* stream) {
+        if (cuBERT::gpu()) {
+            softmax_(inout_gpu, batch_size, channel, sum_gpu, stream);
+            return;
+        }
 
-    void Softmax::compute_cpu_(size_t batch_size, float *inout_cpu) {
 #pragma omp parallel for
         for (int batch_idx = 0; batch_idx < batch_size; ++batch_idx) {
             float sum = 0;
             for (int i = batch_idx * channel; i < (batch_idx + 1) * channel; ++i) {
-                inout_cpu[i] = expf(inout_cpu[i]);
-                sum += inout_cpu[i];
+                inout_gpu[i] = expf(inout_gpu[i]);
+                sum += inout_gpu[i];
             }
 
             for (int i = batch_idx * channel; i < (batch_idx + 1) * channel; ++i) {
-                inout_cpu[i] = inout_cpu[i] / sum;
+                inout_gpu[i] = inout_gpu[i] / sum;
             }
         }
     }

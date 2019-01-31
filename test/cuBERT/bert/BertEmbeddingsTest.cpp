@@ -3,6 +3,7 @@
 #include <cublas_v2.h>
 #include <cmath>
 
+#include "cuBERT/common.h"
 #include "cuBERT/bert/BertEmbeddings.h"
 using namespace cuBERT;
 
@@ -10,10 +11,12 @@ class BertEmbeddingsTest : public ::testing::Test {
 protected:
     void SetUp() override {
         cublasCreate_v2(&handle);
+        cuBERT::initialize();
     }
 
     void TearDown() override {
         cublasDestroy_v2(handle);
+        cuBERT::finalize();
     }
 
     cublasHandle_t handle;
@@ -105,7 +108,21 @@ TEST_F(BertEmbeddingsTest, compute) {
     EXPECT_NEAR(out[23], std::sqrt(1.5) - 1, 1e-6);
 }
 
-TEST_F(BertEmbeddingsTest, compute_cpu) {
+
+class BertEmbeddingsCPUTest : public ::testing::Test {
+protected:
+    void SetUp() override {
+        cuBERT::initialize(true);
+    }
+
+    void TearDown() override {
+        cuBERT::finalize();
+    }
+
+    cublasHandle_t handle;
+};
+
+TEST_F(BertEmbeddingsCPUTest, compute_cpu) {
     size_t vocab_size = 5;
     size_t type_vocab_size = 2;
     size_t hidden_size = 3;
@@ -140,7 +157,7 @@ TEST_F(BertEmbeddingsTest, compute_cpu) {
             {"bert/embeddings/LayerNorm/gamma", gamma},
     };
 
-    BertEmbeddings bert_embeddings(handle, var, 32, vocab_size, type_vocab_size, hidden_size, seq_length);
+    BertEmbeddings bert_embeddings(nullptr, var, 32, vocab_size, type_vocab_size, hidden_size, seq_length);
 
     size_t batch_size = 2;
     int input_ids[8] = {3, 0, 1, 4,
@@ -149,7 +166,7 @@ TEST_F(BertEmbeddingsTest, compute_cpu) {
                            0, 1, 0, 0};
     float out[24];
 
-    bert_embeddings.compute_cpu(batch_size, input_ids, segment_ids, out);
+    bert_embeddings.compute(batch_size, input_ids, segment_ids, out);
 
     EXPECT_NEAR(out[0], 1 - std::sqrt(1.5), 1e-6);
     EXPECT_FLOAT_EQ(out[1], 0);

@@ -40,9 +40,9 @@ namespace cuBERT {
                               const int channel,
                               float *beta,
                               float *gamma,
-                              cudaStream_t stream) {
+                              void* stream) {
         const int blocks = (batch_size + 127) / 128;
-        kernel_layer_norm_ << < blocks, 128, 0, stream >> > (inout, batch_size, channel, beta, gamma);
+        kernel_layer_norm_ << < blocks, 128, 0, (cudaStream_t) stream >> > (inout, batch_size, channel, beta, gamma);
     }
 
     __global__ void kernel_momentum_cub(const float *__restrict__ in,
@@ -108,10 +108,10 @@ namespace cuBERT {
                               float *var_gpu,
                               float *beta,
                               float *gamma,
-                              cudaStream_t stream) {
-        kernel_momentum_cub <<<batch_size, 128, 0, stream>>> (in, inout, batch_size, channel, mean_gpu, var_gpu);
+                              void* stream) {
+        kernel_momentum_cub <<<batch_size, 128, 0, (cudaStream_t) stream>>> (in, inout, batch_size, channel, mean_gpu, var_gpu);
 
         const int all_blocks = (batch_size * channel + 127) / 128;
-        kernel_batchnorm_ <<<all_blocks, 128, 0, stream>>> (in, inout, batch_size, channel, mean_gpu, var_gpu, beta, gamma);
+        kernel_batchnorm_ <<<all_blocks, 128, 0, (cudaStream_t) stream>>> (in, inout, batch_size, channel, mean_gpu, var_gpu, beta, gamma);
     }
 }

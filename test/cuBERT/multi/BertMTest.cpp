@@ -1,23 +1,22 @@
-//
-// Created by 田露 on 2019/1/24.
-//
-
 #include "gtest/gtest.h"
 
-#include "cuBERT/mgpu/BertMGPU.h"
+#include "cuBERT/common.h"
+#include "cuBERT/multi/BertM.h"
 using namespace cuBERT;
 
-class BertMGPUTest : public ::testing::Test {
+class BertMTest : public ::testing::Test {
 protected:
     void SetUp() override {
+        cuBERT::initialize();
     }
 
     void TearDown() override {
+        cuBERT::finalize();
     }
 };
 
-TEST_F(BertMGPUTest, compute) {
-    BertMGPU bert("bert_frozen_seq32.pb", 128, 32);
+TEST_F(BertMTest, compute) {
+    BertM bert("bert_frozen_seq32.pb", 128, 32);
 
     int input_ids[] = {
             0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,

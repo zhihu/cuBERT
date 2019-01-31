@@ -2,6 +2,7 @@
 #include <cuda_runtime.h>
 #include <cublas_v2.h>
 
+#include "cuBERT/common.h"
 #include "cuBERT/op/Dense.h"
 using namespace cuBERT;
 
@@ -9,10 +10,12 @@ class DenseTest : public ::testing::Test {
 protected:
     void SetUp() override {
         cublasCreate_v2(&handle);
+        cuBERT::initialize();
     }
 
     void TearDown() override {
         cublasDestroy_v2(handle);
+        cuBERT::finalize();
     }
 
     cublasHandle_t handle;
@@ -51,15 +54,26 @@ TEST_F(DenseTest, compute) {
     EXPECT_FLOAT_EQ(output[8], 51 - 1);
 }
 
-TEST_F(DenseTest, compute_cpu) {
+class DenseCPUTest : public ::testing::Test {
+protected:
+    void SetUp() override {
+        cuBERT::initialize(true);
+    }
+
+    void TearDown() override {
+        cuBERT::finalize();
+    }
+};
+
+TEST_F(DenseCPUTest, compute) {
     float kernel[6] = {1, 2, 3, 4, 5, 6};
     float bias[3] = {-3, -2, -1};
 
-    Dense dense(handle, 2, 3, kernel, bias, 16);
+    Dense dense(nullptr, 2, 3, kernel, bias, 16);
 
     float input[6] = {1, 2, 3, 4, 5, 6};
     float output[9];
-    dense.compute_cpu(3, input, output);
+    dense.compute(3, input, output);
 
     EXPECT_FLOAT_EQ(output[0], 9 - 3);
     EXPECT_FLOAT_EQ(output[1], 12 - 2);

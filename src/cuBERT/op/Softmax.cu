@@ -43,12 +43,12 @@ namespace cuBERT {
     }
 
 
-    __host__ void softmax_(float *inout, const int batch_size, const int channel, float *sum_gpu, cudaStream_t stream) {
+    __host__ void softmax_(float *inout, const int batch_size, const int channel, float *sum_gpu, void* stream) {
         thrust::device_ptr<float> dev_ptr(inout);
-        thrust::transform(thrust::cuda::par.on(stream), dev_ptr, dev_ptr + batch_size * channel, dev_ptr, exp_functor());
+        thrust::transform(thrust::cuda::par.on((cudaStream_t) stream), dev_ptr, dev_ptr + batch_size * channel, dev_ptr, exp_functor());
 
         const int all_blocks = (batch_size * channel + 127) / 128;
-        kernel_sum_cub <<<batch_size, 128, 0, stream>>> (inout, batch_size, channel, sum_gpu);
-        kernel_scale_ <<<all_blocks, 128, 0, stream>>> (inout, batch_size, channel, sum_gpu);
+        kernel_sum_cub <<<batch_size, 128, 0, (cudaStream_t) stream>>> (inout, batch_size, channel, sum_gpu);
+        kernel_scale_ <<<all_blocks, 128, 0, (cudaStream_t) stream>>> (inout, batch_size, channel, sum_gpu);
     }
 }

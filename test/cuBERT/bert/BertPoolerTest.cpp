@@ -3,6 +3,7 @@
 #include <cublas_v2.h>
 #include <cmath>
 
+#include "cuBERT/common.h"
 #include "cuBERT/bert/BertPooler.h"
 using namespace cuBERT;
 
@@ -10,10 +11,12 @@ class BertPoolerTest : public ::testing::Test {
 protected:
     void SetUp() override {
         cublasCreate_v2(&handle);
+        cuBERT::initialize();
     }
 
     void TearDown() override {
         cublasDestroy_v2(handle);
+        cuBERT::finalize();
     }
 
     cublasHandle_t handle;
@@ -58,7 +61,19 @@ TEST_F(BertPoolerTest, compute) {
     EXPECT_FLOAT_EQ(out[3], tanhf(2));
 }
 
-TEST_F(BertPoolerTest, compute_cpu) {
+
+class BertPoolerCPUTest : public ::testing::Test {
+protected:
+    void SetUp() override {
+        cuBERT::initialize(true);
+    }
+
+    void TearDown() override {
+        cuBERT::finalize();
+    }
+};
+
+TEST_F(BertPoolerCPUTest, compute_cpu) {
     size_t seq_length = 3;
     size_t hidden_size = 2;
 
@@ -66,7 +81,7 @@ TEST_F(BertPoolerTest, compute_cpu) {
                       0, 1};
     float bias[] = {2, 3};
 
-    BertPooler pooler(handle, seq_length, hidden_size, kernel, bias, 32);
+    BertPooler pooler(nullptr, seq_length, hidden_size, kernel, bias, 32);
 
     float in[12] = {
             0, 1,
@@ -78,7 +93,7 @@ TEST_F(BertPoolerTest, compute_cpu) {
     };
     float out[4];
 
-    pooler.compute_cpu(2, in, out);
+    pooler.compute(2, in, out);
 
     EXPECT_FLOAT_EQ(out[0], tanhf(2));
     EXPECT_FLOAT_EQ(out[1], tanhf(4));

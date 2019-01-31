@@ -41,11 +41,11 @@ add_subdirectory(external)
 
 set(SOURCE_FILES
         cuBERT.cpp
+        src/cuBERT/common.cpp
         src/cuBERT/tf/Graph.cpp
         src/cuBERT/op/GELU.cpp src/cuBERT/op/GELU.cu
         src/cuBERT/op/Dense.cpp
         src/cuBERT/op/Embedding.cpp src/cuBERT/op/Embedding.cu
-        src/cuBERT/op/BatchMatMul.cpp
         src/cuBERT/op/Softmax.cpp src/cuBERT/op/Softmax.cu
         src/cuBERT/op/LayerNorm.cpp src/cuBERT/op/LayerNorm.cu
         src/cuBERT/bert/BertEmbeddings.cpp
@@ -56,7 +56,7 @@ set(SOURCE_FILES
         src/cuBERT/bert/Bert.cpp
         src/cuBERT/bert/BertBatchMatMul.cpp
         src/cuBERT/bert/AdditionalOutputLayer.cpp
-        src/cuBERT/mgpu/BertMGPU.cpp)
+        src/cuBERT/multi/BertM.cpp)
 
 cuda_add_library(cuBERT SHARED ${SOURCE_FILES})
 set_target_properties(cuBERT PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
@@ -79,9 +79,9 @@ target_link_libraries(tfBERT_benchmark tensorflow)
 enable_testing()
 include(googletest)
 add_executable(cuBERT_test test/unit_test.cpp
+        test/cuBERT/common_test.cpp
         test/cuBERT/op/DenseTest.cpp
         test/cuBERT/op/LayerNormTest.cpp
-        test/cuBERT/op/BatchMatMulTest.cpp
         test/cuBERT/op/SoftmaxTest.cpp
         test/cuBERT/op/GELUTest.cpp
         test/cuBERT/op/EmbeddingTest.cpp
@@ -93,7 +93,7 @@ add_executable(cuBERT_test test/unit_test.cpp
         test/cuBERT/bert/BertPoolerTest.cpp
         test/cuBERT/bert/AdditionalOutputLayerTest.cpp
         test/cuBERT/bert/BertTest.cpp
-        test/cuBERT/mgpu/BertMGPUTest.cpp
+        test/cuBERT/multi/BertMTest.cpp
         test/cuBERT_test.cpp)
 target_link_libraries(cuBERT_test cuBERT ${googletest_STATIC_LIBRARIES} pthread)
 target_include_directories(cuBERT_test PUBLIC ${googletest_INCLUDE_DIRS})

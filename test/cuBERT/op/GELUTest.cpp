@@ -1,15 +1,19 @@
-//
-// Created by 田露 on 2019/1/21.
-//
-
 #include "gtest/gtest.h"
 #include <cmath>
 
+#include "cuBERT/common.h"
 #include "cuBERT/op/GELU.h"
 using namespace cuBERT;
 
 class GELUTest : public ::testing::Test {
+protected:
+    void SetUp() override {
+        cuBERT::initialize(true);
+    }
 
+    void TearDown() override {
+        cuBERT::finalize();
+    }
 };
 
 TEST_F(GELUTest, compute_cpu_) {
@@ -21,7 +25,7 @@ TEST_F(GELUTest, compute_cpu_) {
     }
 
     GELU gelu;
-    gelu.compute_cpu_(5, inout);
+    gelu.compute_(5, inout, nullptr);
 
     EXPECT_NEAR(inout[0], expect[0], 1e-5);
     EXPECT_NEAR(inout[1], expect[1], 1e-5);

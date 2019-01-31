@@ -2,7 +2,6 @@
 #define CUBERT_BERTQK_H
 
 #include <cstddef>
-#include <cublas_v2.h>
 
 namespace cuBERT {
 
@@ -15,7 +14,7 @@ namespace cuBERT {
      */
     class BertQK {
     public:
-        explicit BertQK(cublasHandle_t handle,
+        explicit BertQK(void* handle,
                         size_t max_batch_size,
                         size_t seq_length, size_t num_attention_heads, size_t size_per_head,
                         float* query, float* key, float* out,
@@ -25,10 +24,8 @@ namespace cuBERT {
 
         void compute(size_t batch_size);
 
-        void compute_cpu(size_t batch_size);
-
     private:
-        cublasHandle_t handle;
+        void* handle;
 
         size_t seq_length;
         size_t num_attention_heads;
@@ -37,20 +34,15 @@ namespace cuBERT {
         float alpha;
         float beta;
 
-        // gpu buffer
-        const float **query_array_gpu;
-        const float **key_array_gpu;
-        float **out_array_gpu;
-
-        // cpu buffer
-        const float **query_array_cpu;
-        const float **key_array_cpu;
-        float **out_array_cpu;
+        // cpu/gpu buffer
+        const float **query_array;
+        const float **key_array;
+        float **out_array;
     };
 
     class BertQKV {
     public:
-        explicit BertQKV(cublasHandle_t handle,
+        explicit BertQKV(void* handle,
                          size_t max_batch_size,
                          size_t seq_length, size_t num_attention_heads, size_t size_per_head,
                          float* qk, float* value, float* out,
@@ -60,10 +52,8 @@ namespace cuBERT {
 
         void compute(size_t batch_size);
 
-        void compute_cpu(size_t batch_size);
-
     private:
-        cublasHandle_t handle;
+        void* handle;
 
         size_t seq_length;
         size_t num_attention_heads;
@@ -72,15 +62,10 @@ namespace cuBERT {
         float alpha;
         float beta;
 
-        // gpu buffer
-        const float **qk_array_gpu;
-        const float **value_array_gpu;
-        float **out_array_gpu;
-
-        // cpu buffer
-        const float **qk_array_cpu;
-        const float **value_array_cpu;
-        float **out_array_cpu;
+        // cpu/gpu buffer
+        const float **qk_array;
+        const float **value_array;
+        float **out_array;
     };
 }
 
