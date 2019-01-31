@@ -18,6 +18,8 @@ void random_input(std::default_random_engine& e,
 }
 
 int main() {
+    cuBERT_initialize();
+
     std::default_random_engine e(0);
 
     int max_batch_size = 128;
@@ -65,4 +67,6 @@ int main() {
 
     result.close();
     cuBERT_close(model);
+
+    cuBERT_finalize();
 }

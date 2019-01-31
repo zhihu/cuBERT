@@ -6,9 +6,13 @@
 
 class cuBertTest : public ::testing::Test {
 protected:
-    void SetUp() override {}
+    void SetUp() override {
+        cuBERT_initialize();
+    }
 
-    void TearDown() override {}
+    void TearDown() override {
+        cuBERT_finalize();
+    }
 };
 
 void random_input(int* input_ids, char* input_mask, char* segment_ids, size_t length) {

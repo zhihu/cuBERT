@@ -2,11 +2,28 @@
 #include <mkl.h>
 #include <cstdlib>
 #include <cstring>
+#include <cstdio>
 #include <iostream>
 
 #include "./common.h"
 
 namespace cuBERT {
+
+#define CUDA_CHECK(call) do {                                           \
+    int err = call;                                                     \
+    if (0 != err) {                                                     \
+        fprintf(stderr, "Cuda error in file '%s' in line %i : %s.\n",   \
+                __FILE__, __LINE__, get_error_string(err));             \
+        exit(EXIT_FAILURE);                                             \
+    } } while(0)
+
+#define CUBLAS_CHECK(call) do {                                         \
+    int err = call;                                                     \
+    if (0 != err) {                                                     \
+        fprintf(stderr, "Cublas error in file '%s' in line %i.\n",      \
+                __FILE__, __LINE__);                                    \
+        exit(EXIT_FAILURE);                                             \
+    } } while(0)
 
     struct CUDA {
         void *cudart;
@@ -23,12 +40,12 @@ namespace cuBERT {
         int (*cudaMalloc)(void **devPtr, size_t size);
         int (*cudaFree)(void *devPtr);
         int (*cudaMemcpy)(void *dst, const void *src, size_t count, int kind);
-        int (*cudaMemcpyAsync)(void *dst, const void *src, size_t count, int kind, void* stream);
+        int (*cudaMemcpyAsync)(void *dst, const void *src, size_t count, int kind, void *stream);
 
         int (*cublasCreate_v2)(void **handle);
-        int (*cublasDestroy_v2)(void* handle);
-        int (*cublasGetStream_v2)(void* handle, void** streamId);
-        int (*cublasSetStream_v2)(void* handle, void* streamId);
+        int (*cublasDestroy_v2)(void *handle);
+        int (*cublasGetStream_v2)(void *handle, void **streamId);
+        int (*cublasSetStream_v2)(void *handle, void *streamId);
 
         int (*cublasSgemm_v2)(void *handle,
                               int transa, int transb,
@@ -38,6 +55,7 @@ namespace cuBERT {
                               const float *B, int ldb,
                               const float *beta,
                               float *C, int ldc);
+
         int (*cublasSgemmBatched)(void *handle,
                                   int transa, int transb,
                                   int m, int n, int k,
@@ -47,6 +65,7 @@ namespace cuBERT {
                                   const float *beta,   /* host or device pointer */
                                   float *const Carray[], int ldc,
                                   int batchCount);
+
         int (*cublasSgemmStridedBatched)(void *handle,
                                          int transa, int transb,
                                          int m, int n, int k,
@@ -72,12 +91,12 @@ namespace cuBERT {
             std::cout << "CUDA found" << std::endl;
 
             CUDA_SO.cudaGetErrorString = (const char *(*)(int)) (dlsym(CUDA_SO.cudart, "cudaGetErrorString"));
-            CUDA_SO.cudaGetDeviceCount = (int (*)(int *))(dlsym(CUDA_SO.cudart, "cudaGetDeviceCount"));
-            CUDA_SO.cudaSetDevice = (int (*)(int))(dlsym(CUDA_SO.cudart, "cudaSetDevice"));
+            CUDA_SO.cudaGetDeviceCount = (int (*)(int *)) (dlsym(CUDA_SO.cudart, "cudaGetDeviceCount"));
+            CUDA_SO.cudaSetDevice = (int (*)(int)) (dlsym(CUDA_SO.cudart, "cudaSetDevice"));
 
-            CUDA_SO.cudaStreamCreate = (int (*)(void **))(dlsym(CUDA_SO.cudart, "cudaStreamCreate"));
-            CUDA_SO.cudaStreamDestroy = (int (*)(void *))(dlsym(CUDA_SO.cudart, "cudaStreamDestroy"));
-            CUDA_SO.cudaStreamSynchronize = (int (*)(void *))(dlsym(CUDA_SO.cudart, "cudaStreamSynchronize"));
+            CUDA_SO.cudaStreamCreate = (int (*)(void **)) (dlsym(CUDA_SO.cudart, "cudaStreamCreate"));
+            CUDA_SO.cudaStreamDestroy = (int (*)(void *)) (dlsym(CUDA_SO.cudart, "cudaStreamDestroy"));
+            CUDA_SO.cudaStreamSynchronize = (int (*)(void *)) (dlsym(CUDA_SO.cudart, "cudaStreamSynchronize"));
 
             CUDA_SO.cudaMalloc = (int (*)(void **, size_t)) (dlsym(CUDA_SO.cudart, "cudaMalloc"));
             CUDA_SO.cudaFree = (int (*)(void *)) (dlsym(CUDA_SO.cudart, "cudaFree"));
@@ -85,16 +104,17 @@ namespace cuBERT {
             CUDA_SO.cudaMemcpyAsync = (int (*)(void *, const void *, size_t, int, void *))
                     (dlsym(CUDA_SO.cudart, "cudaMemcpyAsync"));
 
-            CUDA_SO.cublasCreate_v2 = (int (*)(void **))(dlsym(CUDA_SO.cublas, "cublasCreate_v2"));
-            CUDA_SO.cublasDestroy_v2 = (int (*)(void *))(dlsym(CUDA_SO.cublas, "cublasDestroy_v2"));
+            CUDA_SO.cublasCreate_v2 = (int (*)(void **)) (dlsym(CUDA_SO.cublas, "cublasCreate_v2"));
+            CUDA_SO.cublasDestroy_v2 = (int (*)(void *)) (dlsym(CUDA_SO.cublas, "cublasDestroy_v2"));
             CUDA_SO.cublasGetStream_v2 = (int (*)(void *, void **)) (dlsym(CUDA_SO.cublas, "cublasGetStream_v2"));
-            CUDA_SO.cublasSetStream_v2 = (int (*)(void *, void *))(dlsym(CUDA_SO.cublas, "cublasSetStream_v2"));
+            CUDA_SO.cublasSetStream_v2 = (int (*)(void *, void *)) (dlsym(CUDA_SO.cublas, "cublasSetStream_v2"));
 
             CUDA_SO.cublasSgemm_v2 = (int (*)(void *, int, int, int, int, int, const float *, const float *, int,
                                               const float *, int, const float *, float *, int))
                     (dlsym(CUDA_SO.cublas, "cublasSgemm_v2"));
             CUDA_SO.cublasSgemmBatched = (int (*)(void *, int, int, int, int, int, const float *, const float *const *,
-                                                  int, const float *const *, int, const float *, float *const *, int, int))
+                                                  int, const float *const *, int, const float *, float *const *, int,
+                                                  int))
                     (dlsym(CUDA_SO.cublas, "cublasSgemmBatched"));
 
             CUDA_SO.cublasSgemmStridedBatched = (int (*)(void *, int, int, int, int, int, const float *, const float *,
@@ -115,10 +135,18 @@ namespace cuBERT {
         }
     }
 
+    const char *get_error_string(int error) {
+        if (gpu()) {
+            return CUDA_SO.cudaGetErrorString(error);
+        } else {
+            return "";
+        }
+    }
+
     int get_gpu_count() {
         if (gpu()) {
             int count;
-            CUDA_CHECK((cudaError_t) CUDA_SO.cudaGetDeviceCount(&count));
+            CUDA_CHECK(CUDA_SO.cudaGetDeviceCount(&count));
             return count;
         } else {
             return 0;
@@ -127,14 +155,14 @@ namespace cuBERT {
 
     void set_gpu(int device) {
         if (gpu()) {
-            CUDA_CHECK((cudaError_t) CUDA_SO.cudaSetDevice(device));
+            CUDA_CHECK(CUDA_SO.cudaSetDevice(device));
         }
     }
 
     void *cuda_stream_create() {
         if (gpu()) {
             void *ptr;
-            CUDA_CHECK((cudaError_t) CUDA_SO.cudaStreamCreate(&ptr));
+            CUDA_CHECK(CUDA_SO.cudaStreamCreate(&ptr));
             return ptr;
         } else {
             return nullptr;
@@ -143,20 +171,20 @@ namespace cuBERT {
 
     void cuda_stream_destroy(void *stream) {
         if (gpu()) {
-            CUDA_CHECK((cudaError_t) CUDA_SO.cudaStreamDestroy(stream));
+            CUDA_CHECK(CUDA_SO.cudaStreamDestroy(stream));
         }
     }
 
     void cuda_stream_synchronize(void *stream) {
         if (gpu()) {
-            CUDA_CHECK((cudaError_t) CUDA_SO.cudaStreamSynchronize(stream));
+            CUDA_CHECK(CUDA_SO.cudaStreamSynchronize(stream));
         }
     }
 
     void *malloc(size_t size) {
         if (gpu()) {
             void *ptr;
-            CUDA_CHECK((cudaError_t) CUDA_SO.cudaMalloc(&ptr, size));
+            CUDA_CHECK(CUDA_SO.cudaMalloc(&ptr, size));
             return ptr;
         } else {
             return std::malloc(size);
@@ -165,7 +193,7 @@ namespace cuBERT {
 
     void free(void *ptr) {
         if (gpu()) {
-            CUDA_CHECK((cudaError_t) CUDA_SO.cudaFree(ptr));
+            CUDA_CHECK(CUDA_SO.cudaFree(ptr));
         } else {
             std::free(ptr);
         }
@@ -174,7 +202,7 @@ namespace cuBERT {
     void memcpy(void *dst, const void *src, size_t n) {
         if (gpu()) {
             // cudaMemcpyDeviceToDevice      =   3,      /**< Device -> Device */
-            CUDA_CHECK((cudaError_t) CUDA_SO.cudaMemcpy(dst, src, n, 3));
+            CUDA_CHECK(CUDA_SO.cudaMemcpy(dst, src, n, 3));
         } else {
             std::memcpy(dst, src, n);
         }
@@ -182,15 +210,15 @@ namespace cuBERT {
 
     void memcpy(void *dst, const void *src, size_t n, int kind) {
         if (gpu()) {
-            CUDA_CHECK((cudaError_t) CUDA_SO.cudaMemcpy(dst, src, n, kind));
+            CUDA_CHECK(CUDA_SO.cudaMemcpy(dst, src, n, kind));
         } else {
             std::memcpy(dst, src, n);
         }
     }
 
-    void memcpyAsync(void *dst, const void *src, size_t n, int kind, void* stream) {
+    void memcpyAsync(void *dst, const void *src, size_t n, int kind, void *stream) {
         if (gpu()) {
-            CUDA_CHECK((cudaError_t) CUDA_SO.cudaMemcpyAsync(dst, src, n, kind, stream));
+            CUDA_CHECK(CUDA_SO.cudaMemcpyAsync(dst, src, n, kind, stream));
         } else {
             std::memcpy(dst, src, n);
         }
@@ -201,16 +229,16 @@ namespace cuBERT {
             auto *dst_cpu = new float[n];
             std::fill_n(dst_cpu, n, value);
             cuBERT::memcpy(dst, dst_cpu, sizeof(float) * n, 1);
-            delete []dst_cpu;
+            delete[]dst_cpu;
         } else {
             std::fill_n(dst, n, value);
         }
     }
 
-    void* blas_create() {
+    void *blas_create() {
         if (gpu()) {
             void *ptr;
-            CUBLAS_CHECK((cublasStatus_t) CUDA_SO.cublasCreate_v2(&ptr));
+            CUBLAS_CHECK(CUDA_SO.cublasCreate_v2(&ptr));
             return ptr;
         } else {
             return nullptr;
@@ -219,23 +247,23 @@ namespace cuBERT {
 
     void blas_destroy(void *handle) {
         if (gpu()) {
-            CUBLAS_CHECK((cublasStatus_t) CUDA_SO.cublasDestroy_v2(handle));
+            CUBLAS_CHECK(CUDA_SO.cublasDestroy_v2(handle));
         }
     }
 
-    void* blas_get_stream(void* handle) {
+    void *blas_get_stream(void *handle) {
         if (gpu()) {
-            void* streamId;
-            CUBLAS_CHECK((cublasStatus_t) CUDA_SO.cublasGetStream_v2(handle, &streamId));
+            void *streamId;
+            CUBLAS_CHECK(CUDA_SO.cublasGetStream_v2(handle, &streamId));
             return streamId;
         } else {
             return nullptr;
         }
     }
 
-    void blas_set_stream(void* handle, void* streamId) {
+    void blas_set_stream(void *handle, void *streamId) {
         if (gpu()) {
-            CUBLAS_CHECK((cublasStatus_t) CUDA_SO.cublasSetStream_v2(handle, streamId));
+            CUBLAS_CHECK(CUDA_SO.cublasSetStream_v2(handle, streamId));
         }
     }
 
@@ -248,14 +276,14 @@ namespace cuBERT {
                     const float beta,
                     float *C, const int ldc) {
         if (gpu()) {
-            CUBLAS_CHECK((cublasStatus_t) CUDA_SO.cublasSgemm_v2(handle,
-                                                                 TransA ? 1 : 0, TransB ? 1 : 0,
-                                                                 M, N, K,
-                                                                 &alpha,
-                                                                 A, lda,
-                                                                 B, ldb,
-                                                                 &beta,
-                                                                 C, ldc));
+            CUBLAS_CHECK(CUDA_SO.cublasSgemm_v2(handle,
+                                                TransA ? 1 : 0, TransB ? 1 : 0,
+                                                M, N, K,
+                                                &alpha,
+                                                A, lda,
+                                                B, ldb,
+                                                &beta,
+                                                C, ldc));
         } else {
             cblas_sgemm(CblasColMajor,
                         TransA ? CblasTrans : CblasNoTrans, TransB ? CblasTrans : CblasNoTrans,
@@ -272,21 +300,21 @@ namespace cuBERT {
                           const bool TransA, const bool TransB,
                           int m, int n, int k,
                           const float alpha,
-                          const float ** Aarray, int lda,
-                          const float ** Barray, int ldb,
+                          const float **Aarray, int lda,
+                          const float **Barray, int ldb,
                           const float beta,
-                          float ** Carray, int ldc,
+                          float **Carray, int ldc,
                           int batchCount) {
         if (gpu()) {
-            CUBLAS_CHECK((cublasStatus_t) CUDA_SO.cublasSgemmBatched(handle,
-                                                                     TransA ? 1 : 0, TransB ? 1 : 0,
-                                                                     m, n, k,
-                                                                     &alpha,
-                                                                     Aarray, lda,
-                                                                     Barray, ldb,
-                                                                     &beta,
-                                                                     Carray, ldc,
-                                                                     batchCount));
+            CUBLAS_CHECK(CUDA_SO.cublasSgemmBatched(handle,
+                                                    TransA ? 1 : 0, TransB ? 1 : 0,
+                                                    m, n, k,
+                                                    &alpha,
+                                                    Aarray, lda,
+                                                    Barray, ldb,
+                                                    &beta,
+                                                    Carray, ldc,
+                                                    batchCount));
         } else {
             CBLAS_TRANSPOSE transA = TransA ? CblasTrans : CblasNoTrans;
             CBLAS_TRANSPOSE transB = TransB ? CblasTrans : CblasNoTrans;
@@ -312,15 +340,15 @@ namespace cuBERT {
                                   float *C, int ldc, long long int strideC,
                                   int batchCount) {
         if (gpu()) {
-            CUBLAS_CHECK((cublasStatus_t) CUDA_SO.cublasSgemmStridedBatched(handle,
-                                                                            TransA ? 1 : 0, TransB ? 1 : 0,
-                                                                            m, n, k,
-                                                                            &alpha,
-                                                                            A, lda, strideA,
-                                                                            B, ldb, strideB,
-                                                                            &beta,
-                                                                            C, ldc, strideC,
-                                                                            batchCount));
+            CUBLAS_CHECK(CUDA_SO.cublasSgemmStridedBatched(handle,
+                                                           TransA ? 1 : 0, TransB ? 1 : 0,
+                                                           m, n, k,
+                                                           &alpha,
+                                                           A, lda, strideA,
+                                                           B, ldb, strideB,
+                                                           &beta,
+                                                           C, ldc, strideC,
+                                                           batchCount));
         } else {
             const float *A_Array[batchCount];
             const float *B_Array[batchCount];
