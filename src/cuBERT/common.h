@@ -1,6 +1,8 @@
 #ifndef CUBERT_COMMON_H
 #define CUBERT_COMMON_H
 
+#include <cstddef>
+
 namespace cuBERT {
 
     void initialize(bool force_cpu = false);

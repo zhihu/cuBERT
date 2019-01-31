@@ -1,4 +1,5 @@
 #include <omp.h>
+#include <cmath>
 
 #include "cuBERT/common.h"
 #include "BertPooler.h"

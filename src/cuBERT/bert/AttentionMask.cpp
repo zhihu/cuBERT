@@ -1,4 +1,3 @@
-#include <mkl.h>
 #include <omp.h>
 
 #include "cuBERT/common.h"
