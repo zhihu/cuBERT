@@ -35,7 +35,11 @@ set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};-O3;-use_fast_math;-Xptxas -O3;-Xcompiler
 
 include(mkl)
 
-include_directories(src external ${CUDA_INCLUDE_DIRS} ${mkl_INCLUDE_DIRS})
+include_directories(src external ${mkl_INCLUDE_DIRS})
+if (CUDA_FOUND)
+    include_directories(${CUDA_INCLUDE_DIRS})
+endif()
+
 add_subdirectory(external)
 
 set(SOURCE_FILES
