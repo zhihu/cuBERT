@@ -16,10 +16,12 @@ namespace cuBERT {
     }
 
     void Softmax::compute_(size_t batch_size, float *inout_gpu, void* stream) {
+#ifdef HAVE_CUDA
         if (cuBERT::gpu()) {
             softmax_(inout_gpu, batch_size, channel, sum_gpu, stream);
             return;
         }
+#endif
 
 #pragma omp parallel for
         for (int batch_idx = 0; batch_idx < batch_size; ++batch_idx) {

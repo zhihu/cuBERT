@@ -26,10 +26,12 @@ namespace cuBERT {
     }
 
     void LayerNorm::compute_(size_t batch_size, float *inout, void* stream) {
+#ifdef HAVE_CUDA
         if (cuBERT::gpu()) {
             layer_norm_(inout, batch_size, channels, beta, gamma, stream);
             return;
         }
+#endif
 
 #pragma omp parallel for
         for (int batch_idx = 0; batch_idx < batch_size; ++batch_idx) {
@@ -56,10 +58,12 @@ namespace cuBERT {
     }
 
     void LayerNorm::compute_(size_t batch_size, float *in, float *inout, void* stream) {
+#ifdef HAVE_CUDA
         if (cuBERT::gpu()) {
             layer_norm_(in, inout, batch_size, channels, mean_gpu, var_gpu, beta, gamma, stream);
             return;
         }
+#endif
 
 #pragma omp parallel for
         for (int batch_idx = 0; batch_idx < batch_size; ++batch_idx) {

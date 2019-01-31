@@ -5,11 +5,13 @@
 
 namespace cuBERT {
 
+#ifdef HAVE_CUDA
     void softmax_(float *inout,
                   const int batch_size,
                   const int channel,
                   float *sum_gpu,
                   void *stream);
+#endif
 
     class Softmax {
     public:

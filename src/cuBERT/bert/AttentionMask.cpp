@@ -1,4 +1,5 @@
 #include <omp.h>
+#include <stdexcept>
 
 #include "cuBERT/common.h"
 #include "AttentionMask.h"
@@ -26,8 +27,12 @@ namespace cuBERT {
 
     void AttentionMask::compute(size_t batch_size, char *in, float *out_gpu) {
         if (gpu()) {
+#ifdef HAVE_CUDA
             void *stream = cuBERT::blas_get_stream(handle);
             _not(in, neg, batch_size * seq_length, stream);
+#else
+            throw std::invalid_argument("Compile without CUDA, but run with GPU.");
+#endif
         } else {
 #pragma omp parallel for
             for (int i = 0; i < batch_size * seq_length; ++i) {

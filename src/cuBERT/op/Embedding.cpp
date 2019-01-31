@@ -16,10 +16,12 @@ namespace cuBERT {
 
     template<typename T>
     void Embedding::compute(const T *input_ids, size_t input_ids_len, float *output, void* stream) {
+#ifdef HAVE_CUDA
         if (cuBERT::gpu()) {
             embedding(input_ids, input_ids_len, embedding_table, embedding_size, output, stream);
             return;
         }
+#endif
 
         for (int i = 0; i < input_ids_len; ++i) {
             cuBERT::memcpy(output, embedding_table + embedding_size * input_ids[i], embedding_size * sizeof(float));

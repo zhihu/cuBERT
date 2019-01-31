@@ -7,10 +7,12 @@
 
 namespace cuBERT {
     void GELU::compute_(size_t N, float *inout, void* stream) {
+#ifdef HAVE_CUDA
         if (cuBERT::gpu()) {
             gelu(N, inout, stream);
             return;
         }
+#endif
 
 #pragma omp parallel for
         for (int i = 0; i < N; ++i) {

@@ -1,5 +1,6 @@
 #include <omp.h>
 #include <cmath>
+#include <stdexcept>
 
 #include "cuBERT/common.h"
 #include "BertPooler.h"
@@ -44,7 +45,11 @@ namespace cuBERT {
                            output, hidden_size);
 
         if (cuBERT::gpu()) {
+#ifdef HAVE_CUDA
             tanh_(output, batch_size * hidden_size, streamId);
+#else
+            throw std::invalid_argument("Compile without CUDA, but run with GPU.");
+#endif
         } else {
 #pragma omp parallel for
             for (int i = 0; i < batch_size * hidden_size; ++i) {

@@ -80,15 +80,27 @@ namespace cuBERT {
     bool force_cpu;
     CUDA CUDA_SO;
 
+#ifdef HAVE_CUDA
+    const bool compile_with_cuda = true;
+#else
+    const bool compile_with_cuda = false;
+#endif
+
     bool gpu() {
-        return !force_cpu && CUDA_SO.cudart != nullptr && CUDA_SO.cublas != nullptr;
+        // 1. COMPILE with CUDA
+        // 2. libcudart.so runtime FOUND
+        // 3. choose not force CPU
+        return compile_with_cuda && !force_cpu && CUDA_SO.cudart != nullptr && CUDA_SO.cublas != nullptr;
     }
 
     void initialize(bool force_cpu) {
         CUDA_SO.cudart = dlopen("libcudart.so", RTLD_NOW | RTLD_LOCAL);
         CUDA_SO.cublas = dlopen("libcublas.so", RTLD_NOW | RTLD_LOCAL);
         if (CUDA_SO.cudart != nullptr && CUDA_SO.cublas != nullptr) {
-            std::cout << "CUDA found" << std::endl;
+            std::cout << "CUDA runtime found" << std::endl;
+            if (!compile_with_cuda) {
+                std::cerr << "cuBERT is not compiled with CUDA" << std::endl;
+            }
 
             CUDA_SO.cudaGetErrorString = (const char *(*)(int)) (dlsym(CUDA_SO.cudart, "cudaGetErrorString"));
             CUDA_SO.cudaGetDeviceCount = (int (*)(int *)) (dlsym(CUDA_SO.cudart, "cudaGetDeviceCount"));

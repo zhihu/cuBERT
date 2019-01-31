@@ -5,6 +5,8 @@
 #include <cstddef>
 
 namespace cuBERT {
+
+#ifdef HAVE_CUDA
     template<typename T>
     void embedding(const T *input_ids,
                    const int input_ids_len,
@@ -12,6 +14,7 @@ namespace cuBERT {
                    const int embedding_size,
                    float *output,
                    void *stream);
+#endif
 
     class Embedding {
     public:

@@ -2,6 +2,7 @@
 #define CUBERT_LAYERNORM_H
 
 namespace cuBERT {
+#ifdef HAVE_CUDA
     void layer_norm_(float *inout,
                      const int batch_size,
                      const int channel,
@@ -18,6 +19,7 @@ namespace cuBERT {
                      float *beta,
                      float *gamma,
                      void *stream);
+#endif
 
     class LayerNorm {
     public:

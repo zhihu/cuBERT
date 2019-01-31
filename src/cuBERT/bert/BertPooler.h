@@ -1,11 +1,15 @@
 #ifndef CUBERT_BERTPOOLER_H
 #define CUBERT_BERTPOOLER_H
 
+#include <cstddef>
+
 namespace cuBERT {
+
+#ifdef HAVE_CUDA
     void tanh_(float *inout,
                const int N,
                void *stream);
-
+#endif
 
     class BertPooler {
     public:
