@@ -1,5 +1,4 @@
 #include "gtest/gtest.h"
-#include <cuda_runtime.h>
 #include <algorithm>
 
 #include "cuBERT/common.h"
@@ -121,31 +120,30 @@ TEST_F(TransformerTest, compute) {
     float out[48];
 
     // gpu
-    float *tensor_gpu;
-    char *mask_gpu;
-    cudaMalloc(&tensor_gpu, sizeof(float) * 48);
-    cudaMalloc(&mask_gpu, sizeof(char) * 8);
-    cudaMemcpy(tensor_gpu, tensor, sizeof(float) * 48, cudaMemcpyHostToDevice);
-    cudaMemcpy(mask_gpu, mask, sizeof(char) * 8, cudaMemcpyHostToDevice);
+    float *tensor_gpu = (float*) cuBERT::malloc(sizeof(float) * 48);
+    char *mask_gpu = (char*) cuBERT::malloc(sizeof(char) * 8);
+
+    cuBERT::memcpy(tensor_gpu, tensor, sizeof(float) * 48, 1);
+    cuBERT::memcpy(mask_gpu, mask, sizeof(char) * 8, 1);
 
     // compute
     float *out_gpu = transformer.compute(batch_size, tensor_gpu, mask_gpu);
 
-    cudaMemcpy(out, out_gpu, sizeof(float) * 48, cudaMemcpyDeviceToHost);
-    cudaFree(tensor_gpu);
-    cudaFree(mask_gpu);
+    cuBERT::memcpy(out, out_gpu, sizeof(float) * 48, 2);
+    cuBERT::free(tensor_gpu);
+    cuBERT::free(mask_gpu);
 
     EXPECT_FLOAT_EQ(out[0], -1.655961);
     EXPECT_FLOAT_EQ(out[1], -0.5762695);
     EXPECT_NEAR(out[2], 0.019856449, 1e-6);
-    EXPECT_FLOAT_EQ(out[3], 0.22128667);
+    EXPECT_NEAR(out[3], 0.22128667, 1e-6);
     EXPECT_FLOAT_EQ(out[4], 0.5440447);
     EXPECT_FLOAT_EQ(out[5], 1.5205542);
     EXPECT_FLOAT_EQ(out[42], -1.7647616);
-    EXPECT_FLOAT_EQ(out[43], -0.35221404);
-    EXPECT_FLOAT_EQ(out[44], 0.24000001);
-    EXPECT_FLOAT_EQ(out[45], 0.19876797);
-    EXPECT_FLOAT_EQ(out[46], 0.19049276);
+    EXPECT_NEAR(out[43], -0.35221404, 1e-6);
+    EXPECT_NEAR(out[44], 0.24000001, 1e-6);
+    EXPECT_NEAR(out[45], 0.198767971, 1e-6);
+    EXPECT_NEAR(out[46], 0.19049276, 1e-6);
     EXPECT_FLOAT_EQ(out[47], 1.5452648);
 }
 
@@ -285,19 +283,18 @@ TEST_F(TransformerTest, compute_complex) {
     float out[48];
 
     // gpu
-    float *tensor_gpu;
-    char *mask_gpu;
-    cudaMalloc(&tensor_gpu, sizeof(float) * 48);
-    cudaMalloc(&mask_gpu, sizeof(char) * 8);
-    cudaMemcpy(tensor_gpu, tensor, sizeof(float) * 48, cudaMemcpyHostToDevice);
-    cudaMemcpy(mask_gpu, mask, sizeof(char) * 8, cudaMemcpyHostToDevice);
+    float *tensor_gpu = (float*) cuBERT::malloc(sizeof(float) * 48);
+    char *mask_gpu = (char*) cuBERT::malloc(sizeof(char) * 8);
+
+    cuBERT::memcpy(tensor_gpu, tensor, sizeof(float) * 48, 1);
+    cuBERT::memcpy(mask_gpu, mask, sizeof(char) * 8, 1);
 
     // compute
     float *out_gpu = transformer.compute(batch_size, tensor_gpu, mask_gpu);
 
-    cudaMemcpy(out, out_gpu, sizeof(float) * 48, cudaMemcpyDeviceToHost);
-    cudaFree(tensor_gpu);
-    cudaFree(mask_gpu);
+    cuBERT::memcpy(out, out_gpu, sizeof(float) * 48, 2);
+    cuBERT::free(tensor_gpu);
+    cuBERT::free(mask_gpu);
 
     EXPECT_NEAR(out[0], -1.6749241, 1e-5);
     EXPECT_NEAR(out[1], -0.5803416, 1e-5);

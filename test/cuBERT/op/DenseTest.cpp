@@ -1,5 +1,4 @@
 #include "gtest/gtest.h"
-#include <cuda_runtime.h>
 
 #include "cuBERT/common.h"
 #include "cuBERT/op/Dense.h"
@@ -27,20 +26,18 @@ TEST_F(DenseTest, compute) {
     Dense dense(handle, 2, 3, kernel, bias, 16);
 
     float input[6] = {1, 2, 3, 4, 5, 6};
-    float *input_gpu;
-    cudaMalloc(&input_gpu, 6 * sizeof(float));
+    float *input_gpu = (float*) cuBERT::malloc(6 * sizeof(float));
     cuBERT::memcpy(input_gpu, input, 6 * sizeof(float), 1);
 
-    float *output_gpu;
-    cudaMalloc(&output_gpu, 9 * sizeof(float));
+    float *output_gpu = (float*) cuBERT::malloc(9 * sizeof(float));
 
     dense.compute(3, input_gpu, output_gpu);
 
     float output[9];
     cuBERT::memcpy(output, output_gpu, sizeof(float) * 9, 2);
 
-    cudaFree(output_gpu);
-    cudaFree(input_gpu);
+    cuBERT::free(output_gpu);
+    cuBERT::free(input_gpu);
 
     EXPECT_FLOAT_EQ(output[0], 9 - 3);
     EXPECT_FLOAT_EQ(output[1], 12 - 2);

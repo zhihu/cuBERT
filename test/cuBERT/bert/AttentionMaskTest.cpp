@@ -1,5 +1,4 @@
 #include "gtest/gtest.h"
-#include <cuda_runtime.h>
 
 #include "cuBERT/common.h"
 #include "cuBERT/bert/AttentionMask.h"
@@ -33,18 +32,16 @@ TEST_F(AttentionMaskTest, compute) {
     };
     float out[24];
 
-    char* in_gpu;
-    float* out_gpu;
-    cudaMalloc(&in_gpu, sizeof(char) * 4);
-    cudaMalloc(&out_gpu, sizeof(float) * 24);
+    char* in_gpu = (char*) cuBERT::malloc(sizeof(char) * 4);
+    float* out_gpu = (float*) cuBERT::malloc(sizeof(float) * 24);
 
-    cudaMemcpy(in_gpu, in, sizeof(char) * 4, cudaMemcpyHostToDevice);
+    cuBERT::memcpy(in_gpu, in, sizeof(char) * 4, 1);
 
     attention_mask.compute(batch_size, in_gpu, out_gpu);
 
-    cudaMemcpy(out, out_gpu, sizeof(float) * 24, cudaMemcpyDeviceToHost);
-    cudaFree(in_gpu);
-    cudaFree(out_gpu);
+    cuBERT::memcpy(out, out_gpu, sizeof(float) * 24, 2);
+    cuBERT::free(in_gpu);
+    cuBERT::free(out_gpu);
 
     EXPECT_FLOAT_EQ(out[0], 0);
     EXPECT_FLOAT_EQ(out[1], 1);

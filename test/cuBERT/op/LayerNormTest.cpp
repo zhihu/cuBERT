@@ -1,6 +1,5 @@
 #include "gtest/gtest.h"
 #include <cmath>
-#include <cuda_runtime.h>
 
 #include "cuBERT/common.h"
 #include "cuBERT/op/LayerNorm.h"
@@ -26,14 +25,13 @@ TEST_F(LayerNormTest, compute_) {
 
     float inout[6] = {9, 10, 11, 5, 4, 3};
 
-    float* inout_gpu;
-    cudaMalloc(&inout_gpu, 6 * sizeof(float));
-    cudaMemcpy(inout_gpu, inout, 6 * sizeof(float), cudaMemcpyHostToDevice);
+    float* inout_gpu = (float*) cuBERT::malloc(6 * sizeof(float));
+    cuBERT::memcpy(inout_gpu, inout, 6 * sizeof(float), 1);
 
     layer_norm.compute_(2, inout_gpu, nullptr);
 
-    cudaMemcpy(inout, inout_gpu, 6 * sizeof(float), cudaMemcpyDeviceToHost);
-    cudaFree(inout_gpu);
+    cuBERT::memcpy(inout, inout_gpu, 6 * sizeof(float), 2);
+    cuBERT::free(inout_gpu);
 
     EXPECT_NEAR(inout[0], -2.224744871391589, 1e-5);
     EXPECT_FLOAT_EQ(inout[1], 0);

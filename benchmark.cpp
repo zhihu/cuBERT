@@ -17,11 +17,13 @@ void random_input(std::default_random_engine& e,
     }
 }
 
+// OMP_NUM_THREADS=? KMP_BLOCKTIME=0 KMP_AFFINITY=granularity=fine,verbose,compact,1,0
 int main() {
     cuBERT_initialize();
 
     std::default_random_engine e(0);
 
+    // TODO: if run with CPU, set batch_size and max_batch_size to 1.
     int max_batch_size = 128;
     int batch_size = 128;
     int seq_length = 32;

@@ -1,5 +1,4 @@
 #include "gtest/gtest.h"
-#include <cuda_runtime.h>
 #include <cmath>
 
 #include "cuBERT/common.h"
@@ -41,18 +40,16 @@ TEST_F(BertPoolerTest, compute) {
     };
     float out[4];
 
-    float* in_gpu;
-    float* out_gpu;
-    cudaMalloc(&in_gpu, sizeof(float) * 12);
-    cudaMalloc(&out_gpu, sizeof(float) * 4);
+    float* in_gpu = (float*) cuBERT::malloc(sizeof(float) * 12);
+    float* out_gpu = (float*) cuBERT::malloc(sizeof(float) * 4);
 
-    cudaMemcpy(in_gpu, in, sizeof(float) * 12, cudaMemcpyHostToDevice);
+    cuBERT::memcpy(in_gpu, in, sizeof(float) * 12, 1);
 
     pooler.compute(2, in_gpu, out_gpu);
 
-    cudaMemcpy(out, out_gpu, sizeof(float) * 4, cudaMemcpyDeviceToHost);
-    cudaFree(in_gpu);
-    cudaFree(out_gpu);
+    cuBERT::memcpy(out, out_gpu, sizeof(float) * 4, 2);
+    cuBERT::free(in_gpu);
+    cuBERT::free(out_gpu);
 
     EXPECT_FLOAT_EQ(out[0], tanhf(2));
     EXPECT_FLOAT_EQ(out[1], tanhf(4));

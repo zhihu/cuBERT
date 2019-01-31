@@ -1,5 +1,4 @@
 #include "gtest/gtest.h"
-#include <cuda_runtime.h>
 
 #include "cuBERT/common.h"
 #include "cuBERT/bert/BertBatchMatMul.h"
@@ -25,12 +24,10 @@ TEST_F(BertBatchMatMulTest, qk) {
     size_t num_attention_heads = 4;
     size_t size_per_head = 3;
 
-    float *query_gpu;
-    float *key_gpu;
-    float *out_gpu;
-    cudaMalloc(&query_gpu, sizeof(float) * 48);
-    cudaMalloc(&key_gpu, sizeof(float) * 48);
-    cudaMalloc(&out_gpu, sizeof(float) * 32);
+    float *query_gpu = (float*) cuBERT::malloc(sizeof(float) * 48);
+    float *key_gpu = (float*) cuBERT::malloc(sizeof(float) * 48);
+    float *out_gpu = (float*) cuBERT::malloc(sizeof(float) * 32);
+
     BertQK bqk(handle, 2, seq_length, num_attention_heads, size_per_head, query_gpu, key_gpu, out_gpu);
 
     float query[48] = {
@@ -77,14 +74,14 @@ TEST_F(BertBatchMatMulTest, qk) {
     };
     float out[32];
 
-    cudaMemcpy(query_gpu, query, sizeof(float) * 48, cudaMemcpyHostToDevice);
-    cudaMemcpy(key_gpu, key, sizeof(float) * 48, cudaMemcpyHostToDevice);
+    cuBERT::memcpy(query_gpu, query, sizeof(float) * 48, 1);
+    cuBERT::memcpy(key_gpu, key, sizeof(float) * 48, 1);
     bqk.compute(2);
-    cudaMemcpy(out, out_gpu, sizeof(float) * 32, cudaMemcpyDeviceToHost);
+    cuBERT::memcpy(out, out_gpu, sizeof(float) * 32, 2);
 
-    cudaFree(query_gpu);
-    cudaFree(key_gpu);
-    cudaFree(out_gpu);
+    cuBERT::free(query_gpu);
+    cuBERT::free(key_gpu);
+    cuBERT::free(out_gpu);
     EXPECT_FLOAT_EQ(out[0], -2);
     EXPECT_FLOAT_EQ(out[1], 3);
     EXPECT_FLOAT_EQ(out[2], -8);
@@ -222,12 +219,10 @@ TEST_F(BertBatchMatMulTest, qkv) {
     size_t num_attention_heads = 4;
     size_t size_per_head = 3;
 
-    float *qk_gpu;
-    float *value_gpu;
-    float *out_gpu;
-    cudaMalloc(&qk_gpu, sizeof(float) * 32);
-    cudaMalloc(&value_gpu, sizeof(float) * 48);
-    cudaMalloc(&out_gpu, sizeof(float) * 48);
+    float *qk_gpu = (float*) cuBERT::malloc(sizeof(float) * 32);
+    float *value_gpu = (float*) cuBERT::malloc(sizeof(float) * 48);
+    float *out_gpu = (float*) cuBERT::malloc(sizeof(float) * 48);
+
     BertQKV bqkv(handle, 2, seq_length, num_attention_heads, size_per_head, qk_gpu, value_gpu, out_gpu);
 
     float qk[32] = {
@@ -274,14 +269,14 @@ TEST_F(BertBatchMatMulTest, qkv) {
     };
     float out[48];
 
-    cudaMemcpy(qk_gpu, qk, sizeof(float) * 32, cudaMemcpyHostToDevice);
-    cudaMemcpy(value_gpu, value, sizeof(float) * 48, cudaMemcpyHostToDevice);
+    cuBERT::memcpy(qk_gpu, qk, sizeof(float) * 32, 1);
+    cuBERT::memcpy(value_gpu, value, sizeof(float) * 48, 1);
     bqkv.compute(2);
-    cudaMemcpy(out, out_gpu, sizeof(float) * 48, cudaMemcpyDeviceToHost);
+    cuBERT::memcpy(out, out_gpu, sizeof(float) * 48, 2);
 
-    cudaFree(qk_gpu);
-    cudaFree(value_gpu);
-    cudaFree(out_gpu);
+    cuBERT::free(qk_gpu);
+    cuBERT::free(value_gpu);
+    cuBERT::free(out_gpu);
     EXPECT_FLOAT_EQ(out[0], -2);
     EXPECT_FLOAT_EQ(out[1], 3);
     EXPECT_FLOAT_EQ(out[2], 0);

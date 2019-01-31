@@ -1,5 +1,4 @@
 #include "gtest/gtest.h"
-#include <cuda_runtime.h>
 #include <algorithm>
 
 #include "cuBERT/common.h"
@@ -76,14 +75,12 @@ TEST_F(AttentionSelfTest, compute) {
     float out[48];
 
     // gpu
-    float* tensor_gpu;
-    float* mask_gpu;
-    float* out_gpu;
-    cudaMalloc(&tensor_gpu, sizeof(float) * 48);
-    cudaMalloc(&mask_gpu, sizeof(float) * 64);
-    cudaMalloc(&out_gpu, sizeof(float) * 48);
-    cudaMemcpy(tensor_gpu, tensor, sizeof(float) * 48, cudaMemcpyHostToDevice);
-    cudaMemcpy(mask_gpu, mask, sizeof(float) * 64, cudaMemcpyHostToDevice);
+    float* tensor_gpu = (float*) cuBERT::malloc(sizeof(float) * 48);
+    float* mask_gpu = (float*) cuBERT::malloc(sizeof(float) * 64);
+    float* out_gpu = (float*) cuBERT::malloc(sizeof(float) * 48);
+
+    cuBERT::memcpy(tensor_gpu, tensor, sizeof(float) * 48, 1);
+    cuBERT::memcpy(mask_gpu, mask, sizeof(float) * 64, 1);
 
     // compute
     AttentionSelf attention_self(cublas, "attention/self", var, 32, seq_length,
@@ -91,10 +88,10 @@ TEST_F(AttentionSelfTest, compute) {
                                  num_attention_heads * size_per_head, num_attention_heads, size_per_head);
     attention_self.compute(batch_size, tensor_gpu, mask_gpu);
 
-    cudaMemcpy(out, out_gpu, sizeof(float) * 48, cudaMemcpyDeviceToHost);
-    cudaFree(out_gpu);
-    cudaFree(mask_gpu);
-    cudaFree(tensor_gpu);
+    cuBERT::memcpy(out, out_gpu, sizeof(float) * 48, 2);
+    cuBERT::free(out_gpu);
+    cuBERT::free(mask_gpu);
+    cuBERT::free(tensor_gpu);
 
     EXPECT_FLOAT_EQ(out[0], 3.1048317);
     EXPECT_FLOAT_EQ(out[1], 0.9379833);

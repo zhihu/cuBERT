@@ -1,5 +1,4 @@
 #include "gtest/gtest.h"
-#include <cuda_runtime.h>
 
 #include "cuBERT/common.h"
 #include "cuBERT/op/Embedding.h"
@@ -32,18 +31,16 @@ TEST_F(EmbeddingTest, compute) {
     int input_ids[3] = {2, 2, 1};
     float out[9];
 
-    int* input_ids_gpu;
-    float* out_gpu;
-    cudaMalloc(&input_ids_gpu, 3 * sizeof(int));
-    cudaMalloc(&out_gpu, 9 * sizeof(float));
+    int* input_ids_gpu = (int*) cuBERT::malloc(3 * sizeof(int));
+    float* out_gpu = (float*) cuBERT::malloc(9 * sizeof(float));
 
-    cudaMemcpy(input_ids_gpu, input_ids, 3 * sizeof(int), cudaMemcpyHostToDevice);
+    cuBERT::memcpy(input_ids_gpu, input_ids, 3 * sizeof(int), 1);
 
     embedding.compute(input_ids_gpu, 3, out_gpu, nullptr);
 
-    cudaMemcpy(out, out_gpu, 9 * sizeof(float), cudaMemcpyDeviceToHost);
-    cudaFree(out_gpu);
-    cudaFree(input_ids_gpu);
+    cuBERT::memcpy(out, out_gpu, 9 * sizeof(float), 2);
+    cuBERT::free(out_gpu);
+    cuBERT::free(input_ids_gpu);
 
     EXPECT_FLOAT_EQ(out[0], 6);
     EXPECT_FLOAT_EQ(out[1], 7);

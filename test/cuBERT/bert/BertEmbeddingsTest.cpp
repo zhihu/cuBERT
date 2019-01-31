@@ -1,5 +1,4 @@
 #include "gtest/gtest.h"
-#include <cuda_runtime.h>
 #include <cmath>
 
 #include "cuBERT/common.h"
@@ -65,21 +64,19 @@ TEST_F(BertEmbeddingsTest, compute) {
                           0, 1, 0, 0};
     float out[24];
 
-    int* input_ids_gpu;
-    char* segment_ids_gpu;
-    float* out_gpu;
-    cudaMalloc(&input_ids_gpu, sizeof(int) * 8);
-    cudaMalloc(&segment_ids_gpu, sizeof(char) * 8);
-    cudaMalloc(&out_gpu, sizeof(float) * 24);
-    cudaMemcpy(input_ids_gpu, input_ids, sizeof(int) * 8, cudaMemcpyHostToDevice);
-    cudaMemcpy(segment_ids_gpu, segment_ids, sizeof(char) * 8, cudaMemcpyHostToDevice);
+    int* input_ids_gpu = (int*) cuBERT::malloc(sizeof(int) * 8);
+    char* segment_ids_gpu = (char*) cuBERT::malloc(sizeof(char) * 8);
+    float* out_gpu = (float*) cuBERT::malloc(sizeof(float) * 24);
+
+    cuBERT::memcpy(input_ids_gpu, input_ids, sizeof(int) * 8, 1);
+    cuBERT::memcpy(segment_ids_gpu, segment_ids, sizeof(char) * 8, 1);
 
     bert_embeddings.compute(batch_size, input_ids_gpu, segment_ids_gpu, out_gpu);
 
-    cudaMemcpy(out, out_gpu, sizeof(float) * 24, cudaMemcpyDeviceToHost);
-    cudaFree(input_ids_gpu);
-    cudaFree(segment_ids_gpu);
-    cudaFree(out_gpu);
+    cuBERT::memcpy(out, out_gpu, sizeof(float) * 24, 2);
+    cuBERT::free(input_ids_gpu);
+    cuBERT::free(segment_ids_gpu);
+    cuBERT::free(out_gpu);
 
     EXPECT_NEAR(out[0], 1 - std::sqrt(1.5), 1e-6);
     EXPECT_FLOAT_EQ(out[1], 0);
