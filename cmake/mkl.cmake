@@ -24,7 +24,7 @@ set(mkl_TAG v0.17.2)
 set(mkl_URL https://github.com/intel/mkl-dnn/releases)
 
 if (WIN32)
-    set(mkl_DOWNLOAD_URL ${mkl_URL}/download/${mkl_TAG}/${mkl_WIN})
+    set(mkl_DOWNLOAD_URL ${CMAKE_SOURCE_DIR}/${mkl_WIN})
     list(APPEND mkl_STATIC_LIBRARIES
             ${CMAKE_CURRENT_BINARY_DIR}/mkl/src/mkl/lib/mklml.lib)
     list(APPEND mkl_STATIC_LIBRARIES
@@ -34,7 +34,7 @@ if (WIN32)
     list(APPEND mkl_SHARED_LIBRARIES
             ${CMAKE_CURRENT_BINARY_DIR}/mkl/src/mkl/lib/libiomp5md.dll)
 elseif (UNIX)
-    set(mkl_DOWNLOAD_URL ${mkl_URL}/download/${mkl_TAG}/${mkl_LNX})
+    set(mkl_DOWNLOAD_URL ${CMAKE_SOURCE_DIR}/${mkl_LNX})
     set(mkl_MD5 c846dd30f18bf3ad4a727b967e415087)
     list(APPEND mkl_SHARED_LIBRARIES
             ${CMAKE_CURRENT_BINARY_DIR}/mkl/src/mkl/lib/libiomp5.so)
@@ -43,7 +43,7 @@ elseif (UNIX)
     list(APPEND mkl_SHARED_LIBRARIES
             ${CMAKE_CURRENT_BINARY_DIR}/mkl/src/mkl/lib/libmklml_intel.so)
 elseif (APPLE)
-    set(mkl_DOWNLOAD_URL ${mkl_URL}/download/${mkl_TAG}/${mkl_MAC})
+    set(mkl_DOWNLOAD_URL ${CMAKE_SOURCE_DIR}/${mkl_MAC})
     #TODO need more information
 endif ()
 

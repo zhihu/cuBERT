@@ -11,8 +11,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/)
 
 find_package(Threads REQUIRED)
-find_package(CUDA REQUIRED)
-
+find_package(CUDA)
 find_package(OpenMP)
 if (OPENMP_FOUND)
     set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
@@ -58,14 +57,14 @@ set(SOURCE_FILES
         src/cuBERT/bert/AdditionalOutputLayer.cpp
         src/cuBERT/multi/BertM.cpp)
 
-cuda_add_library(cuBERT SHARED ${SOURCE_FILES})
+if (CUDA_FOUND)
+    cuda_add_library(cuBERT SHARED ${SOURCE_FILES})
+else ()
+    add_library(cuBERT SHARED ${SOURCE_FILES})
+endif ()
 set_target_properties(cuBERT PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 add_dependencies(cuBERT mkl_copy_shared_to_destination)
-target_link_libraries(cuBERT
-        external
-        ${CUDA_LIBRARIES}
-        ${CUDA_CUBLAS_LIBRARIES}
-        ${mkl_SHARED_LIBRARIES})
+target_link_libraries(cuBERT external ${mkl_SHARED_LIBRARIES})
 
 add_executable(cuBERT_benchmark benchmark.cpp)
 target_link_libraries(cuBERT_benchmark cuBERT)

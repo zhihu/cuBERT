@@ -1,6 +1,5 @@
 #include "gtest/gtest.h"
 #include <cuda_runtime.h>
-#include <cublas_v2.h>
 
 #include "cuBERT/common.h"
 #include "cuBERT/bert/AttentionMask.h"
@@ -9,16 +8,16 @@ using namespace cuBERT;
 class AttentionMaskTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        cublasCreate_v2(&handle);
         cuBERT::initialize();
+        handle = cuBERT::blas_create();
     }
 
     void TearDown() override {
-        cublasDestroy_v2(handle);
+        cuBERT::blas_destroy(handle);
         cuBERT::finalize();
     }
 
-    cublasHandle_t handle;
+    void* handle;
 };
 
 TEST_F(AttentionMaskTest, compute) {

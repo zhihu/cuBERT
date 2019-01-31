@@ -1,6 +1,5 @@
 #include "gtest/gtest.h"
 #include <cuda_runtime.h>
-#include <cublas_v2.h>
 #include <algorithm>
 
 #include "cuBERT/common.h"
@@ -10,16 +9,16 @@ using namespace cuBERT;
 class AttentionSelfTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        cublasCreate_v2(&cublas);
         cuBERT::initialize();
+        cublas = cuBERT::blas_create();
     }
 
     void TearDown() override {
-        cublasDestroy_v2(cublas);
+        cuBERT::blas_destroy(cublas);
         cuBERT::finalize();
     }
 
-    cublasHandle_t cublas;
+    void* cublas;
 };
 
 TEST_F(AttentionSelfTest, compute) {

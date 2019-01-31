@@ -1,6 +1,5 @@
 #include "gtest/gtest.h"
 #include <cuda_runtime.h>
-#include <cublas_v2.h>
 #include <cmath>
 
 #include "cuBERT/common.h"
@@ -10,16 +9,16 @@ using namespace cuBERT;
 class BertPoolerTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        cublasCreate_v2(&handle);
         cuBERT::initialize();
+        handle = cuBERT::blas_create();
     }
 
     void TearDown() override {
-        cublasDestroy_v2(handle);
+        cuBERT::blas_destroy(handle);
         cuBERT::finalize();
     }
 
-    cublasHandle_t handle;
+    void* handle;
 };
 
 TEST_F(BertPoolerTest, compute) {

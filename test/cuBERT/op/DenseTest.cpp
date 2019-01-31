@@ -1,6 +1,5 @@
 #include "gtest/gtest.h"
 #include <cuda_runtime.h>
-#include <cublas_v2.h>
 
 #include "cuBERT/common.h"
 #include "cuBERT/op/Dense.h"
@@ -9,16 +8,16 @@ using namespace cuBERT;
 class DenseTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        cublasCreate_v2(&handle);
         cuBERT::initialize();
+        handle = cuBERT::blas_create();
     }
 
     void TearDown() override {
-        cublasDestroy_v2(handle);
+        cuBERT::blas_destroy(handle);
         cuBERT::finalize();
     }
 
-    cublasHandle_t handle;
+    void* handle;
 };
 
 TEST_F(DenseTest, compute) {
@@ -30,7 +29,7 @@ TEST_F(DenseTest, compute) {
     float input[6] = {1, 2, 3, 4, 5, 6};
     float *input_gpu;
     cudaMalloc(&input_gpu, 6 * sizeof(float));
-    cublasSetMatrix(2, 3, sizeof(float), input, 2, input_gpu, 2);
+    cuBERT::memcpy(input_gpu, input, 6 * sizeof(float), 1);
 
     float *output_gpu;
     cudaMalloc(&output_gpu, 9 * sizeof(float));
@@ -38,7 +37,7 @@ TEST_F(DenseTest, compute) {
     dense.compute(3, input_gpu, output_gpu);
 
     float output[9];
-    cublasGetMatrix(3, 3, sizeof(float), output_gpu, 3, output, 3);
+    cuBERT::memcpy(output, output_gpu, sizeof(float) * 9, 2);
 
     cudaFree(output_gpu);
     cudaFree(input_gpu);

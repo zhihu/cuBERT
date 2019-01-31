@@ -1,6 +1,5 @@
 #include "gtest/gtest.h"
 #include <cuda_runtime.h>
-#include <cublas_v2.h>
 #include <algorithm>
 
 #include "cuBERT/common.h"
@@ -63,16 +62,16 @@ float output_norm_gamma[6] = {0.9903053, 0.95159506, 0.98762059, 0.99406842, 1.0
 class TransformerTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        cublasCreate_v2(&cublas);
         cuBERT::initialize();
+        cublas = cuBERT::blas_create();
     }
 
     void TearDown() override {
-        cublasDestroy_v2(cublas);
+        cuBERT::blas_destroy(cublas);
         cuBERT::finalize();
     }
 
-    cublasHandle_t cublas;
+    void* cublas;
 };
 
 TEST_F(TransformerTest, compute) {
