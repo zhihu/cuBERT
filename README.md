@@ -21,8 +21,31 @@ Fast implementation of BERT inference directly on NVIDIA (CUDA, CUBLAS) and Inte
 |cuBERT (GPU)  |184.6  |     |
 |mklBERT (CPU) |984.9  |24.0 |
 
-Note, MKL should be run under `OMP_NUM_THREADS=? KMP_BLOCKTIME=0 KMP_AFFINITY=granularity=fine,verbose,compact,1,0`
+Note: MKL should be run under `OMP_NUM_THREADS=? KMP_BLOCKTIME=0 KMP_AFFINITY=granularity=fine,verbose,compact,1,0`
 
 # API
 
 [API .h header](/cuBERT.h)
+
+# Build
+
+```shell
+mkdir build && cd build
+cmake -DCMAKE_BUILD_TYPE=Release ..
+make -j4
+
+# install to /usr/local
+sudo make install
+```
+
+# Dependency
+
+### Protobuf
+
+This library is built and linked against Google Protobuf 3.6.0 (same as
+tensorflow). As different versions of Protobuf can not co-exist in one
+single program, cuBERT is in-compatible with other Protobuf versions.
+
+### CUDA
+
+Libraries compiled by CUDA with different versions are not compatible.

@@ -1,12 +1,7 @@
-cmake_minimum_required(VERSION 3.0.2)
+cmake_minimum_required(VERSION 3.1)
 project(cuBERT LANGUAGES C CXX)
 
-if(NOT CMAKE_VERSION VERSION_LESS 3.1)
-    set(CMAKE_CXX_STANDARD 11)
-else()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-    set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};-std c++11)
-endif()
+set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/)
 
@@ -68,10 +63,10 @@ set(SOURCE_FILES
 
 if (CUDA_FOUND)
     cuda_add_library(cuBERT SHARED ${SOURCE_FILES})
+    set_target_properties(cuBERT PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 else ()
     add_library(cuBERT SHARED ${SOURCE_FILES})
 endif ()
-set_target_properties(cuBERT PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 add_dependencies(cuBERT mkl_copy_shared_to_destination)
 target_link_libraries(cuBERT external ${mkl_SHARED_LIBRARIES})
 
@@ -103,3 +98,13 @@ add_executable(cuBERT_test test/unit_test.cpp
 target_link_libraries(cuBERT_test cuBERT ${googletest_STATIC_LIBRARIES} pthread)
 target_include_directories(cuBERT_test PUBLIC ${googletest_INCLUDE_DIRS})
 add_test(UnitTest cuBERT_test)
+
+
+install(TARGETS cuBERT
+        RUNTIME DESTINATION bin
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib/static)
+install(FILES ${CMAKE_SOURCE_DIR}/cuBERT.h DESTINATION include)
+
+install(FILES ${mkl_SHARED_LIBRARIES} DESTINATION lib)
+install(DIRECTORY ${mkl_INCLUDE_DIRS} DESTINATION .)
