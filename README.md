@@ -1,5 +1,5 @@
-Fast implementation of BERT inference directly on NVIDIA CUDA and CUBLAS
-========================================================================
+Fast implementation of BERT inference directly on NVIDIA (CUDA, CUBLAS) and Intel MKL
+=====================================================================================
 
 # Benchmark
 
@@ -10,12 +10,18 @@ Fast implementation of BERT inference directly on NVIDIA CUDA and CUBLAS
 * Debian GNU/Linux 8 (jessie)
 * gcc (Debian 4.9.2-10+deb8u1) 4.9.2
 * CUDA: release 9.0, V9.0.176
+* MKL: 2019.0.1.20181227
 * tensorflow: 1.12.0
+* BERT: seq_length = 32
 
-|          |ms   |
-|---       |---  |
-|tensorflow|255.2|
-|cuBERT    |184.6|
+|batch size    |128 /ms|1 /ms|
+|---           |---    |---  |
+|tensorflow_gpu|255.2  |     |
+|tensorflow_cpu|1504.0 |69.9 |
+|cuBERT (GPU)  |184.6  |     |
+|mklBERT (CPU) |984.9  |24.0 |
+
+Note, MKL should be run under `OMP_NUM_THREADS=? KMP_BLOCKTIME=0 KMP_AFFINITY=granularity=fine,verbose,compact,1,0`
 
 # API
 
