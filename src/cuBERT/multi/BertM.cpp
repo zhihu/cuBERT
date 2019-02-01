@@ -52,7 +52,10 @@ namespace cuBERT {
         }
     }
 
-    unsigned int BertM::compute_cpu(size_t batch_size, int *input_ids, char *input_mask, char *segment_ids, float *logits) {
+    unsigned int BertM::compute(size_t batch_size,
+                                int *input_ids, char *input_mask, char *segment_ids,
+                                float *output,
+                                cuBERT_OutputType output_type) {
         uint8_t count = rr++;
         unsigned int choice = count % bert_instances.size();
 
@@ -62,7 +65,22 @@ namespace cuBERT {
 
         std::lock_guard<std::mutex> lg(*mutex_instance);
         bert_instance->compute(batch_size, input_ids, input_mask, segment_ids);
-        bert_instance->logits(batch_size, logits);
+        switch (output_type) {
+            case cuBERT_LOGITS:
+                bert_instance->logits(batch_size, output);
+                break;
+            case cuBERT_POOLED_OUTPUT:
+                bert_instance->pooled_output(batch_size, output);
+                break;
+            case cuBERT_EMBEDDING_OUTPUT:
+                bert_instance->embedding_output(batch_size, output);
+                break;
+            case cuBERT_SEQUENCE_OUTPUT:
+                bert_instance->sequence_output(batch_size, output);
+                break;
+            default:
+                throw std::invalid_argument("invalid output type");
+        }
 
         return choice;
     }

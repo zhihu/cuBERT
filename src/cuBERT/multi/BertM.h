@@ -6,6 +6,7 @@
 #include <atomic>
 #include <mutex>
 
+#include "../../../cuBERT.h"
 #include "cuBERT/bert/Bert.h"
 #include "cuBERT/tf/Graph.h"
 
@@ -20,7 +21,10 @@ namespace cuBERT {
 
         virtual ~BertM();
 
-        unsigned int compute_cpu(size_t batch_size, int *input_ids, char *input_mask, char *segment_ids, float *logits);
+        unsigned int compute(size_t batch_size,
+                             int *input_ids, char *input_mask, char *segment_ids,
+                             float *output,
+                             cuBERT_OutputType output_type = cuBERT_LOGITS);
 
     private:
         Graph graph;

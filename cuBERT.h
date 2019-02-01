@@ -3,6 +3,13 @@
 
 extern "C" {
 
+enum cuBERT_OutputType {
+    cuBERT_LOGITS = 0,
+    cuBERT_POOLED_OUTPUT = 1,
+    cuBERT_SEQUENCE_OUTPUT = 2,
+    cuBERT_EMBEDDING_OUTPUT = 3,
+};
+
 void cuBERT_initialize(bool force_cpu = false);
 void cuBERT_finalize();
 
@@ -17,7 +24,8 @@ void cuBERT_compute(void* model,
                     int* input_ids,
                     char* input_mask,
                     char* segment_ids,
-                    float* logits);
+                    float* output,
+                    cuBERT_OutputType output_type = cuBERT_LOGITS);
 
 void cuBERT_close(void* model);
 

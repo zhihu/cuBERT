@@ -30,6 +30,8 @@ namespace cuBERT {
 
         // cpu/gpu outputs
         void logits(size_t batch_size, float *logits);
+        void pooled_output(size_t batch_size, float *pooled_output);
+        void sequence_output(size_t batch_size, float *sequence_output);
         void embedding_output(size_t batch_size, float *embedding_output);
 
         // cpu fast outputs

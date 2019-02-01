@@ -33,19 +33,19 @@ TEST_F(BertMTest, compute) {
 
     float logits[2];
 
-    bert.compute_cpu(2, input_ids, input_mask, segment_ids, logits);
+    bert.compute(2, input_ids, input_mask, segment_ids, logits);
     EXPECT_FLOAT_EQ(logits[0], -2.9427543);
     EXPECT_FLOAT_EQ(logits[1], -1.4876306);
 
-    bert.compute_cpu(2, input_ids, input_mask, segment_ids, logits);
+    bert.compute(2, input_ids, input_mask, segment_ids, logits);
     EXPECT_FLOAT_EQ(logits[0], -2.9427543);
     EXPECT_FLOAT_EQ(logits[1], -1.4876306);
 
-    bert.compute_cpu(2, input_ids, input_mask, segment_ids, logits);
+    bert.compute(2, input_ids, input_mask, segment_ids, logits);
     EXPECT_FLOAT_EQ(logits[0], -2.9427543);
     EXPECT_FLOAT_EQ(logits[1], -1.4876306);
 
-    bert.compute_cpu(2, input_ids, input_mask, segment_ids, logits);
+    bert.compute(2, input_ids, input_mask, segment_ids, logits);
     EXPECT_FLOAT_EQ(logits[0], -2.9427543);
     EXPECT_FLOAT_EQ(logits[1], -1.4876306);
 }

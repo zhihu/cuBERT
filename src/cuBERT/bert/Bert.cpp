@@ -108,12 +108,33 @@ namespace cuBERT {
         }
     }
 
+    void Bert::pooled_output(size_t batch_size, float *pooled_output) {
+        void *streamId = cuBERT::blas_get_stream(cublas);
+        cuBERT::memcpyAsync(pooled_output, _pooled_output, sizeof(float) * batch_size * hidden_size, 2, streamId);
+        cuBERT::cuda_stream_synchronize(streamId);
+
+        if (!buffer_filled) {
+            transformer->_pre_compute(batch_size);
+            buffer_filled = true;
+        }
+    }
+
+    void Bert::sequence_output(size_t batch_size, float *sequence_output) {
+        void *streamId = cuBERT::blas_get_stream(cublas);
+        cuBERT::memcpyAsync(sequence_output, _sequence_output,
+                            sizeof(float) * batch_size * seq_length * hidden_size, 2, streamId);
+        cuBERT::cuda_stream_synchronize(streamId);
+
+        if (!buffer_filled) {
+            transformer->_pre_compute(batch_size);
+            buffer_filled = true;
+        }
+    }
+
     void Bert::embedding_output(size_t batch_size, float *embedding_output) {
         void *streamId = cuBERT::blas_get_stream(cublas);
-        cuBERT::memcpyAsync(embedding_output,
-                           _embedding_output,
-                           sizeof(float) * batch_size * seq_length * hidden_size,
-                           2, streamId);
+        cuBERT::memcpyAsync(embedding_output, _embedding_output,
+                           sizeof(float) * batch_size * seq_length * hidden_size, 2, streamId);
         cuBERT::cuda_stream_synchronize(streamId);
 
         if (!buffer_filled) {

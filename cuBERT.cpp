@@ -27,8 +27,9 @@ void cuBERT_compute(void *model,
                     int *input_ids,
                     char *input_mask,
                     char *segment_ids,
-                    float *logits) {
-    ((cuBERT::BertM *) model)->compute_cpu(batch_size, input_ids, input_mask, segment_ids, logits);
+                    float *output,
+                    cuBERT_OutputType output_type) {
+    ((cuBERT::BertM *) model)->compute(batch_size, input_ids, input_mask, segment_ids, output, output_type);
 }
 
 void cuBERT_close(void *model) {
