@@ -49,3 +49,7 @@ single program, cuBERT is in-compatible with other Protobuf versions.
 ### CUDA
 
 Libraries compiled by CUDA with different versions are not compatible.
+
+### MKL
+
+MKL is dynamically linked. We install both cuBERT and MKL in `sudo make install`.
