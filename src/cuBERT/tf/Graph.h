@@ -1,7 +1,3 @@
-//
-// Created by 田露 on 2019/1/25.
-//
-
 #ifndef CUBERT_GRAPH_H
 #define CUBERT_GRAPH_H
 
