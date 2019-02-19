@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include "cuBERT/common.h"
 #include "Bert.h"
 
@@ -30,7 +32,11 @@ namespace cuBERT {
                                            var.at("bert/pooler/dense/bias"),
                                            max_batch_size);
 
-        this->additional_output_layer = new AdditionalOutputLayer(cublas, hidden_size, var.at("output_weights"));
+        if (var.count("output_weights")) {
+            this->additional_output_layer = new AdditionalOutputLayer(cublas, hidden_size, var.at("output_weights"));
+        } else {
+            this->additional_output_layer = nullptr;
+        }
 
         this->_embedding_output = static_cast<float *>(cuBERT::malloc(sizeof(float) * max_batch_size * seq_length * hidden_size));
         this->_pooled_output = static_cast<float *>(cuBERT::malloc(sizeof(float) * max_batch_size * hidden_size));
@@ -91,13 +97,19 @@ namespace cuBERT {
         // bert/pooler
         bert_pooler->compute(batch_size, _sequence_output, _pooled_output);
 
-        additional_output_layer->compute(batch_size, _pooled_output, _logits);
+        if (additional_output_layer != nullptr) {
+            additional_output_layer->compute(batch_size, _pooled_output, _logits);
+        }
 
         // buffers should be re-computed in the next request
         buffer_filled = false;
     }
 
     void Bert::logits(size_t batch_size, float *logits) {
+        if (additional_output_layer == nullptr) {
+            std::cerr << "model does not have additional_output_layer, the output logits is wrong." << std::endl;
+        }
+
         void *streamId = cuBERT::blas_get_stream(cublas);
         cuBERT::memcpyAsync(logits, _logits, sizeof(float) * batch_size, 2, streamId);
         cuBERT::cuda_stream_synchronize(streamId);
