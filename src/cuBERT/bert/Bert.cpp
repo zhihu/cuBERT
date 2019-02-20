@@ -13,6 +13,7 @@ namespace cuBERT {
                size_t num_hidden_layers,
                size_t num_attention_heads,
                size_t intermediate_size) {
+        this->max_batch_size = max_batch_size;
         this->seq_length = seq_length;
         this->hidden_size = hidden_size;
 
@@ -70,6 +71,10 @@ namespace cuBERT {
     }
 
     void Bert::compute(size_t batch_size, int *input_ids, char *input_mask, char *segment_ids) {
+        if (batch_size > max_batch_size) {
+            throw std::invalid_argument("batch_size > max_batch_size");
+        }
+
         if (cuBERT::gpu()) {
             // copy inputs
             void *streamId = blas_get_stream(cublas);
