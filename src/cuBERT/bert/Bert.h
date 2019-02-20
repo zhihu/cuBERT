@@ -42,6 +42,7 @@ namespace cuBERT {
         void* cublas;
         void* stream;
 
+        size_t max_batch_size;
         size_t seq_length;
         size_t hidden_size;
 
