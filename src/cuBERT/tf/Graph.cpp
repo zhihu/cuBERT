@@ -15,7 +15,7 @@ namespace cuBERT {
 
         graphDef.ParseFromIstream(&input);
         input.close();
-        std::cout << "model loaded from: " << filename << std::endl;
+        std::cerr << "model loaded from: " << filename << std::endl;
 
         for (const auto &nodeDef : graphDef.node()) {
             if (!nodeDef.attr().count("value")) {
