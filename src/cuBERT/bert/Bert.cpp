@@ -72,7 +72,9 @@ namespace cuBERT {
 
     void Bert::compute(size_t batch_size, int *input_ids, char *input_mask, char *segment_ids) {
         if (batch_size > max_batch_size) {
-            throw std::invalid_argument("batch_size > max_batch_size");
+            char buff[100];
+            snprintf(buff, sizeof(buff), "batch_size: %zu > max_batch_size: %zu", batch_size, max_batch_size);
+            throw std::invalid_argument(buff);	
         } else if (batch_size == 0) {
             return;
         }
