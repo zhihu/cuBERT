@@ -1,6 +1,7 @@
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
+#include <chrono>
 
 #include "tensorflow/core/framework/graph.pb.h"
 #include "cuBERT/common.h"
@@ -14,18 +15,19 @@ namespace cuBERT {
                        size_t num_attention_heads)
             : rr(0), graph(model_file) {
         int count = cuBERT::get_gpu_count();
-        std::cout << "Found GPU count: " << count << std::endl;
+        std::cerr << "Found GPU count: " << count << std::endl;
 
         if (count == 0) {
             if (cuBERT::gpu()) {
                 throw std::invalid_argument("No GPU device detected, but caller choose to use gpu.");
             } else {
-                std::cout << "Use CPU instead" << std::endl;
+                std::cerr << "Use CPU instead" << std::endl;
                 count++;
             }
         }
 
         for (int device = 0; device < count; ++device) {
+            auto start = std::chrono::high_resolution_clock::now();
             cuBERT::set_gpu(device);
 
             auto *bert = new Bert(graph.var, max_batch_size, seq_length,
@@ -39,7 +41,10 @@ namespace cuBERT {
 
             mutex_instances.push_back(new std::mutex());
 
-            std::cout << "device setup: " << device << std::endl;
+            auto finish = std::chrono::high_resolution_clock::now();
+            std::cerr << "device setup: " << device << ". Took "
+                      << std::chrono::duration_cast<std::chrono::milliseconds>(finish - start).count()
+                      << " milliseconds." << std::endl;
         }
     }
 
