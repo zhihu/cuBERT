@@ -29,8 +29,8 @@ void random_input(int* input_ids, char* input_mask, char* segment_ids, size_t le
 }
 
 TEST_F(cuBertTest, compute) {
-    int max_batch_size = 512;
-    int batch_size = 400;
+    int max_batch_size = 128;
+    int batch_size = 128;
     int seq_length = 32;
 
     int input_ids[batch_size * seq_length];
@@ -53,4 +53,28 @@ TEST_F(cuBertTest, compute) {
     std::cout << logits[7] << std::endl;
     std::cout << logits[8] << std::endl;
     std::cout << logits[9] << std::endl;
+}
+
+TEST_F(cuBertTest, compute_tokenize) {
+    int max_batch_size = 128;
+    int batch_size = 2;
+    int seq_length = 32;
+    float output[batch_size];
+
+    const char* text_a[] = {u8"知乎", u8"知乎"};
+    const char* text_b[] = {u8"在家刷知乎", u8"知乎发现更大的世界"};
+
+    void* model = cuBERT_open("bert_frozen_seq32.pb", max_batch_size, seq_length, 12, 12);
+    void* tokenizer = cuBERT_open_tokenizer("vocab.txt");
+
+    cuBERT_tokenize_compute(model, tokenizer, batch_size,
+                            text_a,
+                            text_b,
+                            output, cuBERT_LOGITS);
+
+    cuBERT_close_tokenizer(tokenizer);
+    cuBERT_close(model);
+
+    std::cout << output[0] << std::endl;
+    std::cout << output[1] << std::endl;
 }
