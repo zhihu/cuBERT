@@ -44,7 +44,9 @@ add_subdirectory(external)
 
 set(SOURCE_FILES
         cuBERT.cpp
+        src/utf8proc/utf8proc.c
         src/cuBERT/common.cpp
+        src/cuBERT/tokenization.cpp
         src/cuBERT/tf/Graph.cpp
         src/cuBERT/op/GELU.cpp src/cuBERT/op/GELU.cu
         src/cuBERT/op/Dense.cpp
@@ -77,9 +79,11 @@ add_executable(tfBERT_benchmark benchmark_tf.cpp)
 target_link_libraries(tfBERT_benchmark tensorflow)
 
 enable_testing()
+configure_file(test_vocab.txt ${CMAKE_CURRENT_BINARY_DIR}/test_vocab.txt COPYONLY)
 include(googletest)
 add_executable(cuBERT_test test/unit_test.cpp
         test/cuBERT/common_test.cpp
+        test/cuBERT/tokenization_test.cpp
         test/cuBERT/op/DenseTest.cpp
         test/cuBERT/op/LayerNormTest.cpp
         test/cuBERT/op/SoftmaxTest.cpp

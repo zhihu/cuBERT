@@ -13,7 +13,7 @@ namespace cuBERT {
                        size_t seq_length,
                        size_t num_hidden_layers,
                        size_t num_attention_heads)
-            : rr(0), graph(model_file) {
+            : rr(0), graph(model_file), seq_length(seq_length) {
         int count = cuBERT::get_gpu_count();
         std::cerr << "Found GPU count: " << count << std::endl;
 

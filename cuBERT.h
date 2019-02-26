@@ -29,6 +29,20 @@ void cuBERT_compute(void* model,
 
 void cuBERT_close(void* model);
 
+/** high level API including tokenization **/
+
+void* cuBERT_open_tokenizer(const char* vocab_file, int do_lower_case = 1);
+
+void cuBERT_close_tokenizer(void* tokenizer);
+
+void cuBERT_tokenize_compute(void* model,
+                             void* tokenizer,
+                             int batch_size,
+                             const char** text_a,
+                             const char** text_b,
+                             float* output,
+                             cuBERT_OutputType output_type = cuBERT_LOGITS);
+
 }
 
 #endif

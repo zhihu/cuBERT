@@ -26,6 +26,8 @@ namespace cuBERT {
                              float *output,
                              cuBERT_OutputType output_type = cuBERT_LOGITS);
 
+        size_t seq_length;
+
     private:
         Graph graph;
         std::vector<Bert *> bert_instances;
