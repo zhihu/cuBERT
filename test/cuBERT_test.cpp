@@ -2,7 +2,7 @@
 #include <random>
 #include <iostream>
 
-#include "../cuBERT.h"
+#include "cuBERT.h"
 
 class cuBertTest : public ::testing::Test {
 protected:

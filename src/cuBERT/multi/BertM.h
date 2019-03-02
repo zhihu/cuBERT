@@ -6,9 +6,9 @@
 #include <atomic>
 #include <mutex>
 
-#include "../../../cuBERT.h"
+#include "cuBERT.h"
 #include "cuBERT/bert/Bert.h"
-#include "cuBERT/tf/Graph.h"
+#include "cuBERT/tensorflow/Graph.h"
 
 namespace cuBERT {
     class BertM {

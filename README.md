@@ -25,7 +25,7 @@ Note: MKL should be run under `OMP_NUM_THREADS=? KMP_BLOCKTIME=0 KMP_AFFINITY=gr
 
 # API
 
-[API .h header](/cuBERT.h)
+[API .h header](/src/cuBERT.h)
 
 # Build
 
