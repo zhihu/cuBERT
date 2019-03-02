@@ -94,7 +94,7 @@ endif ()
 add_dependencies(cuBERT ${cuBERT_EXTERNAL_DEPENDENCIES})
 target_link_libraries(cuBERT tf_protos_cc ${cuBERT_EXTERNAL_LIBRARIES})
 
-add_executable(cuBERT_benchmark benchmark.cpp)
+add_executable(cuBERT_benchmark benchmark_cu.cpp)
 target_link_libraries(cuBERT_benchmark cuBERT)
 
 add_executable(tfBERT_benchmark benchmark_tf.cpp)
