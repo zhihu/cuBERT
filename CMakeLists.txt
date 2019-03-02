@@ -65,11 +65,11 @@ endif()
 include(tf_core_framework)
 
 set(SOURCE_FILES
-        cuBERT.cpp
+        src/cuBERT.cpp
         src/utf8proc/utf8proc.c
         src/cuBERT/common.cpp
         src/cuBERT/tokenization.cpp
-        src/cuBERT/tf/Graph.cpp
+        src/cuBERT/tensorflow/Graph.cpp
         src/cuBERT/op/GELU.cpp src/cuBERT/op/GELU.cu
         src/cuBERT/op/Dense.cpp
         src/cuBERT/op/Embedding.cpp src/cuBERT/op/Embedding.cu
@@ -94,10 +94,10 @@ endif ()
 add_dependencies(cuBERT ${cuBERT_EXTERNAL_DEPENDENCIES})
 target_link_libraries(cuBERT tf_protos_cc ${cuBERT_EXTERNAL_LIBRARIES})
 
-add_executable(cuBERT_benchmark benchmark_cu.cpp)
+add_executable(cuBERT_benchmark benchmark/benchmark_cu.cpp)
 target_link_libraries(cuBERT_benchmark cuBERT)
 
-add_executable(tfBERT_benchmark benchmark_tf.cpp)
+add_executable(tfBERT_benchmark benchmark/benchmark_tf.cpp)
 target_link_libraries(tfBERT_benchmark tensorflow)
 
 enable_testing()
@@ -130,7 +130,7 @@ install(TARGETS cuBERT
         RUNTIME DESTINATION bin
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib/static)
-install(FILES ${CMAKE_SOURCE_DIR}/cuBERT.h DESTINATION include)
+install(FILES ${CMAKE_SOURCE_DIR}/src/cuBERT.h DESTINATION include)
 
 install(FILES ${mkl_SHARED_LIBRARIES} DESTINATION lib)
 install(DIRECTORY ${mkl_INCLUDE_DIRS} DESTINATION .)

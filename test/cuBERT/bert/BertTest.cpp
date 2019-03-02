@@ -3,7 +3,7 @@
 
 #include "cuBERT/common.h"
 #include "cuBERT/bert/Bert.h"
-#include "cuBERT/tf/Graph.h"
+#include "cuBERT/tensorflow/Graph.h"
 using namespace cuBERT;
 
 class BertTest : public ::testing::Test {
