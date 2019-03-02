@@ -2,7 +2,7 @@
 #include <cmath>
 
 #include "cuBERT/common.h"
-#include "cuBERT/bert/BertEmbeddings.h"
+#include "cuBERT/op_bert/BertEmbeddings.h"
 using namespace cuBERT;
 
 class BertEmbeddingsTest : public ::testing::Test {

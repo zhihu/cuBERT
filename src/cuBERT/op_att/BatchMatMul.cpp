@@ -1,7 +1,7 @@
-#include "BertBatchMatMul.h"
+#include "BatchMatMul.h"
 #include "cuBERT/common.h"
 
-cuBERT::BertQK::BertQK(void* handle,
+cuBERT::Att_Q_K::Att_Q_K(void* handle,
                        size_t max_batch_size,
                        size_t seq_length, size_t num_attention_heads, size_t size_per_head,
                        float* query, float* key, float* out,
@@ -45,13 +45,13 @@ cuBERT::BertQK::BertQK(void* handle,
     }
 }
 
-cuBERT::BertQK::~BertQK() {
+cuBERT::Att_Q_K::~Att_Q_K() {
     cuBERT::free(out_array);
     cuBERT::free(key_array);
     cuBERT::free(query_array);
 }
 
-void cuBERT::BertQK::compute(size_t batch_size) {
+void cuBERT::Att_Q_K::compute(size_t batch_size) {
     cuBERT::blas_sgemm_batch(handle,
                              true, false,
                              seq_length, seq_length, size_per_head,
@@ -64,7 +64,7 @@ void cuBERT::BertQK::compute(size_t batch_size) {
 }
 
 
-cuBERT::BertQKV::BertQKV(void* handle,
+cuBERT::Att_QK_V::Att_QK_V(void* handle,
                          size_t max_batch_size,
                          size_t seq_length, size_t num_attention_heads, size_t size_per_head,
                          float *qk, float *value, float *out,
@@ -108,13 +108,13 @@ cuBERT::BertQKV::BertQKV(void* handle,
     }
 }
 
-cuBERT::BertQKV::~BertQKV() {
+cuBERT::Att_QK_V::~Att_QK_V() {
     cuBERT::free(out_array);
     cuBERT::free(value_array);
     cuBERT::free(qk_array);
 }
 
-void cuBERT::BertQKV::compute(size_t batch_size) {
+void cuBERT::Att_QK_V::compute(size_t batch_size) {
     cuBERT::blas_sgemm_batch(handle,
                              false, false,
                              size_per_head, seq_length, seq_length,

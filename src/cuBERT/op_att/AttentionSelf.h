@@ -6,7 +6,7 @@
 
 #include "cuBERT/op/Dense.h"
 #include "cuBERT/op/Softmax.h"
-#include "cuBERT/bert/BertBatchMatMul.h"
+#include "BatchMatMul.h"
 
 namespace cuBERT {
     class AttentionSelf {
@@ -44,8 +44,8 @@ namespace cuBERT {
         Dense *key_layer;
         Dense *value_layer;
         Softmax *softmax;
-        BertQK *bqk;
-        BertQKV *bqkv;
+        Att_Q_K *bqk;
+        Att_QK_V *bqkv;
 
         // cpu/gpu buffers
         float *query_layer_out;

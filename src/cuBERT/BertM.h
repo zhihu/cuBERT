@@ -7,7 +7,7 @@
 #include <mutex>
 
 #include "cuBERT.h"
-#include "cuBERT/bert/Bert.h"
+#include "cuBERT/Bert.h"
 #include "cuBERT/tensorflow/Graph.h"
 
 namespace cuBERT {

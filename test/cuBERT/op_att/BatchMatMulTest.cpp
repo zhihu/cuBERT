@@ -1,10 +1,10 @@
 #include "gtest/gtest.h"
 
 #include "cuBERT/common.h"
-#include "cuBERT/bert/BertBatchMatMul.h"
+#include "cuBERT/op_att/BatchMatMul.h"
 using namespace cuBERT;
 
-class BertBatchMatMulTest : public ::testing::Test {
+class BatchMatMulTest : public ::testing::Test {
 protected:
     void SetUp() override {
         cuBERT::initialize();
@@ -19,7 +19,7 @@ protected:
     void* handle;
 };
 
-TEST_F(BertBatchMatMulTest, qk) {
+TEST_F(BatchMatMulTest, qk) {
     size_t seq_length = 2;
     size_t num_attention_heads = 4;
     size_t size_per_head = 3;
@@ -28,7 +28,7 @@ TEST_F(BertBatchMatMulTest, qk) {
     float *key_gpu = (float*) cuBERT::malloc(sizeof(float) * 48);
     float *out_gpu = (float*) cuBERT::malloc(sizeof(float) * 32);
 
-    BertQK bqk(handle, 2, seq_length, num_attention_heads, size_per_head, query_gpu, key_gpu, out_gpu);
+    Att_Q_K bqk(handle, 2, seq_length, num_attention_heads, size_per_head, query_gpu, key_gpu, out_gpu);
 
     float query[48] = {
             0, 1, 2,
@@ -116,105 +116,7 @@ TEST_F(BertBatchMatMulTest, qk) {
     EXPECT_FLOAT_EQ(out[31], 0);
 }
 
-class BertBatchMatMulCPUTest : public ::testing::Test {
-protected:
-    void SetUp() override {
-        cuBERT::initialize(true);
-    }
-
-    void TearDown() override {
-        cuBERT::finalize();
-    }
-};
-
-TEST_F(BertBatchMatMulCPUTest, qk) {
-    size_t seq_length = 2;
-    size_t num_attention_heads = 4;
-    size_t size_per_head = 3;
-
-    float query[48] = {
-            0, 1, 2,
-            -1, -2, 0,
-            2, -1, 0,
-            0, 1, -2,
-
-            2, 1, -2,
-            0, 2, -1,
-            -1, -1, 0,
-            2, 1, -1,
-
-            0, 1, 2,
-            -1, -2, 0,
-            2, -1, 0,
-            0, 1, -2,
-
-            2, 1, -2,
-            0, 2, -1,
-            -1, -1, 0,
-            2, 1, -1,
-    };
-    float key[48] = {
-            3, 0, -1,
-            2, 3, -3,
-            0, -1, -1,
-            1, 1, 1,
-
-            -2, 3, 0,
-            -1, 2, 2,
-            2, 0, 0,
-            0, 0, 0,
-
-            3, 0, -1,
-            2, 3, -3,
-            0, -1, -1,
-            1, 1, 1,
-
-            -2, 3, 0,
-            -1, 2, 2,
-            2, 0, 0,
-            0, 0, 0,
-    };
-    float out[32];
-
-    BertQK bqk(nullptr, 2, seq_length, num_attention_heads, size_per_head, query, key, out);
-    bqk.compute(2);
-
-    EXPECT_FLOAT_EQ(out[0], -2);
-    EXPECT_FLOAT_EQ(out[1], 3);
-    EXPECT_FLOAT_EQ(out[2], -8);
-    EXPECT_FLOAT_EQ(out[3], -3);
-    EXPECT_FLOAT_EQ(out[4], 1);
-    EXPECT_FLOAT_EQ(out[5], 4);
-    EXPECT_FLOAT_EQ(out[6], -1);
-    EXPECT_FLOAT_EQ(out[7], 0);
-    EXPECT_FLOAT_EQ(out[8], 8);
-    EXPECT_FLOAT_EQ(out[9], -1);
-    EXPECT_FLOAT_EQ(out[10], 9);
-    EXPECT_FLOAT_EQ(out[11], 2);
-    EXPECT_FLOAT_EQ(out[12], 1);
-    EXPECT_FLOAT_EQ(out[13], -2);
-    EXPECT_FLOAT_EQ(out[14], 2);
-    EXPECT_FLOAT_EQ(out[15], 0);
-    EXPECT_FLOAT_EQ(out[16], -2);
-    EXPECT_FLOAT_EQ(out[17], 3);
-    EXPECT_FLOAT_EQ(out[18], -8);
-    EXPECT_FLOAT_EQ(out[19], -3);
-    EXPECT_FLOAT_EQ(out[20], 1);
-    EXPECT_FLOAT_EQ(out[21], 4);
-    EXPECT_FLOAT_EQ(out[22], -1);
-    EXPECT_FLOAT_EQ(out[23], 0);
-    EXPECT_FLOAT_EQ(out[24], 8);
-    EXPECT_FLOAT_EQ(out[25], -1);
-    EXPECT_FLOAT_EQ(out[26], 9);
-    EXPECT_FLOAT_EQ(out[27], 2);
-    EXPECT_FLOAT_EQ(out[28], 1);
-    EXPECT_FLOAT_EQ(out[29], -2);
-    EXPECT_FLOAT_EQ(out[30], 2);
-    EXPECT_FLOAT_EQ(out[31], 0);
-}
-
-
-TEST_F(BertBatchMatMulTest, qkv) {
+TEST_F(BatchMatMulTest, qkv) {
     size_t seq_length = 2;
     size_t num_attention_heads = 4;
     size_t size_per_head = 3;
@@ -223,7 +125,7 @@ TEST_F(BertBatchMatMulTest, qkv) {
     float *value_gpu = (float*) cuBERT::malloc(sizeof(float) * 48);
     float *out_gpu = (float*) cuBERT::malloc(sizeof(float) * 48);
 
-    BertQKV bqkv(handle, 2, seq_length, num_attention_heads, size_per_head, qk_gpu, value_gpu, out_gpu);
+    Att_QK_V bqkv(handle, 2, seq_length, num_attention_heads, size_per_head, qk_gpu, value_gpu, out_gpu);
 
     float qk[32] = {
             0, 1,
@@ -327,8 +229,104 @@ TEST_F(BertBatchMatMulTest, qkv) {
     EXPECT_FLOAT_EQ(out[47], 2);
 }
 
+class BatchMatMulCPUTest : public ::testing::Test {
+protected:
+    void SetUp() override {
+        cuBERT::initialize(true);
+    }
 
-TEST_F(BertBatchMatMulCPUTest, qkv_compute) {
+    void TearDown() override {
+        cuBERT::finalize();
+    }
+};
+
+TEST_F(BatchMatMulCPUTest, qk) {
+    size_t seq_length = 2;
+    size_t num_attention_heads = 4;
+    size_t size_per_head = 3;
+
+    float query[48] = {
+            0, 1, 2,
+            -1, -2, 0,
+            2, -1, 0,
+            0, 1, -2,
+
+            2, 1, -2,
+            0, 2, -1,
+            -1, -1, 0,
+            2, 1, -1,
+
+            0, 1, 2,
+            -1, -2, 0,
+            2, -1, 0,
+            0, 1, -2,
+
+            2, 1, -2,
+            0, 2, -1,
+            -1, -1, 0,
+            2, 1, -1,
+    };
+    float key[48] = {
+            3, 0, -1,
+            2, 3, -3,
+            0, -1, -1,
+            1, 1, 1,
+
+            -2, 3, 0,
+            -1, 2, 2,
+            2, 0, 0,
+            0, 0, 0,
+
+            3, 0, -1,
+            2, 3, -3,
+            0, -1, -1,
+            1, 1, 1,
+
+            -2, 3, 0,
+            -1, 2, 2,
+            2, 0, 0,
+            0, 0, 0,
+    };
+    float out[32];
+
+    Att_Q_K bqk(nullptr, 2, seq_length, num_attention_heads, size_per_head, query, key, out);
+    bqk.compute(2);
+
+    EXPECT_FLOAT_EQ(out[0], -2);
+    EXPECT_FLOAT_EQ(out[1], 3);
+    EXPECT_FLOAT_EQ(out[2], -8);
+    EXPECT_FLOAT_EQ(out[3], -3);
+    EXPECT_FLOAT_EQ(out[4], 1);
+    EXPECT_FLOAT_EQ(out[5], 4);
+    EXPECT_FLOAT_EQ(out[6], -1);
+    EXPECT_FLOAT_EQ(out[7], 0);
+    EXPECT_FLOAT_EQ(out[8], 8);
+    EXPECT_FLOAT_EQ(out[9], -1);
+    EXPECT_FLOAT_EQ(out[10], 9);
+    EXPECT_FLOAT_EQ(out[11], 2);
+    EXPECT_FLOAT_EQ(out[12], 1);
+    EXPECT_FLOAT_EQ(out[13], -2);
+    EXPECT_FLOAT_EQ(out[14], 2);
+    EXPECT_FLOAT_EQ(out[15], 0);
+    EXPECT_FLOAT_EQ(out[16], -2);
+    EXPECT_FLOAT_EQ(out[17], 3);
+    EXPECT_FLOAT_EQ(out[18], -8);
+    EXPECT_FLOAT_EQ(out[19], -3);
+    EXPECT_FLOAT_EQ(out[20], 1);
+    EXPECT_FLOAT_EQ(out[21], 4);
+    EXPECT_FLOAT_EQ(out[22], -1);
+    EXPECT_FLOAT_EQ(out[23], 0);
+    EXPECT_FLOAT_EQ(out[24], 8);
+    EXPECT_FLOAT_EQ(out[25], -1);
+    EXPECT_FLOAT_EQ(out[26], 9);
+    EXPECT_FLOAT_EQ(out[27], 2);
+    EXPECT_FLOAT_EQ(out[28], 1);
+    EXPECT_FLOAT_EQ(out[29], -2);
+    EXPECT_FLOAT_EQ(out[30], 2);
+    EXPECT_FLOAT_EQ(out[31], 0);
+}
+
+TEST_F(BatchMatMulCPUTest, qkv_compute) {
     size_t seq_length = 2;
     size_t num_attention_heads = 4;
     size_t size_per_head = 3;
@@ -377,7 +375,7 @@ TEST_F(BertBatchMatMulCPUTest, qkv_compute) {
     };
     float out[48];
 
-    BertQKV bqkv(nullptr, 2, seq_length, num_attention_heads, size_per_head, qk, value, out);
+    Att_QK_V bqkv(nullptr, 2, seq_length, num_attention_heads, size_per_head, qk, value, out);
     bqkv.compute(2);
 
     EXPECT_FLOAT_EQ(out[0], -2);

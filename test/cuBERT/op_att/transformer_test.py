@@ -1,7 +1,7 @@
 import numpy as np
 import tensorflow as tf
 
-from bert import attention_layer, layer_norm
+from modeling import attention_layer, layer_norm
 
 batch_size = 2
 num_attention_heads = 2

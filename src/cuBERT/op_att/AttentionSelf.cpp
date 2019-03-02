@@ -46,11 +46,11 @@ namespace cuBERT {
         this->value_layer_out = static_cast<float *>(cuBERT::malloc(sizeof(float) * max_batch_size * seq_length * num_attention_heads * size_per_head));
         this->attention_scores = static_cast<float *>(cuBERT::malloc(sizeof(float) * max_batch_size * num_attention_heads * seq_length * seq_length));
 
-        bqk = new BertQK(cublas, max_batch_size, seq_length, num_attention_heads, size_per_head,
+        bqk = new Att_Q_K(cublas, max_batch_size, seq_length, num_attention_heads, size_per_head,
                          query_layer_out, key_layer_out, attention_scores,
                          1.0 / std::sqrt(size_per_head), -10000.0f);
 
-        bqkv = new BertQKV(cublas, max_batch_size, seq_length, num_attention_heads, size_per_head,
+        bqkv = new Att_QK_V(cublas, max_batch_size, seq_length, num_attention_heads, size_per_head,
                            attention_scores, value_layer_out, context_layer_out);
     }
 

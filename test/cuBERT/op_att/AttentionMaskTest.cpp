@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
 
 #include "cuBERT/common.h"
-#include "cuBERT/bert/AttentionMask.h"
+#include "cuBERT/op_att/AttentionMask.h"
 using namespace cuBERT;
 
 class AttentionMaskTest : public ::testing::Test {
