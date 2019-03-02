@@ -43,8 +43,18 @@ sudo make install
 ### Protobuf
 
 This library is built and linked against Google Protobuf 3.6.0 (same as
-tensorflow). As different versions of Protobuf can not co-exist in one
-single program, cuBERT is in-compatible with other Protobuf versions.
+tensorflow 1.12). As different versions of Protobuf can not co-exist in 
+one single program, cuBERT is in-compatible with other Protobuf versions.
+
+Check tensorflow protobuf version at their [tensorflow/workspace.bzl](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/workspace.bzl).
+
+|tensorflow|protobuf|
+|---       |---     |
+|1.13.1    |3.6.1.2 |
+|1.12.0    |3.6.0   |
+|1.11.0    |3.6.0   |
+|1.10.1    |3.6.0   |
+|1.10.0    |3.6.0   |
 
 ### CUDA
 
