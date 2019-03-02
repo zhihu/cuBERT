@@ -7,11 +7,7 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/)
 
 find_package(Threads REQUIRED)
 
-find_package(CUDA)
-if (CUDA_FOUND)
-    add_definitions(-DHAVE_CUDA)
-endif()
-
+# OpenMP Support
 find_package(OpenMP)
 if (OPENMP_FOUND)
     set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
@@ -19,28 +15,54 @@ if (OPENMP_FOUND)
     set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
 endif()
 
-# use cmake internal CUDA_ARCH_NAME switch
-# e.g. CUDA_ARCH_NAME="Auto" will autodetect
-#      CUDA_ARCH_NAME="All"  will use all arches
-# cuda_select_nvcc_arch_flags(NVCC_ARCH_FLAGS ${CUDA_ARCH_NAME})
-# list(APPEND CUDA_NVCC_FLAGS ${NVCC_ARCH_FLAGS})
-# message(STATUS "Using CUDA arch flags: ${NVCC_ARCH_FLAGS_readable}")
-set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};-gencode arch=compute_60,code=sm_60)
-set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};-gencode arch=compute_61,code=sm_61)
-set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};-gencode arch=compute_62,code=sm_62)
-set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};-gencode arch=compute_70,code=sm_70)
+include(cub)
+include(protobuf)
 
-set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};--expt-relaxed-constexpr)
-set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};-O3;-use_fast_math;-Xptxas -O3;-Xcompiler -O3)  # Flush denormals to zero
+set(cuBERT_EXTERNAL_LIBRARIES
+        ${protobuf_STATIC_LIBRARIES})
+set(cuBERT_EXTERNAL_DEPENDENCIES
+        cub
+        protobuf)
 
+include_directories(
+        # Source and generated code.
+        src
+        ${CMAKE_CURRENT_BINARY_DIR}
+        # External dependencies.
+        ${cub_INCLUDE_DIR}
+        ${PROTOBUF_INCLUDE_DIRS})
+
+# MKL Support
 include(mkl)
+list(APPEND cuBERT_EXTERNAL_LIBRARIES ${mkl_SHARED_LIBRARIES})
+list(APPEND cuBERT_EXTERNAL_DEPENDENCIES mkl_copy_shared_to_destination)
+include_directories(${mkl_INCLUDE_DIRS})
 
-include_directories(src external ${mkl_INCLUDE_DIRS})
+find_package(CUDA)
 if (CUDA_FOUND)
+    add_definitions(-DHAVE_CUDA)
+
+    # use cmake internal CUDA_ARCH_NAME switch
+    # e.g. CUDA_ARCH_NAME="Auto" will autodetect
+    #      CUDA_ARCH_NAME="All"  will use all arches
+    # cuda_select_nvcc_arch_flags(NVCC_ARCH_FLAGS ${CUDA_ARCH_NAME})
+    # list(APPEND CUDA_NVCC_FLAGS ${NVCC_ARCH_FLAGS})
+    # message(STATUS "Using CUDA arch flags: ${NVCC_ARCH_FLAGS_readable}")
+
+    set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};-gencode arch=compute_60,code=sm_60)
+    set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};-gencode arch=compute_61,code=sm_61)
+    set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};-gencode arch=compute_62,code=sm_62)
+    set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};-gencode arch=compute_70,code=sm_70)
+
+    set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};--expt-relaxed-constexpr)
+    set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};-O3;-use_fast_math;-Xptxas -O3;-Xcompiler -O3)
+    set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};-ftz=true)  # Flush denormals to zero
+
     include_directories(${CUDA_INCLUDE_DIRS})
 endif()
 
-add_subdirectory(external)
+# Let's get to work!
+include(tf_core_framework)
 
 set(SOURCE_FILES
         cuBERT.cpp
@@ -69,8 +91,8 @@ if (CUDA_FOUND)
 else ()
     add_library(cuBERT SHARED ${SOURCE_FILES})
 endif ()
-add_dependencies(cuBERT mkl_copy_shared_to_destination)
-target_link_libraries(cuBERT external ${mkl_SHARED_LIBRARIES})
+add_dependencies(cuBERT ${cuBERT_EXTERNAL_DEPENDENCIES})
+target_link_libraries(cuBERT tf_protos_cc ${cuBERT_EXTERNAL_LIBRARIES})
 
 add_executable(cuBERT_benchmark benchmark.cpp)
 target_link_libraries(cuBERT_benchmark cuBERT)
@@ -99,7 +121,7 @@ add_executable(cuBERT_test test/unit_test.cpp
         test/cuBERT/bert/BertTest.cpp
         test/cuBERT/multi/BertMTest.cpp
         test/cuBERT_test.cpp)
-target_link_libraries(cuBERT_test cuBERT ${googletest_STATIC_LIBRARIES} pthread)
+target_link_libraries(cuBERT_test cuBERT ${googletest_STATIC_LIBRARIES})
 target_include_directories(cuBERT_test PUBLIC ${googletest_INCLUDE_DIRS})
 add_test(UnitTest cuBERT_test)
 
