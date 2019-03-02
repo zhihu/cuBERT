@@ -2,7 +2,7 @@
 #include <algorithm>
 
 #include "cuBERT/common.h"
-#include "cuBERT/bert/AttentionSelf.h"
+#include "cuBERT/op_att/AttentionSelf.h"
 using namespace cuBERT;
 
 class AttentionSelfTest : public ::testing::Test {

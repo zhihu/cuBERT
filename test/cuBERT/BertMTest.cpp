@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
 
 #include "cuBERT/common.h"
-#include "cuBERT/multi/BertM.h"
+#include "cuBERT/BertM.h"
 using namespace cuBERT;
 
 class BertMTest : public ::testing::Test {

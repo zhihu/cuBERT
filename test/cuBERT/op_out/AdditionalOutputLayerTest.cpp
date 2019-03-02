@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
 
 #include "cuBERT/common.h"
-#include "cuBERT/bert/AdditionalOutputLayer.h"
+#include "cuBERT/op_out/AdditionalOutputLayer.h"
 using namespace cuBERT;
 
 class AdditionalOutputLayerTest : public ::testing::Test {

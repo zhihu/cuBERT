@@ -4,10 +4,10 @@
 #include <string>
 #include <unordered_map>
 
-#include "./BertEmbeddings.h"
-#include "./Transformer.h"
-#include "./BertPooler.h"
-#include "./AdditionalOutputLayer.h"
+#include "cuBERT/op_bert/BertEmbeddings.h"
+#include "cuBERT/op_att/Transformer.h"
+#include "cuBERT/op_bert/BertPooler.h"
+#include "cuBERT/op_out/AdditionalOutputLayer.h"
 
 namespace cuBERT {
     class Bert {

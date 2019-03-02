@@ -5,7 +5,7 @@
 #include "cuBERT.h"
 #include "cuBERT/common.h"
 #include "cuBERT/tokenization.h"
-#include "cuBERT/multi/BertM.h"
+#include "cuBERT/BertM.h"
 
 void cuBERT_initialize(bool force_cpu) {
     cuBERT::initialize(force_cpu);

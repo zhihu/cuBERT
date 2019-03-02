@@ -2,7 +2,7 @@
 #include <cmath>
 
 #include "cuBERT/common.h"
-#include "cuBERT/bert/BertPooler.h"
+#include "cuBERT/op_bert/BertPooler.h"
 using namespace cuBERT;
 
 class BertPoolerTest : public ::testing::Test {

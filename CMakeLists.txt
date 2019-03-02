@@ -69,21 +69,21 @@ set(SOURCE_FILES
         src/utf8proc/utf8proc.c
         src/cuBERT/common.cpp
         src/cuBERT/tokenization.cpp
+        src/cuBERT/Bert.cpp
+        src/cuBERT/BertM.cpp
         src/cuBERT/tensorflow/Graph.cpp
         src/cuBERT/op/GELU.cpp src/cuBERT/op/GELU.cu
         src/cuBERT/op/Dense.cpp
         src/cuBERT/op/Embedding.cpp src/cuBERT/op/Embedding.cu
         src/cuBERT/op/Softmax.cpp src/cuBERT/op/Softmax.cu
         src/cuBERT/op/LayerNorm.cpp src/cuBERT/op/LayerNorm.cu
-        src/cuBERT/bert/BertEmbeddings.cpp
-        src/cuBERT/bert/AttentionSelf.cpp
-        src/cuBERT/bert/AttentionMask.cpp src/cuBERT/bert/AttentionMask.cu
-        src/cuBERT/bert/BertPooler.cpp src/cuBERT/bert/BertPooler.cu
-        src/cuBERT/bert/Transformer.cpp
-        src/cuBERT/bert/Bert.cpp
-        src/cuBERT/bert/BertBatchMatMul.cpp
-        src/cuBERT/bert/AdditionalOutputLayer.cpp
-        src/cuBERT/multi/BertM.cpp)
+        src/cuBERT/op_att/AttentionSelf.cpp
+        src/cuBERT/op_att/AttentionMask.cpp src/cuBERT/op_att/AttentionMask.cu
+        src/cuBERT/op_att/BatchMatMul.cpp
+        src/cuBERT/op_att/Transformer.cpp
+        src/cuBERT/op_bert/BertEmbeddings.cpp
+        src/cuBERT/op_bert/BertPooler.cpp src/cuBERT/op_bert/BertPooler.cu
+        src/cuBERT/op_out/AdditionalOutputLayer.cpp)
 
 if (CUDA_FOUND)
     cuda_add_library(cuBERT SHARED ${SOURCE_FILES})
@@ -111,15 +111,15 @@ add_executable(cuBERT_test test/unit_test.cpp
         test/cuBERT/op/SoftmaxTest.cpp
         test/cuBERT/op/GELUTest.cpp
         test/cuBERT/op/EmbeddingTest.cpp
-        test/cuBERT/bert/BertBatchMatMulTest.cpp
-        test/cuBERT/bert/AttentionSelfTest.cpp
-        test/cuBERT/bert/TransformerTest.cpp
-        test/cuBERT/bert/BertEmbeddingsTest.cpp
-        test/cuBERT/bert/AttentionMaskTest.cpp
-        test/cuBERT/bert/BertPoolerTest.cpp
-        test/cuBERT/bert/AdditionalOutputLayerTest.cpp
-        test/cuBERT/bert/BertTest.cpp
-        test/cuBERT/multi/BertMTest.cpp
+        test/cuBERT/op_att/BatchMatMulTest.cpp
+        test/cuBERT/op_att/AttentionSelfTest.cpp
+        test/cuBERT/op_att/TransformerTest.cpp
+        test/cuBERT/op_att/AttentionMaskTest.cpp
+        test/cuBERT/op_bert/BertEmbeddingsTest.cpp
+        test/cuBERT/op_bert/BertPoolerTest.cpp
+        test/cuBERT/op_out/AdditionalOutputLayerTest.cpp
+        test/cuBERT/BertTest.cpp
+        test/cuBERT/BertMTest.cpp
         test/cuBERT_test.cpp)
 target_link_libraries(cuBERT_test cuBERT ${googletest_STATIC_LIBRARIES})
 target_include_directories(cuBERT_test PUBLIC ${googletest_INCLUDE_DIRS})

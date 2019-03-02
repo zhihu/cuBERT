@@ -2,7 +2,7 @@
 #include <algorithm>
 
 #include "cuBERT/common.h"
-#include "cuBERT/bert/Transformer.h"
+#include "cuBERT/op_att/Transformer.h"
 using namespace cuBERT;
 
 float query_kernel[36] = {-0.07848196, -0.18097023, 0.06933199, -0.07760319, 0.11389876, 0.05236414,

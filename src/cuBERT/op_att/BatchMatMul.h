@@ -12,15 +12,15 @@ namespace cuBERT {
      *
      * QK = Q * K^T: [N, seq_length, num_attention_heads, seq_length]
      */
-    class BertQK {
+    class Att_Q_K {
     public:
-        explicit BertQK(void* handle,
+        explicit Att_Q_K(void* handle,
                         size_t max_batch_size,
                         size_t seq_length, size_t num_attention_heads, size_t size_per_head,
                         float* query, float* key, float* out,
                         float alpha = 1, float beta = 0);
 
-        virtual ~BertQK();
+        virtual ~Att_Q_K();
 
         void compute(size_t batch_size);
 
@@ -40,15 +40,15 @@ namespace cuBERT {
         float **out_array;
     };
 
-    class BertQKV {
+    class Att_QK_V {
     public:
-        explicit BertQKV(void* handle,
+        explicit Att_QK_V(void* handle,
                          size_t max_batch_size,
                          size_t seq_length, size_t num_attention_heads, size_t size_per_head,
                          float* qk, float* value, float* out,
                          float alpha = 1, float beta = 0);
 
-        virtual ~BertQKV();
+        virtual ~Att_QK_V();
 
         void compute(size_t batch_size);
 

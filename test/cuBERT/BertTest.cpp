@@ -2,7 +2,7 @@
 #include <unordered_map>
 
 #include "cuBERT/common.h"
-#include "cuBERT/bert/Bert.h"
+#include "cuBERT/Bert.h"
 #include "cuBERT/tensorflow/Graph.h"
 using namespace cuBERT;
 
