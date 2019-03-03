@@ -163,12 +163,4 @@ namespace cuBERT {
             buffer_filled = true;
         }
     }
-
-    float *Bert::get_logits() {
-        return this->_logits;
-    }
-
-    float *Bert::get_embedding_output() {
-        return this->_embedding_output;
-    }
 }
