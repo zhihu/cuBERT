@@ -1,22 +1,11 @@
 #include "gtest/gtest.h"
 #include <cmath>
 
-#include "cuBERT/common.h"
+#include "../common_test.h"
 #include "cuBERT/op/GELU.h"
 using namespace cuBERT;
 
-class GELUTest : public ::testing::Test {
-protected:
-    void SetUp() override {
-        cuBERT::initialize(true);
-    }
-
-    void TearDown() override {
-        cuBERT::finalize();
-    }
-};
-
-TEST_F(GELUTest, compute_cpu_) {
+TEST_F(CommonTest, gelu) {
     float inout[5] = {-2, -1, 0, 1, 2};
 
     float expect[5];
@@ -25,7 +14,14 @@ TEST_F(GELUTest, compute_cpu_) {
     }
 
     GELU gelu;
-    gelu.compute_(5, inout, nullptr);
+
+    float* inout_gpu = (float*) cuBERT::malloc(sizeof(float) * 5);
+    cuBERT::memcpy(inout_gpu, inout, sizeof(float) * 5, 1);
+
+    gelu.compute_(5, inout_gpu, nullptr);
+
+    cuBERT::memcpy(inout, inout_gpu, sizeof(float) * 5, 2);
+    cuBERT::free(inout_gpu);
 
     EXPECT_NEAR(inout[0], expect[0], 1e-5);
     EXPECT_NEAR(inout[1], expect[1], 1e-5);

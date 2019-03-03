@@ -1,21 +1,10 @@
 #include "gtest/gtest.h"
 
-#include "cuBERT/common.h"
+#include "common_test.h"
 #include "cuBERT/BertM.h"
 using namespace cuBERT;
 
-class BertMTest : public ::testing::Test {
-protected:
-    void SetUp() override {
-        cuBERT::initialize();
-    }
-
-    void TearDown() override {
-        cuBERT::finalize();
-    }
-};
-
-TEST_F(BertMTest, compute) {
+TEST_F(CommonTest, bert_m) {
     BertM bert("bert_frozen_seq32.pb", 128, 32);
 
     int input_ids[] = {
@@ -34,18 +23,18 @@ TEST_F(BertMTest, compute) {
     float logits[2];
 
     bert.compute(2, input_ids, input_mask, segment_ids, logits);
-    EXPECT_FLOAT_EQ(logits[0], -2.9427543);
-    EXPECT_FLOAT_EQ(logits[1], -1.4876306);
+    EXPECT_NEAR(logits[0], -2.9427543, 1e-5);
+    EXPECT_NEAR(logits[1], -1.4876306, 1e-5);
 
     bert.compute(2, input_ids, input_mask, segment_ids, logits);
-    EXPECT_FLOAT_EQ(logits[0], -2.9427543);
-    EXPECT_FLOAT_EQ(logits[1], -1.4876306);
+    EXPECT_NEAR(logits[0], -2.9427543, 1e-5);
+    EXPECT_NEAR(logits[1], -1.4876306, 1e-5);
 
     bert.compute(2, input_ids, input_mask, segment_ids, logits);
-    EXPECT_FLOAT_EQ(logits[0], -2.9427543);
-    EXPECT_FLOAT_EQ(logits[1], -1.4876306);
+    EXPECT_NEAR(logits[0], -2.9427543, 1e-5);
+    EXPECT_NEAR(logits[1], -1.4876306, 1e-5);
 
     bert.compute(2, input_ids, input_mask, segment_ids, logits);
-    EXPECT_FLOAT_EQ(logits[0], -2.9427543);
-    EXPECT_FLOAT_EQ(logits[1], -1.4876306);
+    EXPECT_NEAR(logits[0], -2.9427543, 1e-5);
+    EXPECT_NEAR(logits[1], -1.4876306, 1e-5);
 }

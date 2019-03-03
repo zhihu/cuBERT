@@ -1,25 +1,10 @@
 #include "gtest/gtest.h"
 
-#include "cuBERT/common.h"
+#include "../common_test.h"
 #include "cuBERT/op/Dense.h"
 using namespace cuBERT;
 
-class DenseTest : public ::testing::Test {
-protected:
-    void SetUp() override {
-        cuBERT::initialize();
-        handle = cuBERT::blas_create();
-    }
-
-    void TearDown() override {
-        cuBERT::blas_destroy(handle);
-        cuBERT::finalize();
-    }
-
-    void* handle;
-};
-
-TEST_F(DenseTest, compute) {
+TEST_F(CommonTest, dense) {
     float kernel[6] = {1, 2, 3, 4, 5, 6};
     float bias[3] = {-3, -2, -1};
 
@@ -38,38 +23,6 @@ TEST_F(DenseTest, compute) {
 
     cuBERT::free(output_gpu);
     cuBERT::free(input_gpu);
-
-    EXPECT_FLOAT_EQ(output[0], 9 - 3);
-    EXPECT_FLOAT_EQ(output[1], 12 - 2);
-    EXPECT_FLOAT_EQ(output[2], 15 - 1);
-    EXPECT_FLOAT_EQ(output[3], 19 - 3);
-    EXPECT_FLOAT_EQ(output[4], 26 - 2);
-    EXPECT_FLOAT_EQ(output[5], 33 - 1);
-    EXPECT_FLOAT_EQ(output[6], 29 - 3);
-    EXPECT_FLOAT_EQ(output[7], 40 - 2);
-    EXPECT_FLOAT_EQ(output[8], 51 - 1);
-}
-
-class DenseCPUTest : public ::testing::Test {
-protected:
-    void SetUp() override {
-        cuBERT::initialize(true);
-    }
-
-    void TearDown() override {
-        cuBERT::finalize();
-    }
-};
-
-TEST_F(DenseCPUTest, compute) {
-    float kernel[6] = {1, 2, 3, 4, 5, 6};
-    float bias[3] = {-3, -2, -1};
-
-    Dense dense(nullptr, 2, 3, kernel, bias, 16);
-
-    float input[6] = {1, 2, 3, 4, 5, 6};
-    float output[9];
-    dense.compute(3, input, output);
 
     EXPECT_FLOAT_EQ(output[0], 9 - 3);
     EXPECT_FLOAT_EQ(output[1], 12 - 2);

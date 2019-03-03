@@ -1,26 +1,11 @@
 #include "gtest/gtest.h"
 #include <cmath>
 
-#include "cuBERT/common.h"
+#include "../common_test.h"
 #include "cuBERT/op_bert/BertPooler.h"
 using namespace cuBERT;
 
-class BertPoolerTest : public ::testing::Test {
-protected:
-    void SetUp() override {
-        cuBERT::initialize();
-        handle = cuBERT::blas_create();
-    }
-
-    void TearDown() override {
-        cuBERT::blas_destroy(handle);
-        cuBERT::finalize();
-    }
-
-    void* handle;
-};
-
-TEST_F(BertPoolerTest, compute) {
+TEST_F(CommonTest, bert_pooler) {
     size_t seq_length = 3;
     size_t hidden_size = 2;
 
@@ -50,46 +35,6 @@ TEST_F(BertPoolerTest, compute) {
     cuBERT::memcpy(out, out_gpu, sizeof(float) * 4, 2);
     cuBERT::free(in_gpu);
     cuBERT::free(out_gpu);
-
-    EXPECT_FLOAT_EQ(out[0], tanhf(2));
-    EXPECT_FLOAT_EQ(out[1], tanhf(4));
-    EXPECT_FLOAT_EQ(out[2], tanhf(4));
-    EXPECT_FLOAT_EQ(out[3], tanhf(2));
-}
-
-
-class BertPoolerCPUTest : public ::testing::Test {
-protected:
-    void SetUp() override {
-        cuBERT::initialize(true);
-    }
-
-    void TearDown() override {
-        cuBERT::finalize();
-    }
-};
-
-TEST_F(BertPoolerCPUTest, compute_cpu) {
-    size_t seq_length = 3;
-    size_t hidden_size = 2;
-
-    float kernel[] = {-1, 0,
-                      0, 1};
-    float bias[] = {2, 3};
-
-    BertPooler pooler(nullptr, seq_length, hidden_size, kernel, bias, 32);
-
-    float in[12] = {
-            0, 1,
-            1, 1,
-            2, 1,
-            -2, -1,
-            3, 2,
-            0, 5,
-    };
-    float out[4];
-
-    pooler.compute(2, in, out);
 
     EXPECT_FLOAT_EQ(out[0], tanhf(2));
     EXPECT_FLOAT_EQ(out[1], tanhf(4));
