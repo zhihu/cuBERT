@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
 #include <algorithm>
 
-#include "cuBERT/common.h"
+#include "../common_test.h"
 #include "cuBERT/op_att/Transformer.h"
 using namespace cuBERT;
 
@@ -58,22 +58,8 @@ float output_bias[6] = {-0.01755394, 0.02878171, 0.04216052, 0.01562296, 0.01129
 float output_norm_beta[6] = {0.00422856, 0.04091637, 0.03255221, -0.03470522, 0.01916321, -0.00184435};
 float output_norm_gamma[6] = {0.9903053, 0.95159506, 0.98762059, 0.99406842, 1.00686035, 0.97648946};
 
-class TransformerTest : public ::testing::Test {
-protected:
-    void SetUp() override {
-        cuBERT::initialize();
-        cublas = cuBERT::blas_create();
-    }
 
-    void TearDown() override {
-        cuBERT::blas_destroy(cublas);
-        cuBERT::finalize();
-    }
-
-    void* cublas;
-};
-
-TEST_F(TransformerTest, compute) {
+TEST_F(CommonTest, transformer) {
     std::unordered_map<std::string, float *> var = {
             {"encoder/layer_0/attention/self/query/kernel",      query_kernel},
             {"encoder/layer_0/attention/self/query/bias",        query_bias},
@@ -101,7 +87,7 @@ TEST_F(TransformerTest, compute) {
 
     size_t hidden_size = num_attention_heads * size_per_head;
 
-    Transformer transformer(cublas, "encoder", var, 32,
+    Transformer transformer(handle, "encoder", var, 32,
                             seq_length, hidden_size, 1, num_attention_heads, intermediate_size);
 
     float tensor[48] = {0, 1, 2, 3, 4, 5,
@@ -147,80 +133,7 @@ TEST_F(TransformerTest, compute) {
     EXPECT_FLOAT_EQ(out[47], 1.5452648);
 }
 
-
-class TransformerCPUTest : public ::testing::Test {
-protected:
-    void SetUp() override {
-        cuBERT::initialize(true);
-    }
-
-    void TearDown() override {
-        cuBERT::finalize();
-    }
-};
-
-TEST_F(TransformerCPUTest, compute_cpu) {
-    std::unordered_map<std::string, float *> var = {
-            {"encoder/layer_0/attention/self/query/kernel",      query_kernel},
-            {"encoder/layer_0/attention/self/query/bias",        query_bias},
-            {"encoder/layer_0/attention/self/key/kernel",        key_kernel},
-            {"encoder/layer_0/attention/self/key/bias",          key_bias},
-            {"encoder/layer_0/attention/self/value/kernel",      value_kernel},
-            {"encoder/layer_0/attention/self/value/bias",        value_bias},
-            {"encoder/layer_0/attention/output/dense/kernel",    attention_output_kernel},
-            {"encoder/layer_0/attention/output/dense/bias",      attention_output_bias},
-            {"encoder/layer_0/attention/output/LayerNorm/beta",  attention_norm_beta},
-            {"encoder/layer_0/attention/output/LayerNorm/gamma", attention_norm_gamma},
-            {"encoder/layer_0/intermediate/dense/kernel",        intermediate_kernel},
-            {"encoder/layer_0/intermediate/dense/bias",          intermediate_bias},
-            {"encoder/layer_0/output/dense/kernel",              output_kernel},
-            {"encoder/layer_0/output/dense/bias",                output_bias},
-            {"encoder/layer_0/output/LayerNorm/beta",            output_norm_beta},
-            {"encoder/layer_0/output/LayerNorm/gamma",           output_norm_gamma},
-    };
-
-    size_t batch_size = 2;
-    size_t num_attention_heads = 2;
-    size_t size_per_head = 3;
-    size_t seq_length = 4;
-    size_t intermediate_size = 5;
-
-    size_t hidden_size = num_attention_heads * size_per_head;
-
-    Transformer transformer(nullptr, "encoder", var, 32,
-                            seq_length, hidden_size, 1, num_attention_heads, intermediate_size);
-
-    float tensor[48] = {0, 1, 2, 3, 4, 5,
-                        6, 7, 8, 9, 10, 11,
-                        12, 13, 14, 15, 16, 17,
-                        18, 19, 20, 21, 22, 23,
-                        24, 25, 26, 27, 28, 29,
-                        30, 31, 32, 33, 34, 35,
-                        36, 37, 38, 39, 40, 41,
-                        42, 43, 44, 45, 46, 47};
-
-    char mask[8];
-    std::fill_n(mask, 8, 1);
-    mask[0] = 0;
-
-    // compute
-    float *out = transformer.compute(batch_size, tensor, mask);
-
-    EXPECT_FLOAT_EQ(out[0], -1.655961);
-    EXPECT_FLOAT_EQ(out[1], -0.5762695);
-    EXPECT_NEAR(out[2], 0.019856449, 1e-6);
-    EXPECT_FLOAT_EQ(out[3], 0.22128674);
-    EXPECT_FLOAT_EQ(out[4], 0.5440447);
-    EXPECT_FLOAT_EQ(out[5], 1.5205542);
-    EXPECT_FLOAT_EQ(out[42], -1.7647616);
-    EXPECT_FLOAT_EQ(out[43], -0.35221428);
-    EXPECT_FLOAT_EQ(out[44], 0.23999988);
-    EXPECT_FLOAT_EQ(out[45], 0.19876842);
-    EXPECT_FLOAT_EQ(out[46], 0.19049288);
-    EXPECT_FLOAT_EQ(out[47], 1.5452648);
-}
-
-TEST_F(TransformerTest, compute_complex) {
+TEST_F(CommonTest, transformer_complex) {
     std::unordered_map<std::string, float *> var = {
             {"encoder/layer_0/attention/self/query/kernel",      query_kernel},
             {"encoder/layer_0/attention/self/query/bias",        query_bias},
@@ -264,7 +177,7 @@ TEST_F(TransformerTest, compute_complex) {
 
     size_t hidden_size = num_attention_heads * size_per_head;
 
-    Transformer transformer(cublas, "encoder", var, 32,
+    Transformer transformer(handle, "encoder", var, 32,
                             seq_length, hidden_size, 2, num_attention_heads, intermediate_size);
 
     float tensor[48] = {0, 1, 2, 3, 4, 5,
@@ -295,83 +208,6 @@ TEST_F(TransformerTest, compute_complex) {
     cuBERT::memcpy(out, out_gpu, sizeof(float) * 48, 2);
     cuBERT::free(tensor_gpu);
     cuBERT::free(mask_gpu);
-
-    EXPECT_NEAR(out[0], -1.6749241, 1e-5);
-    EXPECT_NEAR(out[1], -0.5803416, 1e-5);
-    EXPECT_NEAR(out[2], 0.07921408, 1e-5);
-    EXPECT_NEAR(out[3], 0.18109897, 1e-5);
-    EXPECT_NEAR(out[4], 0.5763312, 1e-5);
-    EXPECT_NEAR(out[5], 1.4929073, 1e-5);
-    EXPECT_NEAR(out[42], -1.7720084, 1e-5);
-    EXPECT_NEAR(out[43], -0.3701498, 1e-5);
-    EXPECT_NEAR(out[44], 0.3161025, 1e-5);
-    EXPECT_NEAR(out[45], 0.15598607, 1e-5);
-    EXPECT_NEAR(out[46], 0.20395504, 1e-5);
-    EXPECT_NEAR(out[47], 1.5245408, 1e-5);
-}
-
-TEST_F(TransformerCPUTest, compute_complex_cpu) {
-    std::unordered_map<std::string, float *> var = {
-            {"encoder/layer_0/attention/self/query/kernel",      query_kernel},
-            {"encoder/layer_0/attention/self/query/bias",        query_bias},
-            {"encoder/layer_0/attention/self/key/kernel",        key_kernel},
-            {"encoder/layer_0/attention/self/key/bias",          key_bias},
-            {"encoder/layer_0/attention/self/value/kernel",      value_kernel},
-            {"encoder/layer_0/attention/self/value/bias",        value_bias},
-            {"encoder/layer_0/attention/output/dense/kernel",    attention_output_kernel},
-            {"encoder/layer_0/attention/output/dense/bias",      attention_output_bias},
-            {"encoder/layer_0/attention/output/LayerNorm/beta",  attention_norm_beta},
-            {"encoder/layer_0/attention/output/LayerNorm/gamma", attention_norm_gamma},
-            {"encoder/layer_0/intermediate/dense/kernel",        intermediate_kernel},
-            {"encoder/layer_0/intermediate/dense/bias",          intermediate_bias},
-            {"encoder/layer_0/output/dense/kernel",              output_kernel},
-            {"encoder/layer_0/output/dense/bias",                output_bias},
-            {"encoder/layer_0/output/LayerNorm/beta",            output_norm_beta},
-            {"encoder/layer_0/output/LayerNorm/gamma",           output_norm_gamma},
-            {"encoder/layer_1/attention/self/query/kernel",      query_kernel},
-            {"encoder/layer_1/attention/self/query/bias",        query_bias},
-            {"encoder/layer_1/attention/self/key/kernel",        key_kernel},
-            {"encoder/layer_1/attention/self/key/bias",          key_bias},
-            {"encoder/layer_1/attention/self/value/kernel",      value_kernel},
-            {"encoder/layer_1/attention/self/value/bias",        value_bias},
-            {"encoder/layer_1/attention/output/dense/kernel",    attention_output_kernel},
-            {"encoder/layer_1/attention/output/dense/bias",      attention_output_bias},
-            {"encoder/layer_1/attention/output/LayerNorm/beta",  attention_norm_beta},
-            {"encoder/layer_1/attention/output/LayerNorm/gamma", attention_norm_gamma},
-            {"encoder/layer_1/intermediate/dense/kernel",        intermediate_kernel},
-            {"encoder/layer_1/intermediate/dense/bias",          intermediate_bias},
-            {"encoder/layer_1/output/dense/kernel",              output_kernel},
-            {"encoder/layer_1/output/dense/bias",                output_bias},
-            {"encoder/layer_1/output/LayerNorm/beta",            output_norm_beta},
-            {"encoder/layer_1/output/LayerNorm/gamma",           output_norm_gamma},
-    };
-
-    size_t batch_size = 2;
-    size_t num_attention_heads = 2;
-    size_t size_per_head = 3;
-    size_t seq_length = 4;
-    size_t intermediate_size = 5;
-
-    size_t hidden_size = num_attention_heads * size_per_head;
-
-    Transformer transformer(nullptr, "encoder", var, 32,
-                            seq_length, hidden_size, 2, num_attention_heads, intermediate_size);
-
-    float tensor[48] = {0, 1, 2, 3, 4, 5,
-                        6, 7, 8, 9, 10, 11,
-                        12, 13, 14, 15, 16, 17,
-                        18, 19, 20, 21, 22, 23,
-                        24, 25, 26, 27, 28, 29,
-                        30, 31, 32, 33, 34, 35,
-                        36, 37, 38, 39, 40, 41,
-                        42, 43, 44, 45, 46, 47};
-
-    char mask[8];
-    std::fill_n(mask, 8, 1);
-    mask[0] = 0;
-
-    // compute
-    float *out = transformer.compute(batch_size, tensor, mask);
 
     EXPECT_NEAR(out[0], -1.6749241, 1e-5);
     EXPECT_NEAR(out[1], -0.5803416, 1e-5);
