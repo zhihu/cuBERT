@@ -12,18 +12,29 @@ TF_Output t_output;
 TF_Graph* graph;
 TF_Session* session;
 
-void tf_open(const char *export_dir) {
-    const char* tag = "serve";
+void tf_open(const char *filename) {
+    std::ifstream input(filename, std::ios::binary);
+    std::string str(std::istreambuf_iterator<char>{input}, {});
+    input.close();
+
     TF_Status* status = TF_NewStatus();
     TF_SessionOptions* opts = TF_NewSessionOptions();
+    TF_ImportGraphDefOptions* gopts = TF_NewImportGraphDefOptions();
+    TF_Buffer* buffer = TF_NewBufferFromString(str.c_str(), str.length());
 
     graph = TF_NewGraph();
-    session = TF_LoadSessionFromSavedModel(opts, nullptr, export_dir, &tag, 1, graph, nullptr, status);
+    TF_GraphImportGraphDef(graph, buffer, gopts, status);
+    session = TF_NewSession(graph, opts, status);
 
     t_inputs[0] = {TF_GraphOperationByName(graph, "input_ids"), 0};
     t_inputs[1] = {TF_GraphOperationByName(graph, "input_mask"), 0};
     t_inputs[2] = {TF_GraphOperationByName(graph, "segment_ids"), 0};
     t_output = {TF_GraphOperationByName(graph, "loss/output"), 0};
+
+    TF_DeleteBuffer(buffer);
+    TF_DeleteImportGraphDefOptions(gopts);
+    TF_DeleteSessionOptions(opts);
+    TF_DeleteStatus(status);
 }
 
 void tf_compute(TF_Tensor *input_ids, TF_Tensor *input_mask, TF_Tensor *segment_ids, TF_Tensor **output) {
@@ -70,7 +81,7 @@ int main() {
     TF_Tensor* tf_segment_ids = TF_AllocateTensor(TF_INT64, dims, 2, sizeof(int64_t) * dims[0] * dims[1]);
     std::cout << TF_Version() << std::endl;
 
-    tf_open("bert");
+    tf_open("bert_frozen_seq32.pb");
     std::ofstream result("tfBERT.txt");
 
     std::cout << "=== warm_up ===" << std::endl;
