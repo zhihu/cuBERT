@@ -35,15 +35,24 @@ namespace cuBERT {
         }
     }
 
+    template<bool cpu>
     __host__ void layer_norm_(float *inout,
                               const int batch_size,
                               const int channel,
-                              float *beta,
-                              float *gamma,
-                              void* stream) {
+                              const float *beta,
+                              const float *gamma,
+                              void *stream) {
         const int blocks = (batch_size + 127) / 128;
         kernel_layer_norm_ << < blocks, 128, 0, (cudaStream_t) stream >> > (inout, batch_size, channel, beta, gamma);
     }
+
+    template
+    __host__ void layer_norm_<false>(float *inout,
+                                     const int batch_size,
+                                     const int channel,
+                                     const float *beta,
+                                     const float *gamma,
+                                     void *stream);
 
     __global__ void kernel_momentum_cub(const float *__restrict__ in,
                                         const float *__restrict__ inout,
@@ -100,18 +109,30 @@ namespace cuBERT {
                 __ldg(gamma + channel_idx) * var * (__ldg(inout + idx) + __ldg(in + idx) - mean);
     }
 
-    __host__ void layer_norm_(float *in,
+    template<bool cpu>
+    __host__ void layer_norm_(const float *in,
                               float *inout,
                               const int batch_size,
                               const int channel,
                               float *mean_gpu,
                               float *var_gpu,
-                              float *beta,
-                              float *gamma,
-                              void* stream) {
+                              const float *beta,
+                              const float *gamma,
+                              void *stream) {
         kernel_momentum_cub <<<batch_size, 128, 0, (cudaStream_t) stream>>> (in, inout, batch_size, channel, mean_gpu, var_gpu);
 
         const int all_blocks = (batch_size * channel + 127) / 128;
         kernel_batchnorm_ <<<all_blocks, 128, 0, (cudaStream_t) stream>>> (in, inout, batch_size, channel, mean_gpu, var_gpu, beta, gamma);
     }
+
+    template
+    __host__ void layer_norm_<false>(const float *in,
+                                     float *inout,
+                                     const int batch_size,
+                                     const int channel,
+                                     float *mean_gpu,
+                                     float *var_gpu,
+                                     const float *beta,
+                                     const float *gamma,
+                                     void *stream);
 }

@@ -5,11 +5,10 @@
 
 namespace cuBERT {
 
-#ifdef HAVE_CUDA
+    template <bool cpu>
     void tanh_(float *inout,
                const int N,
                void *stream);
-#endif
 
     class BertPooler {
     public:

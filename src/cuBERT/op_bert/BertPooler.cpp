@@ -1,12 +1,20 @@
-#include <omp.h>
 #include <cmath>
-#include <stdexcept>
 
 #include "cuBERT/common.h"
 #include "BertPooler.h"
 
 namespace cuBERT {
     const static float ONE = 1;
+
+    template<>
+    void tanh_<true>(float *inout,
+                     const int N,
+                     void *stream) {
+#pragma omp parallel for
+        for (int i = 0; i < N; ++i) {
+            inout[i] = tanhf(inout[i]);
+        }
+    }
 
     BertPooler::BertPooler(void* handle,
                            size_t seq_length, size_t hidden_size,
@@ -44,17 +52,14 @@ namespace cuBERT {
                            ONE,
                            output, hidden_size);
 
-        if (cuBERT::gpu()) {
 #ifdef HAVE_CUDA
-            tanh_(output, batch_size * hidden_size, streamId);
-#else
-            throw std::invalid_argument("Compile without CUDA, but run with GPU.");
-#endif
+        if (cuBERT::gpu()) {
+            tanh_<false>(output, batch_size * hidden_size, streamId);
         } else {
-#pragma omp parallel for
-            for (int i = 0; i < batch_size * hidden_size; ++i) {
-                output[i] = tanhf(output[i]);
-            }
+            tanh_<true>(output, batch_size * hidden_size, streamId);
         }
+#else
+        tanh_<true>(output, batch_size * hidden_size, streamId);
+#endif
     }
 }

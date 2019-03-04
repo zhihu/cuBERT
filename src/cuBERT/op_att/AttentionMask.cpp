@@ -1,12 +1,20 @@
-#include <omp.h>
-#include <stdexcept>
-
 #include "cuBERT/common.h"
 #include "AttentionMask.h"
 
 namespace cuBERT {
     const static float ZERO = 0;
     const static float ONE = 1;
+
+    template<>
+    void _not<true>(const char *in,
+                    float *out,
+                    const int N,
+                    void *stream) {
+#pragma omp parallel for
+        for (int i = 0; i < N; ++i) {
+            out[i] = !in[i];
+        }
+    }
 
     AttentionMask::AttentionMask(void* handle,
                                  size_t seq_length, size_t num_attention_heads, size_t max_batch_size) {
@@ -26,19 +34,17 @@ namespace cuBERT {
     }
 
     void AttentionMask::compute(size_t batch_size, char *in, float *out_gpu) {
-        if (gpu()) {
+        void *stream = cuBERT::blas_get_stream(handle);
+
 #ifdef HAVE_CUDA
-            void *stream = cuBERT::blas_get_stream(handle);
-            _not(in, neg, batch_size * seq_length, stream);
-#else
-            throw std::invalid_argument("Compile without CUDA, but run with GPU.");
-#endif
+        if (cuBERT::gpu()) {
+            _not<false>(in, neg, batch_size * seq_length, stream);
         } else {
-#pragma omp parallel for
-            for (int i = 0; i < batch_size * seq_length; ++i) {
-                neg[i] = !in[i];
-            }
+            _not<true>(in, neg, batch_size * seq_length, stream);
         }
+#else
+        _not<true>(in, neg, batch_size * seq_length, stream);
+#endif
 
         cuBERT::blas_sgemm_strided_batch(handle,
                                          false, false,

@@ -1,10 +1,29 @@
 #include <cmath>
-#include <omp.h>
 
 #include "cuBERT/common.h"
 #include "Softmax.h"
 
 namespace cuBERT {
+
+    template<>
+    void softmax_<true>(float *inout,
+                        const int batch_size,
+                        const int channel,
+                        float *sum_gpu,
+                        void *stream) {
+#pragma omp parallel for
+        for (int batch_idx = 0; batch_idx < batch_size; ++batch_idx) {
+            float sum = 0;
+            for (int i = batch_idx * channel; i < (batch_idx + 1) * channel; ++i) {
+                inout[i] = expf(inout[i]);
+                sum += inout[i];
+            }
+
+            for (int i = batch_idx * channel; i < (batch_idx + 1) * channel; ++i) {
+                inout[i] = inout[i] / sum;
+            }
+        }
+    }
 
     Softmax::Softmax(size_t max_batch_size, size_t channel) {
         this->channel = channel;
@@ -18,22 +37,10 @@ namespace cuBERT {
     void Softmax::compute_(size_t batch_size, float *inout_gpu, void* stream) {
 #ifdef HAVE_CUDA
         if (cuBERT::gpu()) {
-            softmax_(inout_gpu, batch_size, channel, sum_gpu, stream);
+            softmax_<false>(inout_gpu, batch_size, channel, sum_gpu, stream);
             return;
         }
 #endif
-
-#pragma omp parallel for
-        for (int batch_idx = 0; batch_idx < batch_size; ++batch_idx) {
-            float sum = 0;
-            for (int i = batch_idx * channel; i < (batch_idx + 1) * channel; ++i) {
-                inout_gpu[i] = expf(inout_gpu[i]);
-                sum += inout_gpu[i];
-            }
-
-            for (int i = batch_idx * channel; i < (batch_idx + 1) * channel; ++i) {
-                inout_gpu[i] = inout_gpu[i] / sum;
-            }
-        }
+        softmax_<true>(inout_gpu, batch_size, channel, sum_gpu, stream);
     }
 }

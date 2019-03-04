@@ -4,12 +4,12 @@
 #include <cstddef>
 
 namespace cuBERT {
-#ifdef HAVE_CUDA
+
+    template <bool cpu>
     void _not(const char *in,
               float *out,
               const int N,
               void *stream);
-#endif
 
 /**
  * 1. compute: 1 - in_gpu
