@@ -28,5 +28,4 @@ TEST_F(CommonTest, gelu) {
     EXPECT_NEAR(inout[2], expect[2], 1e-5);
     EXPECT_NEAR(inout[3], expect[3], 1e-5);
     EXPECT_NEAR(inout[4], expect[4], 1e-5);
-    EXPECT_NEAR(inout[5], expect[5], 1e-5);
 }
