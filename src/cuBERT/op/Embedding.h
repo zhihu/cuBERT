@@ -6,15 +6,13 @@
 
 namespace cuBERT {
 
-#ifdef HAVE_CUDA
-    template<typename T>
+    template<bool cpu, typename T>
     void embedding(const T *input_ids,
                    const int input_ids_len,
                    const float *embedding_table,
                    const int embedding_size,
                    float *output,
                    void *stream);
-#endif
 
     class Embedding {
     public:

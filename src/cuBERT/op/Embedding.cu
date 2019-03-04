@@ -18,13 +18,13 @@ namespace cuBERT {
                embedding_size * sizeof(float));
     }
 
-    template<typename T>
+    template<bool cpu, typename T>
     __host__ void embedding(const T *input_ids,
                             const int input_ids_len,
                             const float *embedding_table,
                             const int embedding_size,
                             float *output,
-                            void* stream) {
+                            void *stream) {
         const int blocks = (input_ids_len + 127) / 128;
         kernel_embedding<T> << < blocks, 128, 0, (cudaStream_t) stream >> > (input_ids,
                 input_ids_len,
@@ -34,18 +34,18 @@ namespace cuBERT {
     }
 
     template
-    __host__ void embedding<int>(const int *input_ids,
-                                 const int input_ids_len,
-                                 const float *embedding_table,
-                                 const int embedding_size,
-                                 float *output,
-                                 void* stream);
+    __host__ void embedding<false, int>(const int *input_ids,
+                                        const int input_ids_len,
+                                        const float *embedding_table,
+                                        const int embedding_size,
+                                        float *output,
+                                        void *stream);
 
     template
-    __host__ void embedding<char>(const char *input_ids,
-                                  const int input_ids_len,
-                                  const float *embedding_table,
-                                  const int embedding_size,
-                                  float *output,
-                                  void* stream);
+    __host__ void embedding<false, char>(const char *input_ids,
+                                         const int input_ids_len,
+                                         const float *embedding_table,
+                                         const int embedding_size,
+                                         float *output,
+                                         void *stream);
 }

@@ -13,7 +13,8 @@ namespace cuBERT {
         }
     };
 
-    __host__ void gelu(size_t N, float *inout_gpu, void *stream) {
+    template <>
+    __host__ void gelu<false>(size_t N, float *inout_gpu, void *stream) {
         thrust::device_ptr<float> dev_ptr(inout_gpu);
         thrust::transform(thrust::cuda::par.on((cudaStream_t) stream), dev_ptr, dev_ptr + N, dev_ptr, gelu_functor());
     }

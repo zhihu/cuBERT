@@ -3,9 +3,8 @@
 
 namespace cuBERT {
 
-#ifdef HAVE_CUDA
-    void gelu(size_t N, float *inout_gpu, void *stream);
-#endif
+    template <bool cpu>
+    void gelu(size_t N, float *inout, void *stream);
 
     class GELU {
     public:

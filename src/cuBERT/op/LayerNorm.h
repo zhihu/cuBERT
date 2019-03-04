@@ -2,24 +2,25 @@
 #define CUBERT_LAYERNORM_H
 
 namespace cuBERT {
-#ifdef HAVE_CUDA
+
+    template <bool cpu>
     void layer_norm_(float *inout,
                      const int batch_size,
-                     const int channel,
-                     float *beta,
-                     float *gamma,
+                     const int channels,
+                     const float *beta,
+                     const float *gamma,
                      void *stream);
 
-    void layer_norm_(float *in,
+    template <bool cpu>
+    void layer_norm_(const float *in,
                      float *inout,
                      const int batch_size,
-                     const int channel,
+                     const int channels,
                      float *mean_gpu,
                      float *var_gpu,
-                     float *beta,
-                     float *gamma,
+                     const float *beta,
+                     const float *gamma,
                      void *stream);
-#endif
 
     class LayerNorm {
     public:
