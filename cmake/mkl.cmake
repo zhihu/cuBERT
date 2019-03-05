@@ -33,7 +33,7 @@ if (WIN32)
             ${CMAKE_CURRENT_BINARY_DIR}/mkl/src/mkl/lib/mklml.dll)
     list(APPEND mkl_SHARED_LIBRARIES
             ${CMAKE_CURRENT_BINARY_DIR}/mkl/src/mkl/lib/libiomp5md.dll)
-elseif (UNIX)
+elseif (UNIX AND NOT APPLE)
     set(mkl_DOWNLOAD_URL ${CMAKE_SOURCE_DIR}/${mkl_LNX})
     set(mkl_MD5 c846dd30f18bf3ad4a727b967e415087)
     list(APPEND mkl_SHARED_LIBRARIES
@@ -44,7 +44,11 @@ elseif (UNIX)
             ${CMAKE_CURRENT_BINARY_DIR}/mkl/src/mkl/lib/libmklml_intel.so)
 elseif (APPLE)
     set(mkl_DOWNLOAD_URL ${CMAKE_SOURCE_DIR}/${mkl_MAC})
-    #TODO need more information
+    set(mkl_MD5 a8b4b158dc8e7aad13c0d594a9a8d241)
+    list(APPEND mkl_SHARED_LIBRARIES
+            ${CMAKE_CURRENT_BINARY_DIR}/mkl/src/mkl/lib/libiomp5.dylib)
+    list(APPEND mkl_SHARED_LIBRARIES
+            ${CMAKE_CURRENT_BINARY_DIR}/mkl/src/mkl/lib/libmklml.dylib)
 endif ()
 
 ExternalProject_Add(mkl
