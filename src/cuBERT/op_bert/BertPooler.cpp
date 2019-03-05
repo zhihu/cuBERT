@@ -16,6 +16,23 @@ namespace cuBERT {
         }
     }
 
+    template<>
+    void reduce_mean_1<true>(const float *in, float *out,
+                             const int batch_size, const int seq_length, const int hidden_size,
+                             void *stream) {
+#pragma omp parallel for
+        for (int idx = 0; idx < batch_size * hidden_size; ++idx) {
+            size_t batch_idx = idx / hidden_size;
+            size_t channel_idx = idx % hidden_size;
+
+            float sum = 0;
+            for (int seq_idx = 0; seq_idx < seq_length; ++seq_idx) {
+                sum += in[channel_idx + seq_idx * hidden_size + batch_idx * seq_length * hidden_size];
+            }
+            out[idx] = sum / seq_length;
+        }
+    }
+
     BertPooler::BertPooler(void* handle,
                            size_t seq_length, size_t hidden_size,
                            float *kernel, float *bias,
@@ -61,5 +78,25 @@ namespace cuBERT {
 #else
         tanh_<true>(output, batch_size * hidden_size, streamId);
 #endif
+    }
+
+
+    MeanPooler::MeanPooler(void *handle, size_t seq_length, size_t hidden_size) {
+        this->handle = handle;
+
+        this->hidden_size = hidden_size;
+        this->seq_length = seq_length;
+    }
+
+    void MeanPooler::compute(size_t batch_size, float *in, float *out) {
+        void* streamId = cuBERT::blas_get_stream(handle);
+
+#ifdef HAVE_CUDA
+        if (cuBERT::gpu()) {
+            reduce_mean_1<false>(in, out, batch_size, seq_length, hidden_size, streamId);
+            return;
+        }
+#endif
+        reduce_mean_1<true>(in, out, batch_size, seq_length, hidden_size, streamId);
     }
 }

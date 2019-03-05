@@ -28,10 +28,14 @@ namespace cuBERT {
                                             max_batch_size, seq_length,
                                             hidden_size, num_hidden_layers, num_attention_heads, intermediate_size);
 
-        this->bert_pooler = new BertPooler(cublas, seq_length, hidden_size,
-                                           var.at("bert/pooler/dense/kernel"),
-                                           var.at("bert/pooler/dense/bias"),
-                                           max_batch_size);
+        if (var.count("bert/pooler/dense/kernel")) {
+            this->bert_pooler = new BertPooler(cublas, seq_length, hidden_size,
+                                               var.at("bert/pooler/dense/kernel"),
+                                               var.at("bert/pooler/dense/bias"),
+                                               max_batch_size);
+        } else {
+            this->bert_pooler = new MeanPooler(cublas, seq_length, hidden_size);
+        }
 
         if (var.count("output_weights")) {
             this->additional_output_layer = new AdditionalOutputLayer(cublas, hidden_size, var.at("output_weights"));

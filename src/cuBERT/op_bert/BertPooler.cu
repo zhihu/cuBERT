@@ -23,4 +23,39 @@ namespace cuBERT {
     __host__ void tanh_<false>(float *inout,
                                const int N,
                                void *stream);
+
+    __global__ void kernel_reduce_mean_1(const float *__restrict__ in,
+                                         float *out,
+                                         const int batch_size, const int seq_length, const int channel) {
+        const int idx = blockIdx.x * blockDim.x + threadIdx.x;
+        if (idx >= batch_size * channel) {
+            return;
+        }
+
+        int batch_idx = idx / channel;
+        int channel_idx = idx % channel;
+        const int tmp = channel_idx + batch_idx * seq_length * channel;
+
+        float sum = 0;
+#pragma unroll
+        for (int seq_idx = 0; seq_idx < seq_length; ++seq_idx) {
+            sum += __ldg(in + tmp + seq_idx * channel);
+        }
+
+        out[idx] = sum / seq_length;
+    }
+
+
+    template <bool cpu>
+    __host__ void reduce_mean_1(const float *in, float *out,
+                                const int batch_size, const int seq_length, const int hidden_size,
+                                void *stream) {
+        const int blocks = (batch_size * hidden_size + 127) / 128;
+        kernel_reduce_mean_1 <<<blocks, 128, 0, (cudaStream_t) stream>>> (in, out, batch_size, seq_length, hidden_size);
+    }
+
+    template
+    __host__ void reduce_mean_1<false>(const float *in, float *out,
+                                       const int batch_size, const int seq_length, const int hidden_size,
+                                       void *stream);
 }

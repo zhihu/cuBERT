@@ -42,7 +42,7 @@ namespace cuBERT {
 
         BertEmbeddings *bert_embeddings;
         Transformer *transformer;
-        BertPooler *bert_pooler;
+        Pooler *bert_pooler;
         AdditionalOutputLayer *additional_output_layer;
 
         // input buffer
