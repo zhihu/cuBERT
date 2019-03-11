@@ -2,8 +2,8 @@
 #include <thrust/transform.h>
 #include <thrust/system/cuda/execution_policy.h>
 
-#include "cuBERT/common.h"
-#include "GELU.h"
+#include "math.h"
+#include <cuda_runtime.h>
 
 namespace cuBERT {
 
