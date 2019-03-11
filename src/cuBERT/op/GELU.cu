@@ -5,6 +5,8 @@
 #include "math.h"
 #include <cuda_runtime.h>
 
+#include "GELU.h"
+
 namespace cuBERT {
 
     struct gelu_functor {

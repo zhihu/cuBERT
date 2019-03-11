@@ -6,6 +6,8 @@
 #include "cub/cub.cuh"
 #include <cuda_runtime.h>
 
+#include "Softmax.h"
+
 namespace cuBERT {
 
     struct exp_functor {
@@ -42,8 +44,8 @@ namespace cuBERT {
         inout[idx] = __ldg(inout + idx) / __ldg(sum_in + batch_idx);
     }
 
-    template <bool cpu>
-    __host__ void softmax_(float *inout, const int batch_size, const int channel, float *sum_gpu, void* stream) {
+    template <>
+    __host__ void softmax_<false>(float *inout, const int batch_size, const int channel, float *sum_gpu, void* stream) {
         thrust::device_ptr<float> dev_ptr(inout);
         thrust::transform(thrust::cuda::par.on((cudaStream_t) stream), dev_ptr, dev_ptr + batch_size * channel, dev_ptr, exp_functor());
 
@@ -51,7 +53,4 @@ namespace cuBERT {
         kernel_sum_cub <<<batch_size, 128, 0, (cudaStream_t) stream>>> (inout, batch_size, channel, sum_gpu);
         kernel_scale_ <<<all_blocks, 128, 0, (cudaStream_t) stream>>> (inout, batch_size, channel, sum_gpu);
     }
-
-    template
-    __host__ void softmax_<false>(float *inout, const int batch_size, const int channel, float *sum_gpu, void *stream);
 }

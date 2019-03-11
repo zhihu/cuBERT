@@ -4,6 +4,8 @@
 #include <thrust/transform.h>
 #include <thrust/system/cuda/execution_policy.h>
 
+#include "BertPooler.h"
+
 namespace cuBERT {
     struct tanh_functor {
         __device__ float operator()(const float& x) const {
@@ -11,18 +13,13 @@ namespace cuBERT {
         }
     };
 
-    template <bool cpu>
-    __host__ void tanh_(float *inout,
-                        const int N,
-                        void *stream) {
+    template <>
+    __host__ void tanh_<false>(float *inout,
+                               const int N,
+                               void *stream) {
         thrust::device_ptr<float> dev_ptr(inout);
         thrust::transform(thrust::cuda::par.on((cudaStream_t) stream), dev_ptr, dev_ptr + N, dev_ptr, tanh_functor());
     }
-
-    template
-    __host__ void tanh_<false>(float *inout,
-                               const int N,
-                               void *stream);
 
     __global__ void kernel_reduce_mean_1(const float *__restrict__ in,
                                          float *out,
@@ -46,16 +43,11 @@ namespace cuBERT {
     }
 
 
-    template <bool cpu>
-    __host__ void reduce_mean_1(const float *in, float *out,
-                                const int batch_size, const int seq_length, const int hidden_size,
-                                void *stream) {
+    template<>
+    __host__ void reduce_mean_1<false>(const float *in, float *out,
+                                       const int batch_size, const int seq_length, const int hidden_size,
+                                       void *stream) {
         const int blocks = (batch_size * hidden_size + 127) / 128;
         kernel_reduce_mean_1 <<<blocks, 128, 0, (cudaStream_t) stream>>> (in, out, batch_size, seq_length, hidden_size);
     }
-
-    template
-    __host__ void reduce_mean_1<false>(const float *in, float *out,
-                                       const int batch_size, const int seq_length, const int hidden_size,
-                                       void *stream);
 }

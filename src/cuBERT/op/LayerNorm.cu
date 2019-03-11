@@ -2,6 +2,8 @@
 #include "cub/cub.cuh"
 #include <cuda_runtime.h>
 
+#include "LayerNorm.h"
+
 namespace cuBERT {
     __global__ void kernel_momentum_cub(const float *__restrict__ in,
                                         const float *__restrict__ inout,
@@ -58,23 +60,7 @@ namespace cuBERT {
                 __ldg(gamma + channel_idx) * var * (__ldg(inout + idx) + __ldg(in + idx) - mean);
     }
 
-    template<bool cpu>
-    __host__ void layer_norm_(const float *in,
-                              float *inout,
-                              const int batch_size,
-                              const int channel,
-                              float *mean_gpu,
-                              float *var_gpu,
-                              const float *beta,
-                              const float *gamma,
-                              void *stream) {
-        kernel_momentum_cub <<<batch_size, 128, 0, (cudaStream_t) stream>>> (in, inout, batch_size, channel, mean_gpu, var_gpu);
-
-        const int all_blocks = (batch_size * channel + 127) / 128;
-        kernel_batchnorm_ <<<all_blocks, 128, 0, (cudaStream_t) stream>>> (in, inout, batch_size, channel, mean_gpu, var_gpu, beta, gamma);
-    }
-
-    template
+    template<>
     __host__ void layer_norm_<false>(const float *in,
                                      float *inout,
                                      const int batch_size,
@@ -83,5 +69,10 @@ namespace cuBERT {
                                      float *var_gpu,
                                      const float *beta,
                                      const float *gamma,
-                                     void *stream);
+                                     void *stream) {
+        kernel_momentum_cub <<<batch_size, 128, 0, (cudaStream_t) stream>>> (in, inout, batch_size, channel, mean_gpu, var_gpu);
+
+        const int all_blocks = (batch_size * channel + 127) / 128;
+        kernel_batchnorm_ <<<all_blocks, 128, 0, (cudaStream_t) stream>>> (in, inout, batch_size, channel, mean_gpu, var_gpu, beta, gamma);
+    }
 }

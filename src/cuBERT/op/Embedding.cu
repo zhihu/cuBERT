@@ -1,5 +1,7 @@
 #include <cuda_runtime.h>
 
+#include "Embedding.h"
+
 namespace cuBERT {
     template<typename T>
     __global__ void kernel_embedding(const T *__restrict__ input_ids,
