@@ -1,3 +1,5 @@
+#include <cstring>
+
 #include "cuBERT/common.h"
 #include "Embedding.h"
 
@@ -11,7 +13,7 @@ namespace cuBERT {
                               float *output,
                               void *stream) {
         for (int i = 0; i < input_ids_len; ++i) {
-            cuBERT::memcpy(output, embedding_table + embedding_size * input_ids[i], embedding_size * sizeof(float));
+            std::memcpy(output, embedding_table + embedding_size * input_ids[i], embedding_size * sizeof(float));
             output += embedding_size;
         }
     }
@@ -24,7 +26,7 @@ namespace cuBERT {
                                float *output,
                                void *stream) {
         for (int i = 0; i < input_ids_len; ++i) {
-            cuBERT::memcpy(output, embedding_table + embedding_size * input_ids[i], embedding_size * sizeof(float));
+            std::memcpy(output, embedding_table + embedding_size * input_ids[i], embedding_size * sizeof(float));
             output += embedding_size;
         }
     }

@@ -211,15 +211,6 @@ namespace cuBERT {
         }
     }
 
-    void memcpy(void *dst, const void *src, size_t n) {
-        if (gpu()) {
-            // cudaMemcpyDeviceToDevice      =   3,      /**< Device -> Device */
-            CUDA_CHECK(CUDA_SO.cudaMemcpy(dst, src, n, 3));
-        } else {
-            std::memcpy(dst, src, n);
-        }
-    }
-
     void memcpy(void *dst, const void *src, size_t n, int kind) {
         if (gpu()) {
             CUDA_CHECK(CUDA_SO.cudaMemcpy(dst, src, n, kind));

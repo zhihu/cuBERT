@@ -4,7 +4,7 @@
 #include "cuBERT/op/Softmax.h"
 using namespace cuBERT;
 
-TEST_F(CommonTest, compute_) {
+TEST_F(CommonTest, softmax_) {
     float inout[6] = {1, 2, 3, 6, 6, 6};
     float *inout_gpu = (float*) cuBERT::malloc(sizeof(float) * 6);
     cuBERT::memcpy(inout_gpu, inout, sizeof(float) * 6, 1);

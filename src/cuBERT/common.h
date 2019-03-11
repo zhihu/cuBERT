@@ -20,7 +20,6 @@ namespace cuBERT {
     void *malloc(size_t size);
     void free(void *ptr);
 
-    void memcpy(void *dst, const void *src, size_t n);
     void memcpy(void *dst, const void *src, size_t n, int kind);
     void memcpyAsync(void *dst, const void *src, size_t n, int kind, void* stream);
     void fill_n(float *dst, size_t n, float value);

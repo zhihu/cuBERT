@@ -4,38 +4,6 @@
 #include "LayerNorm.h"
 
 namespace cuBERT {
-
-    template<>
-    void layer_norm_<true>(float *inout,
-                           const int batch_size,
-                           const int channels,
-                           const float *beta,
-                           const float *gamma,
-                           void *stream) {
-#pragma omp parallel for
-        for (int batch_idx = 0; batch_idx < batch_size; ++batch_idx) {
-            float mean = 0;
-            float var = 0;
-#pragma unroll
-            for (int i = batch_idx * channels; i < (batch_idx + 1) * channels; ++i) {
-                float t = inout[i];
-                mean += t;
-                var += t * t;
-            }
-            mean = mean / channels;
-            var = var / channels - mean * mean;
-
-            // 1 / sqrt(var)
-            var = 1.f / sqrtf(var + 1e-12f);
-
-#pragma unroll
-            for (int i = 0; i < channels; ++i) {
-                int j = batch_idx * channels + i;
-                inout[j] = beta[i] + gamma[i] * var * (inout[j] - mean);
-            }
-        }
-    }
-
     template<>
     void layer_norm_<true>(const float *in,
                            float *inout,
@@ -88,16 +56,6 @@ namespace cuBERT {
 
         cuBERT::free(var_gpu);
         cuBERT::free(mean_gpu);
-    }
-
-    void LayerNorm::compute_(size_t batch_size, float *inout, void* stream) {
-#ifdef HAVE_CUDA
-        if (cuBERT::gpu()) {
-            layer_norm_<false>(inout, batch_size, channels, beta, gamma, stream);
-            return;
-        }
-#endif
-        layer_norm_<true>(inout, batch_size, channels, beta, gamma, stream);
     }
 
     void LayerNorm::compute_(size_t batch_size, float *in, float *inout, void* stream) {
