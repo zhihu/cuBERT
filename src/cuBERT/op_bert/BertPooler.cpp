@@ -33,6 +33,8 @@ namespace cuBERT {
         }
     }
 
+    Pooler::~Pooler() = default;
+
     BertPooler::BertPooler(void* handle,
                            size_t seq_length, size_t hidden_size,
                            float *kernel, float *bias,

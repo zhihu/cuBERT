@@ -23,6 +23,8 @@ namespace cuBERT {
          * @param out (batch_size, hidden_size)
          */
         virtual void compute(size_t batch_size, float *in, float *out) = 0;
+
+        virtual ~Pooler() = 0;
     };
 
     class BertPooler : public Pooler {
@@ -33,7 +35,7 @@ namespace cuBERT {
                             float *bias,
                             size_t max_batch_size);
 
-        virtual ~BertPooler();
+        ~BertPooler() override;
 
         void compute(size_t batch_size, float *input_gpu, float *output_gpu) override;
 
@@ -49,14 +51,14 @@ namespace cuBERT {
     };
 
     /**
-     * tf.reduce_mean(model.all_encoder_layers[-1], axis=1)
+     * output_layer = tf.reduce_mean(model.get_sequence_output(), axis=1)
      */
     class MeanPooler : public Pooler {
     public:
         explicit MeanPooler(void *handle,
                                 size_t seq_length, size_t hidden_size);
 
-        virtual ~MeanPooler() = default;
+        ~MeanPooler() override = default;
 
         void compute(size_t batch_size, float *in, float *out) override;
 

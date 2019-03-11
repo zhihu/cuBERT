@@ -3,7 +3,7 @@ Fast implementation of BERT inference directly on NVIDIA (CUDA, CUBLAS) and Inte
 
 # Benchmark
 
-### ai-gpu-01
+### Environment
 
 * 2 * Tesla P4
 * 28 * Intel(R) Xeon(R) CPU E5-2680 v4 @ 2.40GHz
@@ -14,18 +14,60 @@ Fast implementation of BERT inference directly on NVIDIA (CUDA, CUBLAS) and Inte
 * tensorflow: 1.12.0
 * BERT: seq_length = 32
 
-|batch size    |128 /ms|1 /ms|
-|---           |---    |---  |
-|tensorflow_gpu|255.2  |     |
-|tensorflow_cpu|1504.0 |69.9 |
-|cuBERT (GPU)  |184.6  |     |
-|mklBERT (CPU) |984.9  |24.0 |
+### GPU (cuBERT)
+
+|batch size|128 (ms)|1 (ms)|
+|---       |---     |---   |
+|tensorflow|255.2   |      |
+|cuBERT    |184.6   |      |
+
+### CPU (mklBERT)
+
+|batch size|128 (ms)|1 (ms)|
+|---       |---     |---   |
+|tensorflow|1504.0  |69.9  |
+|mklBERT   |984.9   |24.0  |
 
 Note: MKL should be run under `OMP_NUM_THREADS=? KMP_BLOCKTIME=0 KMP_AFFINITY=granularity=fine,verbose,compact,1,0`
 
 # API
 
 [API .h header](/src/cuBERT.h)
+
+### Pooler
+
+We support following 2 pooling method.
+
+* The standard BERT pooler, which is defined as:
+
+```python
+with tf.variable_scope("pooler"):
+  # We "pool" the model by simply taking the hidden state corresponding
+  # to the first token. We assume that this has been pre-trained
+  first_token_tensor = tf.squeeze(self.sequence_output[:, 0:1, :], axis=1)
+  self.pooled_output = tf.layers.dense(
+    first_token_tensor,
+    config.hidden_size,
+    activation=tf.tanh,
+    kernel_initializer=create_initializer(config.initializer_range))
+```
+
+* Simple average pooler:
+
+```python
+self.pooled_output = tf.reduce_mean(self.sequence_output, axis=1)
+```
+
+### Output
+
+Following outputs are supported:
+
+|cuBERT_OutputType      |python code                   |
+|---                    |---                           |
+|cuBERT_LOGITS          |`output_weights = tf.get_variable("output_weights", [1, hidden_size])` <br> `logits = tf.matmul(output_layer, output_weights, transpose_b=True)`|
+|cuBERT_POOLED_OUTPUT   |`model.get_pooled_output()`   |
+|cuBERT_SEQUENCE_OUTPUT |`model.get_sequence_output()` |
+|cuBERT_EMBEDDING_OUTPUT|`model.get_embedding_output()`|
 
 # Build
 

@@ -20,16 +20,6 @@ namespace cuBERT {
     void *malloc(size_t size);
     void free(void *ptr);
 
-    void memcpy(void *dst, const void *src, size_t n, int kind);
-    void memcpyAsync(void *dst, const void *src, size_t n, int kind, void* stream);
-    void fill_n(float *dst, size_t n, float value);
-
-//    typedef enum {
-//        CUBLAS_OP_N=0,
-//        CUBLAS_OP_T=1,
-//        CUBLAS_OP_C=2
-//    } cublasOperation_t;
-
 //    enum __device_builtin__ cudaMemcpyKind
 //    {
 //        cudaMemcpyHostToHost          =   0,      /**< Host   -> Host */
@@ -38,9 +28,9 @@ namespace cuBERT {
 //        cudaMemcpyDeviceToDevice      =   3,      /**< Device -> Device */
 //        cudaMemcpyDefault             =   4       /**< Direction of the transfer is inferred from the pointer values. Requires unified virtual addressing */
 //    };
-
-//    typedef enum {CblasRowMajor=101, CblasColMajor=102} CBLAS_LAYOUT;
-//    typedef enum {CblasNoTrans=111, CblasTrans=112, CblasConjTrans=113} CBLAS_TRANSPOSE;
+    void memcpy(void *dst, const void *src, size_t n, int kind);
+    void memcpyAsync(void *dst, const void *src, size_t n, int kind, void* stream);
+    void fill_n(float *dst, size_t n, float value);
 
     void* blas_create();
     void blas_destroy(void *handle);
