@@ -7,8 +7,13 @@ namespace cuBERT {
 
     void initialize(bool force_cpu = false);
     void finalize();
-    bool gpu();
-    const char *get_error_string(int error);
+    constexpr bool gpu() {
+#ifdef HAVE_CUDA
+        return true;
+#else
+        return false;
+#endif
+    }
 
     int get_gpu_count();
     void set_gpu(int device);

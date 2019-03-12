@@ -71,15 +71,7 @@ namespace cuBERT {
                            ONE,
                            output, hidden_size);
 
-#ifdef HAVE_CUDA
-        if (cuBERT::gpu()) {
-            tanh_<false>(output, batch_size * hidden_size, streamId);
-        } else {
-            tanh_<true>(output, batch_size * hidden_size, streamId);
-        }
-#else
-        tanh_<true>(output, batch_size * hidden_size, streamId);
-#endif
+        tanh_<!cuBERT::gpu()>(output, batch_size * hidden_size, streamId);
     }
 
 
@@ -92,13 +84,6 @@ namespace cuBERT {
 
     void MeanPooler::compute(size_t batch_size, float *in, float *out) {
         void* streamId = cuBERT::blas_get_stream(handle);
-
-#ifdef HAVE_CUDA
-        if (cuBERT::gpu()) {
-            reduce_mean_1<false>(in, out, batch_size, seq_length, hidden_size, streamId);
-            return;
-        }
-#endif
-        reduce_mean_1<true>(in, out, batch_size, seq_length, hidden_size, streamId);
+        reduce_mean_1<!cuBERT::gpu()>(in, out, batch_size, seq_length, hidden_size, streamId);
     }
 }

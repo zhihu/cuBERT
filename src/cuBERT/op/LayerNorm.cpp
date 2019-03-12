@@ -59,12 +59,6 @@ namespace cuBERT {
     }
 
     void LayerNorm::compute_(size_t batch_size, float *in, float *inout, void* stream) {
-#ifdef HAVE_CUDA
-        if (cuBERT::gpu()) {
-            layer_norm_<false>(in, inout, batch_size, channels, mean_gpu, var_gpu, beta, gamma, stream);
-            return;
-        }
-#endif
-        layer_norm_<true>(in, inout, batch_size, channels, mean_gpu, var_gpu, beta, gamma, stream);
+        layer_norm_<!cuBERT::gpu()>(in, inout, batch_size, channels, mean_gpu, var_gpu, beta, gamma, stream);
     }
 }

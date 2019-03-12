@@ -45,14 +45,7 @@ namespace cuBERT {
 
     template<typename T>
     void Embedding::compute(const T *input_ids, size_t input_ids_len, float *output, void* stream) {
-#ifdef HAVE_CUDA
-        if (cuBERT::gpu()) {
-            embedding<false>(input_ids, input_ids_len, embedding_table, embedding_size, output, stream);
-            return;
-        }
-#endif
-
-        embedding<true>(input_ids, input_ids_len, embedding_table, embedding_size, output, stream);
+        embedding<!cuBERT::gpu()>(input_ids, input_ids_len, embedding_table, embedding_size, output, stream);
     }
 
     template void
