@@ -1,11 +1,16 @@
 Fast implementation of BERT inference directly on NVIDIA (CUDA, CUBLAS) and Intel MKL
 =====================================================================================
 
+Highly customized and optimized BERT inference directly on NVIDIA (CUDA,
+CUBLAS) or Intel MKL, without tensorflow and its framework overhead.
+
+ONLY BERT (Transformer) is supported.
+
 # Benchmark
 
 ### Environment
 
-* 2 * Tesla P4
+* Tesla P4
 * 28 * Intel(R) Xeon(R) CPU E5-2680 v4 @ 2.40GHz
 * Debian GNU/Linux 8 (jessie)
 * gcc (Debian 4.9.2-10+deb8u1) 4.9.2
@@ -16,10 +21,10 @@ Fast implementation of BERT inference directly on NVIDIA (CUDA, CUBLAS) and Inte
 
 ### GPU (cuBERT)
 
-|batch size|128 (ms)|1 (ms)|
-|---       |---     |---   |
-|tensorflow|255.2   |      |
-|cuBERT    |184.6   |      |
+|batch size|128 (ms)|32 (ms)|
+|---       |---     |---    |
+|tensorflow|255.2   |70.0   |
+|cuBERT    |184.6   |54.5   |
 
 ### CPU (mklBERT)
 
@@ -80,6 +85,11 @@ make -j4
 sudo make install
 ```
 
+### Run Unit Test
+
+Download BERT test model `bert_frozen_seq32.pb` and `vocab.txt` from
+[Google Drive](https://drive.google.com/drive/folders/1UG9ijvwcf_Fe50EPiE8ObAJbupFLrs-k?usp=sharing).
+
 # Dependency
 
 ### Protobuf
@@ -105,3 +115,9 @@ Libraries compiled by CUDA with different versions are not compatible.
 ### MKL
 
 MKL is dynamically linked. We install both cuBERT and MKL in `sudo make install`.
+
+# Authors
+
+* fanliwen
+* wangruixin
+* fangkuan
