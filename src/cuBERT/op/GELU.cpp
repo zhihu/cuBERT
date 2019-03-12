@@ -14,12 +14,6 @@ namespace cuBERT {
     }
 
     void GELU::compute_(size_t N, float *inout, void* stream) {
-#ifdef HAVE_CUDA
-        if (cuBERT::gpu()) {
-            gelu<false>(N, inout, stream);
-            return;
-        }
-#endif
-        gelu<true>(N, inout, stream);
+        gelu<!cuBERT::gpu()>(N, inout, stream);
     }
 }

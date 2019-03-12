@@ -78,7 +78,10 @@ Following outputs are supported:
 
 ```shell
 mkdir build && cd build
-cmake -DCMAKE_BUILD_TYPE=Release ..
+# if build with CUDA
+cmake -DCMAKE_BUILD_TYPE=Release -DcuBERT_ENABLE_GPU=ON ..
+# or build with MKL
+cmake -DCMAKE_BUILD_TYPE=Release -DcuBERT_ENABLE_MKL_SUPPORT=ON ..
 make -j4
 
 # install to /usr/local
@@ -88,7 +91,8 @@ sudo make install
 ### Run Unit Test
 
 Download BERT test model `bert_frozen_seq32.pb` and `vocab.txt` from
-[Google Drive](https://drive.google.com/drive/folders/1UG9ijvwcf_Fe50EPiE8ObAJbupFLrs-k?usp=sharing).
+[Google Drive](https://drive.google.com/drive/folders/1UG9ijvwcf_Fe50EPiE8ObAJbupFLrs-k?usp=sharing), 
+and put them under dir `build` before run `make test` or `./cuBERT_test`.
 
 # Dependency
 

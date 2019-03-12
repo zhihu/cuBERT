@@ -35,12 +35,6 @@ namespace cuBERT {
     }
 
     void Softmax::compute_(size_t batch_size, float *inout_gpu, void* stream) {
-#ifdef HAVE_CUDA
-        if (cuBERT::gpu()) {
-            softmax_<false>(inout_gpu, batch_size, channel, sum_gpu, stream);
-            return;
-        }
-#endif
-        softmax_<true>(inout_gpu, batch_size, channel, sum_gpu, stream);
+        softmax_<!cuBERT::gpu()>(inout_gpu, batch_size, channel, sum_gpu, stream);
     }
 }

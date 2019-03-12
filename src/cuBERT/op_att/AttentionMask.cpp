@@ -35,16 +35,7 @@ namespace cuBERT {
 
     void AttentionMask::compute(size_t batch_size, char *in, float *out_gpu) {
         void *stream = cuBERT::blas_get_stream(handle);
-
-#ifdef HAVE_CUDA
-        if (cuBERT::gpu()) {
-            _not<false>(in, neg, batch_size * seq_length, stream);
-        } else {
-            _not<true>(in, neg, batch_size * seq_length, stream);
-        }
-#else
-        _not<true>(in, neg, batch_size * seq_length, stream);
-#endif
+        _not<!cuBERT::gpu()>(in, neg, batch_size * seq_length, stream);
 
         cuBERT::blas_sgemm_strided_batch(handle,
                                          false, false,

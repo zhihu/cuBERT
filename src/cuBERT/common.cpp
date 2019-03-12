@@ -1,273 +1,164 @@
-#include <dlfcn.h>
-#include <mkl.h>
 #include <cstdlib>
 #include <cstring>
 #include <cstdio>
 #include <iostream>
+#ifdef HAVE_CUDA
+#include <cuda_runtime.h>
+#include <cublas.h>
+#endif
+#ifdef HAVE_MKL
+#include <mkl.h>
+#endif
+
+#if defined HAVE_CUDA && defined HAVE_MKL
+#error only one and extact one blas implementation should be selected
+#endif
+
+#if !defined HAVE_CUDA && !defined HAVE_MKL
+#error only one and extact one blas implementation should be selected
+#endif
 
 #include "./common.h"
 
 namespace cuBERT {
 
+#ifdef HAVE_CUDA
+
 #define CUDA_CHECK(call) do {                                           \
-    int err = call;                                                     \
+    cudaError_t err = call;                                             \
     if (0 != err) {                                                     \
         fprintf(stderr, "Cuda error in file '%s' in line %i : %s.\n",   \
-                __FILE__, __LINE__, get_error_string(err));             \
+                __FILE__, __LINE__, cudaGetErrorString(err));           \
         exit(EXIT_FAILURE);                                             \
     } } while(0)
 
 #define CUBLAS_CHECK(call) do {                                         \
-    int err = call;                                                     \
+    cublasStatus_t err = call;                                          \
     if (0 != err) {                                                     \
         fprintf(stderr, "Cublas error in file '%s' in line %i.\n",      \
                 __FILE__, __LINE__);                                    \
         exit(EXIT_FAILURE);                                             \
     } } while(0)
 
-    struct CUDA {
-        void *cudart;
-        void *cublas;
-
-        const char *(*cudaGetErrorString)(int error);
-        int (*cudaGetDeviceCount)(int *count);
-        int (*cudaSetDevice)(int device);
-
-        int (*cudaStreamCreate)(void **pStream);
-        int (*cudaStreamDestroy)(void *stream);
-        int (*cudaStreamSynchronize)(void *stream);
-
-        int (*cudaMalloc)(void **devPtr, size_t size);
-        int (*cudaFree)(void *devPtr);
-        int (*cudaMemcpy)(void *dst, const void *src, size_t count, int kind);
-        int (*cudaMemcpyAsync)(void *dst, const void *src, size_t count, int kind, void *stream);
-
-        int (*cublasCreate_v2)(void **handle);
-        int (*cublasDestroy_v2)(void *handle);
-        int (*cublasGetStream_v2)(void *handle, void **streamId);
-        int (*cublasSetStream_v2)(void *handle, void *streamId);
-
-        int (*cublasSgemm_v2)(void *handle,
-                              int transa, int transb,
-                              int m, int n, int k,
-                              const float *alpha,
-                              const float *A, int lda,
-                              const float *B, int ldb,
-                              const float *beta,
-                              float *C, int ldc);
-
-        int (*cublasSgemmBatched)(void *handle,
-                                  int transa, int transb,
-                                  int m, int n, int k,
-                                  const float *alpha,  /* host or device pointer */
-                                  const float *const Aarray[], int lda,
-                                  const float *const Barray[], int ldb,
-                                  const float *beta,   /* host or device pointer */
-                                  float *const Carray[], int ldc,
-                                  int batchCount);
-
-        int (*cublasSgemmStridedBatched)(void *handle,
-                                         int transa, int transb,
-                                         int m, int n, int k,
-                                         const float *alpha,  /* host or device pointer */
-                                         const float *A, int lda, long long int strideA,
-                                         const float *B, int ldb, long long int strideB,
-                                         const float *beta,   /* host or device pointer */
-                                         float *C, int ldc, long long int strideC,
-                                         int batchCount);
-    };
-
-    bool force_cpu;
-    CUDA CUDA_SO;
-
-#ifdef HAVE_CUDA
-    const bool compile_with_cuda = true;
-#else
-    const bool compile_with_cuda = false;
 #endif
 
-    bool gpu() {
-        // 1. COMPILE with CUDA
-        // 2. libcudart.so runtime FOUND
-        // 3. choose not force CPU
-        return compile_with_cuda && !force_cpu && CUDA_SO.cudart != nullptr && CUDA_SO.cublas != nullptr;
-    }
+    void initialize(bool force_cpu) {}
 
-    void initialize(bool force_cpu) {
-        CUDA_SO.cudart = dlopen("libcudart.so", RTLD_NOW | RTLD_LOCAL);
-        CUDA_SO.cublas = dlopen("libcublas.so", RTLD_NOW | RTLD_LOCAL);
-        if (CUDA_SO.cudart != nullptr && CUDA_SO.cublas != nullptr) {
-            std::cout << "CUDA runtime found" << std::endl;
-            if (!compile_with_cuda) {
-                std::cerr << "cuBERT is not compiled with CUDA" << std::endl;
-            }
-
-            CUDA_SO.cudaGetErrorString = (const char *(*)(int)) (dlsym(CUDA_SO.cudart, "cudaGetErrorString"));
-            CUDA_SO.cudaGetDeviceCount = (int (*)(int *)) (dlsym(CUDA_SO.cudart, "cudaGetDeviceCount"));
-            CUDA_SO.cudaSetDevice = (int (*)(int)) (dlsym(CUDA_SO.cudart, "cudaSetDevice"));
-
-            CUDA_SO.cudaStreamCreate = (int (*)(void **)) (dlsym(CUDA_SO.cudart, "cudaStreamCreate"));
-            CUDA_SO.cudaStreamDestroy = (int (*)(void *)) (dlsym(CUDA_SO.cudart, "cudaStreamDestroy"));
-            CUDA_SO.cudaStreamSynchronize = (int (*)(void *)) (dlsym(CUDA_SO.cudart, "cudaStreamSynchronize"));
-
-            CUDA_SO.cudaMalloc = (int (*)(void **, size_t)) (dlsym(CUDA_SO.cudart, "cudaMalloc"));
-            CUDA_SO.cudaFree = (int (*)(void *)) (dlsym(CUDA_SO.cudart, "cudaFree"));
-            CUDA_SO.cudaMemcpy = (int (*)(void *, const void *, size_t, int)) (dlsym(CUDA_SO.cudart, "cudaMemcpy"));
-            CUDA_SO.cudaMemcpyAsync = (int (*)(void *, const void *, size_t, int, void *))
-                    (dlsym(CUDA_SO.cudart, "cudaMemcpyAsync"));
-
-            CUDA_SO.cublasCreate_v2 = (int (*)(void **)) (dlsym(CUDA_SO.cublas, "cublasCreate_v2"));
-            CUDA_SO.cublasDestroy_v2 = (int (*)(void *)) (dlsym(CUDA_SO.cublas, "cublasDestroy_v2"));
-            CUDA_SO.cublasGetStream_v2 = (int (*)(void *, void **)) (dlsym(CUDA_SO.cublas, "cublasGetStream_v2"));
-            CUDA_SO.cublasSetStream_v2 = (int (*)(void *, void *)) (dlsym(CUDA_SO.cublas, "cublasSetStream_v2"));
-
-            CUDA_SO.cublasSgemm_v2 = (int (*)(void *, int, int, int, int, int, const float *, const float *, int,
-                                              const float *, int, const float *, float *, int))
-                    (dlsym(CUDA_SO.cublas, "cublasSgemm_v2"));
-            CUDA_SO.cublasSgemmBatched = (int (*)(void *, int, int, int, int, int, const float *, const float *const *,
-                                                  int, const float *const *, int, const float *, float *const *, int,
-                                                  int))
-                    (dlsym(CUDA_SO.cublas, "cublasSgemmBatched"));
-
-            CUDA_SO.cublasSgemmStridedBatched = (int (*)(void *, int, int, int, int, int, const float *, const float *,
-                                                         int, long long int, const float *, int, long long int,
-                                                         const float *, float *, int, long long int, int))
-                    (dlsym(CUDA_SO.cublas, "cublasSgemmStridedBatched"));
-        }
-
-        cuBERT::force_cpu = force_cpu;
-    }
-
-    void finalize() {
-        if (CUDA_SO.cudart != nullptr) {
-            dlclose(CUDA_SO.cudart);
-        }
-        if (CUDA_SO.cublas != nullptr) {
-            dlclose(CUDA_SO.cublas);
-        }
-    }
-
-    const char *get_error_string(int error) {
-        if (gpu()) {
-            return CUDA_SO.cudaGetErrorString(error);
-        } else {
-            return "";
-        }
-    }
+    void finalize() {}
 
     int get_gpu_count() {
-        if (gpu()) {
+#ifdef HAVE_CUDA
             int count;
-            CUDA_CHECK(CUDA_SO.cudaGetDeviceCount(&count));
+            CUDA_CHECK(cudaGetDeviceCount(&count));
             return count;
-        } else {
+#else
             return 0;
-        }
+#endif
     }
 
     void set_gpu(int device) {
-        if (gpu()) {
-            CUDA_CHECK(CUDA_SO.cudaSetDevice(device));
-        }
+#ifdef HAVE_CUDA
+            CUDA_CHECK(cudaSetDevice(device));
+#endif
     }
 
     void *cuda_stream_create() {
-        if (gpu()) {
-            void *ptr;
-            CUDA_CHECK(CUDA_SO.cudaStreamCreate(&ptr));
+#ifdef HAVE_CUDA
+            cudaStream_t ptr;
+            CUDA_CHECK(cudaStreamCreate(&ptr));
             return ptr;
-        } else {
+#else
             return nullptr;
-        }
+#endif
     }
 
     void cuda_stream_destroy(void *stream) {
-        if (gpu()) {
-            CUDA_CHECK(CUDA_SO.cudaStreamDestroy(stream));
-        }
+#ifdef HAVE_CUDA
+            CUDA_CHECK(cudaStreamDestroy((cudaStream_t) stream));
+#endif
     }
 
     void cuda_stream_synchronize(void *stream) {
-        if (gpu()) {
-            CUDA_CHECK(CUDA_SO.cudaStreamSynchronize(stream));
-        }
+#ifdef HAVE_CUDA
+            CUDA_CHECK(cudaStreamSynchronize((cudaStream_t) stream));
+#endif
     }
 
     void *malloc(size_t size) {
-        if (gpu()) {
+#ifdef HAVE_CUDA
             void *ptr;
-            CUDA_CHECK(CUDA_SO.cudaMalloc(&ptr, size));
+            CUDA_CHECK(cudaMalloc(&ptr, size));
             return ptr;
-        } else {
+#else
             return std::malloc(size);
-        }
+#endif
     }
 
     void free(void *ptr) {
-        if (gpu()) {
-            CUDA_CHECK(CUDA_SO.cudaFree(ptr));
-        } else {
+#ifdef HAVE_CUDA
+            CUDA_CHECK(cudaFree(ptr));
+#else
             std::free(ptr);
-        }
+#endif
     }
 
     void memcpy(void *dst, const void *src, size_t n, int kind) {
-        if (gpu()) {
-            CUDA_CHECK(CUDA_SO.cudaMemcpy(dst, src, n, kind));
-        } else {
+#ifdef HAVE_CUDA
+            CUDA_CHECK(cudaMemcpy(dst, src, n, (cudaMemcpyKind) kind));
+#else
             std::memcpy(dst, src, n);
-        }
+#endif
     }
 
     void memcpyAsync(void *dst, const void *src, size_t n, int kind, void *stream) {
-        if (gpu()) {
-            CUDA_CHECK(CUDA_SO.cudaMemcpyAsync(dst, src, n, kind, stream));
-        } else {
+#ifdef HAVE_CUDA
+            CUDA_CHECK(cudaMemcpyAsync(dst, src, n, (cudaMemcpyKind) kind, (cudaStream_t) stream));
+#else
             std::memcpy(dst, src, n);
-        }
+#endif
     }
 
     void fill_n(float *dst, size_t n, float value) {
-        if (gpu()) {
+#ifdef HAVE_CUDA
             auto *dst_cpu = new float[n];
             std::fill_n(dst_cpu, n, value);
             cuBERT::memcpy(dst, dst_cpu, sizeof(float) * n, 1);
             delete[]dst_cpu;
-        } else {
+#else
             std::fill_n(dst, n, value);
-        }
+#endif
     }
 
     void *blas_create() {
-        if (gpu()) {
-            void *ptr;
-            CUBLAS_CHECK(CUDA_SO.cublasCreate_v2(&ptr));
+#ifdef HAVE_CUDA
+            cublasHandle_t ptr;
+            CUBLAS_CHECK(cublasCreate_v2(&ptr));
             return ptr;
-        } else {
+#else
             return nullptr;
-        }
+#endif
     }
 
     void blas_destroy(void *handle) {
-        if (gpu()) {
-            CUBLAS_CHECK(CUDA_SO.cublasDestroy_v2(handle));
-        }
+#ifdef HAVE_CUDA
+            CUBLAS_CHECK(cublasDestroy_v2((cublasHandle_t) handle));
+#endif
     }
 
     void *blas_get_stream(void *handle) {
-        if (gpu()) {
-            void *streamId;
-            CUBLAS_CHECK(CUDA_SO.cublasGetStream_v2(handle, &streamId));
+#ifdef HAVE_CUDA
+            cudaStream_t streamId;
+            CUBLAS_CHECK(cublasGetStream_v2((cublasHandle_t) handle, &streamId));
             return streamId;
-        } else {
+#else
             return nullptr;
-        }
+#endif
     }
 
     void blas_set_stream(void *handle, void *streamId) {
-        if (gpu()) {
-            CUBLAS_CHECK(CUDA_SO.cublasSetStream_v2(handle, streamId));
-        }
+#ifdef HAVE_CUDA
+            CUBLAS_CHECK(cublasSetStream_v2((cublasHandle_t) handle, (cudaStream_t) streamId));
+#endif
     }
 
     void blas_sgemm(void *handle,
@@ -278,16 +169,18 @@ namespace cuBERT {
                     const float *B, const int ldb,
                     const float beta,
                     float *C, const int ldc) {
-        if (gpu()) {
-            CUBLAS_CHECK(CUDA_SO.cublasSgemm_v2(handle,
-                                                TransA ? 1 : 0, TransB ? 1 : 0,
-                                                M, N, K,
-                                                &alpha,
-                                                A, lda,
-                                                B, ldb,
-                                                &beta,
-                                                C, ldc));
-        } else {
+#ifdef HAVE_CUDA
+            CUBLAS_CHECK(cublasSgemm_v2((cublasHandle_t) handle,
+                                        TransA ? CUBLAS_OP_T : CUBLAS_OP_N, TransB ? CUBLAS_OP_T : CUBLAS_OP_N,
+                                        M, N, K,
+                                        &alpha,
+                                        A, lda,
+                                        B, ldb,
+                                        &beta,
+                                        C, ldc));
+            return;
+#endif
+#ifdef HAVE_MKL
             cblas_sgemm(CblasColMajor,
                         TransA ? CblasTrans : CblasNoTrans, TransB ? CblasTrans : CblasNoTrans,
                         M, N, K,
@@ -296,7 +189,8 @@ namespace cuBERT {
                         B, ldb,
                         beta,
                         C, ldc);
-        }
+            return;
+#endif
     }
 
     void blas_sgemm_batch(void *handle,
@@ -308,17 +202,19 @@ namespace cuBERT {
                           const float beta,
                           float **Carray, int ldc,
                           int batchCount) {
-        if (gpu()) {
-            CUBLAS_CHECK(CUDA_SO.cublasSgemmBatched(handle,
-                                                    TransA ? 1 : 0, TransB ? 1 : 0,
-                                                    m, n, k,
-                                                    &alpha,
-                                                    Aarray, lda,
-                                                    Barray, ldb,
-                                                    &beta,
-                                                    Carray, ldc,
-                                                    batchCount));
-        } else {
+#ifdef HAVE_CUDA
+            CUBLAS_CHECK(cublasSgemmBatched((cublasHandle_t) handle,
+                                            TransA ? CUBLAS_OP_T : CUBLAS_OP_N, TransB ? CUBLAS_OP_T : CUBLAS_OP_N,
+                                            m, n, k,
+                                            &alpha,
+                                            Aarray, lda,
+                                            Barray, ldb,
+                                            &beta,
+                                            Carray, ldc,
+                                            batchCount));
+            return;
+#endif
+#ifdef HAVE_MKL
             CBLAS_TRANSPOSE transA = TransA ? CblasTrans : CblasNoTrans;
             CBLAS_TRANSPOSE transB = TransB ? CblasTrans : CblasNoTrans;
             cblas_sgemm_batch(CblasColMajor,
@@ -330,7 +226,8 @@ namespace cuBERT {
                               &beta,
                               Carray, &ldc,
                               1, &batchCount);
-        }
+            return;
+#endif
     }
 
     void blas_sgemm_strided_batch(void *handle,
@@ -342,17 +239,19 @@ namespace cuBERT {
                                   const float beta,
                                   float *C, int ldc, long long int strideC,
                                   int batchCount) {
-        if (gpu()) {
-            CUBLAS_CHECK(CUDA_SO.cublasSgemmStridedBatched(handle,
-                                                           TransA ? 1 : 0, TransB ? 1 : 0,
-                                                           m, n, k,
-                                                           &alpha,
-                                                           A, lda, strideA,
-                                                           B, ldb, strideB,
-                                                           &beta,
-                                                           C, ldc, strideC,
-                                                           batchCount));
-        } else {
+#ifdef HAVE_CUDA
+            CUBLAS_CHECK(cublasSgemmStridedBatched((cublasHandle_t) handle,
+                                                    TransA ? CUBLAS_OP_T : CUBLAS_OP_N, TransB ? CUBLAS_OP_T : CUBLAS_OP_N,
+                                                    m, n, k,
+                                                    &alpha,
+                                                    A, lda, strideA,
+                                                    B, ldb, strideB,
+                                                    &beta,
+                                                    C, ldc, strideC,
+                                                    batchCount));
+            return;
+#endif
+#ifdef HAVE_MKL
             const float *A_Array[batchCount];
             const float *B_Array[batchCount];
             float *C_Array[batchCount];
@@ -373,6 +272,7 @@ namespace cuBERT {
                               &beta,
                               C_Array, &ldc,
                               1, &batchCount);
-        }
+            return;
+#endif
     }
 }

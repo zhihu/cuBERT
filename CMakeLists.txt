@@ -1,9 +1,12 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.7)
 project(cuBERT LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/)
+
+option(cuBERT_ENABLE_GPU "Enable GPU support" OFF)
+option(cuBERT_ENABLE_MKL_SUPPORT "Enable Intel MKL support" OFF)
 
 find_package(Threads REQUIRED)
 
@@ -33,34 +36,37 @@ include_directories(
         ${PROTOBUF_INCLUDE_DIRS})
 
 # MKL Support
-include(mkl)
-list(APPEND cuBERT_EXTERNAL_LIBRARIES ${mkl_SHARED_LIBRARIES})
-list(APPEND cuBERT_EXTERNAL_DEPENDENCIES mkl_copy_shared_to_destination)
-include_directories(${mkl_INCLUDE_DIRS})
+if(cuBERT_ENABLE_MKL_SUPPORT)
+    include(mkl)
+    add_definitions(-DHAVE_MKL)
+    list(APPEND cuBERT_EXTERNAL_LIBRARIES ${mkl_SHARED_LIBRARIES})
+    list(APPEND cuBERT_EXTERNAL_DEPENDENCIES mkl_copy_shared_to_destination)
+    include_directories(${mkl_INCLUDE_DIRS})
+endif(cuBERT_ENABLE_MKL_SUPPORT)
 
-find_package(CUDA)
-if (CUDA_FOUND)
+if(cuBERT_ENABLE_GPU)
+    find_package(CUDA)
+    if(NOT CUDA_FOUND)
+        message(FATAL_ERROR "CUDA not found.")
+    endif()
+
     add_definitions(-DHAVE_CUDA)
 
     # use cmake internal CUDA_ARCH_NAME switch
     # e.g. CUDA_ARCH_NAME="Auto" will autodetect
     #      CUDA_ARCH_NAME="All"  will use all arches
-    # cuda_select_nvcc_arch_flags(NVCC_ARCH_FLAGS ${CUDA_ARCH_NAME})
-    # list(APPEND CUDA_NVCC_FLAGS ${NVCC_ARCH_FLAGS})
-    # message(STATUS "Using CUDA arch flags: ${NVCC_ARCH_FLAGS_readable}")
-
-    set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};-gencode arch=compute_60,code=sm_60)
-    set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};-gencode arch=compute_61,code=sm_61)
-    set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};-gencode arch=compute_62,code=sm_62)
-    set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};-gencode arch=compute_70,code=sm_70)
+    cuda_select_nvcc_arch_flags(NVCC_ARCH_FLAGS ${CUDA_ARCH_NAME})
+    list(APPEND CUDA_NVCC_FLAGS ${NVCC_ARCH_FLAGS})
+    message(STATUS "Using CUDA arch flags: ${NVCC_ARCH_FLAGS_readable}")
 
     set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};-std=c++11)
     set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};--expt-relaxed-constexpr)
     set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};-O3;-use_fast_math;-Xptxas -O3;-Xcompiler -O3)
     set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};-ftz=true)  # Flush denormals to zero
 
+    list(APPEND cuBERT_EXTERNAL_LIBRARIES ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES})
     include_directories(${CUDA_INCLUDE_DIRS})
-endif()
+endif(cuBERT_ENABLE_GPU)
 
 # Let's get to work!
 include(tf_core_framework)
@@ -86,7 +92,7 @@ set(SOURCE_FILES
         src/cuBERT/op_bert/BertPooler.cpp src/cuBERT/op_bert/BertPooler.cu
         src/cuBERT/op_out/AdditionalOutputLayer.cpp)
 
-if (CUDA_FOUND)
+if (cuBERT_ENABLE_GPU)
     cuda_add_library(cuBERT SHARED ${SOURCE_FILES})
     set_target_properties(cuBERT PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 else ()
