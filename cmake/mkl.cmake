@@ -17,10 +17,10 @@ include (ExternalProject)
 # NOTE: Different from mkldnn.cmake, this file is meant to download mkl libraries
 set(mkl_INCLUDE_DIRS ${CMAKE_CURRENT_BINARY_DIR}/mkl/src/mkl/include)
 set(mkl_BIN_DIRS ${CMAKE_CURRENT_BINARY_DIR}/mkl/bin)
-set(mkl_WIN mklml_win_2019.0.1.20181227.zip)
-set(mkl_MAC mklml_mac_2019.0.1.20181227.tgz)
-set(mkl_LNX mklml_lnx_2019.0.1.20181227.tgz)
-set(mkl_TAG v0.17.2)
+set(mkl_WIN mklml_win_2019.0.3.20190220.zip)
+set(mkl_MAC mklml_mac_2019.0.3.20190220.tgz)
+set(mkl_LNX mklml_lnx_2019.0.3.20190220.tgz)
+set(mkl_TAG v0.18)
 set(mkl_URL https://github.com/intel/mkl-dnn/releases)
 
 if (WIN32)
@@ -35,7 +35,7 @@ if (WIN32)
             ${CMAKE_CURRENT_BINARY_DIR}/mkl/src/mkl/lib/libiomp5md.dll)
 elseif (UNIX AND NOT APPLE)
     set(mkl_DOWNLOAD_URL ${mkl_URL}/download/${mkl_TAG}/${mkl_LNX})
-    set(mkl_MD5 c846dd30f18bf3ad4a727b967e415087)
+    set(mkl_MD5 76354b74325cd293aba593d7cbe36b3f)
     list(APPEND mkl_SHARED_LIBRARIES
             ${CMAKE_CURRENT_BINARY_DIR}/mkl/src/mkl/lib/libiomp5.so)
     list(APPEND mkl_SHARED_LIBRARIES
@@ -44,7 +44,7 @@ elseif (UNIX AND NOT APPLE)
             ${CMAKE_CURRENT_BINARY_DIR}/mkl/src/mkl/lib/libmklml_intel.so)
 elseif (APPLE)
     set(mkl_DOWNLOAD_URL ${mkl_URL}/download/${mkl_TAG}/${mkl_MAC})
-    set(mkl_MD5 a8b4b158dc8e7aad13c0d594a9a8d241)
+    set(mkl_MD5 3b28da686a25a4cf995ca4fc5e30e514)
     list(APPEND mkl_SHARED_LIBRARIES
             ${CMAKE_CURRENT_BINARY_DIR}/mkl/src/mkl/lib/libiomp5.dylib)
     list(APPEND mkl_SHARED_LIBRARIES
