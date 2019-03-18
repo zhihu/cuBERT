@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
@@ -22,7 +23,13 @@ namespace cuBERT {
                 throw std::invalid_argument("No GPU device detected, but caller choose to use gpu.");
             } else {
                 std::cerr << "Use CPU instead" << std::endl;
-                count++;
+
+                char *cpu_models = std::getenv("CUBERT_NUM_CPU_MODELS");
+                if (cpu_models != nullptr) {
+                    count = std::atoi(cpu_models);
+                } else {
+                    count = 1;
+                }
             }
         }
 

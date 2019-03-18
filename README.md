@@ -120,6 +120,61 @@ Libraries compiled by CUDA with different versions are not compatible.
 
 MKL is dynamically linked. We install both cuBERT and MKL in `sudo make install`.
 
+# Threading
+
+We assume the typical usage case of cuBERT is for online serving, where
+concurrent requests of different batch_size should be served as fast as
+possible. Thus, throughput and latency should be balanced, especially in
+pure CPU environment.
+
+As the vanilla [class Bert](/src/cuBERT/Bert.h) is not thread-safe
+because of its internal buffers for computation, a wrapper [class BertM](/src/cuBERT/BertM.h)
+is written to hold locks of different `Bert` instances for thread safety.
+`BertM` will choose one underlying `Bert` instance by a round-robin
+manner, and consequence requests of the same `Bert` instance might be
+queued by its corresponding lock.
+
+### GPU
+
+One `Bert` is placed on one GPU card. The maximum concurrent requests is
+the number of usable GPU cards on one machine, which can be controlled
+by `CUDA_VISIBLE_DEVICES` if it is specified.
+
+### CPU
+
+For pure CPU environment, it is more complicate than GPU. There are 2
+level of parallelism:
+
+1. Request level. Concurrent requests will compete CPU resource if the
+online server itself is multi-threaded. If the server is single-threaded
+(for example some server implementation in Python), things will be much
+easier.
+
+2. Operation level. The matrix operations are parallelized by OpenMP and
+MKL. The maximum parallelism is controlled by `OMP_NUM_THREADS`,
+`MKL_NUM_THREADS`, and many other environment variables. We refer our
+users to first read [Using Threaded Intel® MKL in Multi-Thread Application](https://software.intel.com/en-us/articles/using-threaded-intel-mkl-in-multi-thread-application)
+ and [Recommended settings for calling Intel MKL routines from multi-threaded applications](https://software.intel.com/en-us/articles/recommended-settings-for-calling-intel-mkl-routines-from-multi-threaded-applications)
+.
+
+Thus, we introduce `CUBERT_NUM_CPU_MODELS` for better control of request
+level parallelism. This variable specifies the number of `Bert` instances
+created on CPU/memory, which acts same like `CUDA_VISIBLE_DEVICES` for
+GPU.
+
+* If you have limited number of CPU cores (old or desktop CPUs, or in
+Docker), it is not necessary to use `CUBERT_NUM_CPU_MODELS`. For example
+4 CPU cores, a request-level parallelism of 1 and operation-level
+parallelism of 4 should work quite well.
+
+* But if you have many CPU cores like 40, it might be better to try with
+request-level parallelism of 5 and operation-level parallelism of 8.
+
+Again, the per request latency and overall throughput should be balanced,
+and it diffs from model `seq_length`, `batch_size`, your CPU cores, your
+server QPS, and many many other things. You should take a lot benchmark
+to achieve the best trade-off. Good luck!
+
 # Authors
 
 * fanliwen
