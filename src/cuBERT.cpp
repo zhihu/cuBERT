@@ -213,5 +213,5 @@ void cuBERT_tokenize_compute(void* model,
                                segment_ids + max_seq_length * batch_idx);
     }
 
-    cuBERT_compute(model, batch_size, input_ids, input_mask, segment_ids, output, output_type);
+    cuBERT_compute(model, batch_size, input_ids, input_mask, segment_ids, output, output_type, compute_type);
 }
