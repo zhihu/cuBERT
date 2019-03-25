@@ -185,7 +185,7 @@ void cuBERT_tokenize_compute(void* model,
                              int batch_size,
                              const char** text_a,
                              const char** text_b,
-                             float* output,
+                             void* output,
                              cuBERT_OutputType output_type,
                              cuBERT_ComputeType compute_type) {
     size_t max_seq_length;

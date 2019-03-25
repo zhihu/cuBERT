@@ -48,7 +48,7 @@ void cuBERT_tokenize_compute(void* model,
                              int batch_size,
                              const char** text_a,
                              const char** text_b,
-                             float* output,
+                             void* output,
                              cuBERT_OutputType output_type = cuBERT_LOGITS,
                              cuBERT_ComputeType compute_type = cuBERT_COMPUTE_FLOAT);
 
