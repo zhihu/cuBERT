@@ -2,6 +2,15 @@
 #define CUBERT_COMMON_H
 
 #include <cstddef>
+#include <cstring>
+#include <algorithm>
+
+#include <half.hpp>
+#ifdef HAVE_CUDA
+#include <cuda_fp16.h>
+#else
+typedef half_float::half half;
+#endif
 
 namespace cuBERT {
 
@@ -35,41 +44,72 @@ namespace cuBERT {
 //    };
     void memcpy(void *dst, const void *src, size_t n, int kind);
     void memcpyAsync(void *dst, const void *src, size_t n, int kind, void* stream);
-    void fill_n(float *dst, size_t n, float value);
+
+    template <typename T>
+    inline void fill_n(T *dst, size_t n, const T& value) {
+#ifdef HAVE_CUDA
+            auto *dst_cpu = new T[n];
+            std::fill_n(dst_cpu, n, value);
+            cuBERT::memcpy(dst, dst_cpu, sizeof(T) * n, 1);
+            delete[] dst_cpu;
+#else
+            std::fill_n(dst, n, value);
+#endif
+    }
 
     void* blas_create();
     void blas_destroy(void *handle);
     void* blas_get_stream(void* handle);
     void blas_set_stream(void* handle, void* streamId);
 
-    void blas_sgemm(void *handle,
-                    const bool TransA, const bool TransB,
-                    const int M, const int N, const int K,
-                    const float alpha,
-                    const float *A, const int lda,
-                    const float *B, const int ldb,
-                    const float beta,
-                    float *C, const int ldc);
+    template<typename T>
+    void blas_gemm(void *handle,
+                   const bool TransA, const bool TransB,
+                   const int M, const int N, const int K,
+                   const float alpha,
+                   const T *A, const int lda,
+                   const T *B, const int ldb,
+                   const float beta,
+                   T *C, const int ldc);
 
-    void blas_sgemm_batch(void *handle,
-                          const bool TransA, const bool TransB,
-                          int m, int n, int k,
-                          const float alpha,
-                          const float ** Aarray, int lda,
-                          const float ** Barray, int ldb,
-                          const float beta,
-                          float ** Carray, int ldc,
-                          int batchCount);
+    template<typename T>
+    void blas_gemm_batch(void *handle,
+                         const bool TransA, const bool TransB,
+                         int m, int n, int k,
+                         const float alpha,
+                         const T **Aarray, int lda,
+                         const T **Barray, int ldb,
+                         const float beta,
+                         T **Carray, int ldc,
+                         int batchCount);
 
-    void blas_sgemm_strided_batch(void *handle,
-                                  const bool TransA, const bool TransB,
-                                  int m, int n, int k,
-                                  const float alpha,
-                                  const float *A, int lda, long long int strideA,
-                                  const float *B, int ldb, long long int strideB,
-                                  const float beta,
-                                  float *C, int ldc, long long int strideC,
-                                  int batchCount);
+    template<typename T>
+    void blas_gemm_strided_batch(void *handle,
+                                 const bool TransA, const bool TransB,
+                                 int m, int n, int k,
+                                 const float alpha,
+                                 const T *A, int lda, long long int strideA,
+                                 const T *B, int ldb, long long int strideB,
+                                 const float beta,
+                                 T *C, int ldc, long long int strideC,
+                                 int batchCount);
+
+    inline void float2half(const float* fs, void* hs, size_t n) {
+        auto* _hs = (half_float::half*) hs;
+        for (int i = 0; i < n; ++i) {
+            _hs[i] = fs[i];
+        }
+    }
+
+    inline void half2float(const void* hs, float* fs, size_t n) {
+        auto* _hs = (half_float::half*) hs;
+        for (int i = 0; i < n; ++i) {
+            fs[i] = (float) _hs[i];
+        }
+    }
+
+    template <typename T, typename V>
+    void T2T(const T* in, V* out, size_t n);
 }
 
 #endif //CUBERT_COMMON_H

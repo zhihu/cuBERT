@@ -40,7 +40,7 @@ TEST_F(CommonTest, bert_embedding) {
             {"bert/embeddings/LayerNorm/gamma", gamma},
     };
 
-    BertEmbeddings bert_embeddings(handle, var, 32, vocab_size, type_vocab_size, hidden_size, seq_length);
+    BertEmbeddings<float> bert_embeddings(handle, var, 32, vocab_size, type_vocab_size, hidden_size, seq_length);
 
     size_t batch_size = 2;
     int input_ids[8] = {3, 0, 1, 4,

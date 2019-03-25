@@ -13,7 +13,7 @@ TEST_F(CommonTest, q_k) {
     float *key_gpu = (float*) cuBERT::malloc(sizeof(float) * 48);
     float *out_gpu = (float*) cuBERT::malloc(sizeof(float) * 32);
 
-    Att_Q_K bqk(handle, 2, seq_length, num_attention_heads, size_per_head, query_gpu, key_gpu, out_gpu);
+    Att_Q_K<float> bqk(handle, 2, seq_length, num_attention_heads, size_per_head, query_gpu, key_gpu, out_gpu);
 
     float query[48] = {
             0, 1, 2,
@@ -110,7 +110,7 @@ TEST_F(CommonTest, qk_v) {
     float *value_gpu = (float*) cuBERT::malloc(sizeof(float) * 48);
     float *out_gpu = (float*) cuBERT::malloc(sizeof(float) * 48);
 
-    Att_QK_V bqkv(handle, 2, seq_length, num_attention_heads, size_per_head, qk_gpu, value_gpu, out_gpu);
+    Att_QK_V<float> bqkv(handle, 2, seq_length, num_attention_heads, size_per_head, qk_gpu, value_gpu, out_gpu);
 
     float qk[32] = {
             0, 1,

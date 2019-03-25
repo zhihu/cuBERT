@@ -9,7 +9,7 @@ TEST_F(CommonTest, additional_output) {
     size_t hidden_size = 3;
     float output_weights[3] = {-1, 0, 1};
 
-    AdditionalOutputLayer aol(handle, hidden_size, output_weights);
+    AdditionalOutputLayer<float> aol(handle, hidden_size, output_weights);
 
     float in[6] = {
             2, 8, 3,

@@ -13,22 +13,23 @@ namespace cuBERT {
  *
  * Output = Input @ Kernel + Bias
  */
+    template<typename T>
     class Dense {
     public:
         explicit Dense(void* handle,
                        size_t inputs,
                        size_t units,
-                       float *kernel,
-                       float *bias,
+                       T *kernel,
+                       T *bias,
                        size_t max_batch_size);
 
         virtual ~Dense();
 
-        void _pre_compute(size_t batch_size, float *output);
+        void _pre_compute(size_t batch_size, T *output);
 
-        void _in_compute(size_t batch_size, float *input, float *output);
+        void _in_compute(size_t batch_size, T *input, T *output);
 
-        void compute(size_t batch_size, float *input, float *output);
+        void compute(size_t batch_size, T *input, T *output);
 
     private:
         void* handle;
@@ -37,8 +38,8 @@ namespace cuBERT {
         size_t units;
 
         // gpu/cpu buffer
-        float *kernel;
-        float *bias;
+        T *kernel;
+        T *bias;
     };
 }
 

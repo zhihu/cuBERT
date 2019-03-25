@@ -1,19 +1,22 @@
 #include <cmath>
+#include <stdexcept>
 
 #include "cuBERT/common.h"
 #include "LayerNorm.h"
 
 namespace cuBERT {
+
+#ifdef HAVE_MKL
     template<>
-    void layer_norm_<true>(const float *in,
-                           float *inout,
-                           const int batch_size,
-                           const int channels,
-                           float *mean_gpu,
-                           float *var_gpu,
-                           const float *beta,
-                           const float *gamma,
-                           void *stream) {
+    void layer_norm_<float>(const float *in,
+                            float *inout,
+                            const int batch_size,
+                            const int channels,
+                            float *mean_gpu,
+                            float *var_gpu,
+                            const float *beta,
+                            const float *gamma,
+                            void *stream) {
 #pragma omp parallel for
         for (int batch_idx = 0; batch_idx < batch_size; ++batch_idx) {
             float mean = 0;
@@ -37,20 +40,23 @@ namespace cuBERT {
             }
         }
     }
+#endif
 
-    LayerNorm::LayerNorm(size_t max_batch_size, size_t channels, float *beta, float *gamma) {
+    template <typename T>
+    LayerNorm<T>::LayerNorm(size_t max_batch_size, size_t channels, T *beta, T *gamma) {
         this->channels = channels;
 
-        this->mean_gpu = static_cast<float *>(cuBERT::malloc(max_batch_size * sizeof(float)));
-        this->var_gpu = static_cast<float *>(cuBERT::malloc(max_batch_size * sizeof(float)));
+        this->mean_gpu = static_cast<T *>(cuBERT::malloc(max_batch_size * sizeof(T)));
+        this->var_gpu = static_cast<T *>(cuBERT::malloc(max_batch_size * sizeof(T)));
 
-        this->beta = static_cast<float *>(cuBERT::malloc(channels * sizeof(float)));
-        this->gamma = static_cast<float *>(cuBERT::malloc(channels * sizeof(float)));
-        cuBERT::memcpy(this->beta, beta, channels * sizeof(float), 1);
-        cuBERT::memcpy(this->gamma, gamma, channels * sizeof(float), 1);
+        this->beta = static_cast<T *>(cuBERT::malloc(channels * sizeof(T)));
+        this->gamma = static_cast<T *>(cuBERT::malloc(channels * sizeof(T)));
+        cuBERT::memcpy(this->beta, beta, channels * sizeof(T), 1);
+        cuBERT::memcpy(this->gamma, gamma, channels * sizeof(T), 1);
     }
 
-    LayerNorm::~LayerNorm() {
+    template <typename T>
+    LayerNorm<T>::~LayerNorm() {
         cuBERT::free(gamma);
         cuBERT::free(beta);
 
@@ -58,7 +64,13 @@ namespace cuBERT {
         cuBERT::free(mean_gpu);
     }
 
-    void LayerNorm::compute_(size_t batch_size, float *in, float *inout, void* stream) {
-        layer_norm_<!cuBERT::gpu()>(in, inout, batch_size, channels, mean_gpu, var_gpu, beta, gamma, stream);
+    template <typename T>
+    void LayerNorm<T>::compute_(size_t batch_size, T *in, T *inout, void* stream) {
+        layer_norm_<T>(in, inout, batch_size, channels, mean_gpu, var_gpu, beta, gamma, stream);
     }
+
+    template class LayerNorm<float>;
+#ifdef HAVE_CUDA
+    template class LayerNorm<half>;
+#endif
 }

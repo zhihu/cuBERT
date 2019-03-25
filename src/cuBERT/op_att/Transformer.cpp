@@ -4,9 +4,10 @@
 #include "Transformer.h"
 
 namespace cuBERT {
-    Transformer::Transformer(void* cublas,
+    template <typename T>
+    Transformer<T>::Transformer(void* cublas,
                              const std::string &var_prefix,
-                             const std::unordered_map<std::string, float *> &var,
+                             const std::unordered_map<std::string, T *> &var,
                              size_t max_batch_size,
                              size_t seq_length,
                              size_t hidden_size,
@@ -31,17 +32,17 @@ namespace cuBERT {
 
         size_t attention_head_size = hidden_size / num_attention_heads;
 
-        this->attention_mask = new AttentionMask(cublas, seq_length, num_attention_heads, max_batch_size);
-        this->neg_attention_mask_buffer = static_cast<float *>(cuBERT::malloc(sizeof(float) * max_batch_size * num_attention_heads * seq_length * seq_length));
+        this->attention_mask = new AttentionMask<T >(cublas, seq_length, num_attention_heads, max_batch_size);
+        this->neg_attention_mask_buffer = static_cast<T *>(cuBERT::malloc(sizeof(T) * max_batch_size * num_attention_heads * seq_length * seq_length));
 
         for (int layer_idx = 0; layer_idx < num_hidden_layers; ++layer_idx) {
             // buffers
-            this->attention_heads[layer_idx] = static_cast<float *>(cuBERT::malloc(sizeof(float) * max_batch_size * seq_length * hidden_size));
-            this->attention_output[layer_idx] = static_cast<float *>(cuBERT::malloc(sizeof(float) * max_batch_size * seq_length * hidden_size));
-            this->intermediate_output[layer_idx] = static_cast<float *>(cuBERT::malloc(sizeof(float) * max_batch_size * seq_length * intermediate_size));
-            this->layer_output[layer_idx] = static_cast<float *>(cuBERT::malloc(sizeof(float) * max_batch_size * seq_length * hidden_size));
+            this->attention_heads[layer_idx] = static_cast<T *>(cuBERT::malloc(sizeof(T) * max_batch_size * seq_length * hidden_size));
+            this->attention_output[layer_idx] = static_cast<T *>(cuBERT::malloc(sizeof(T) * max_batch_size * seq_length * hidden_size));
+            this->intermediate_output[layer_idx] = static_cast<T *>(cuBERT::malloc(sizeof(T) * max_batch_size * seq_length * intermediate_size));
+            this->layer_output[layer_idx] = static_cast<T *>(cuBERT::malloc(sizeof(T) * max_batch_size * seq_length * hidden_size));
 
-            attention_self[layer_idx] = new AttentionSelf(cublas,
+            attention_self[layer_idx] = new AttentionSelf<T>(cublas,
                                                               var_prefix + "/layer_" + std::to_string(layer_idx) +
                                                               "/attention/self",
                                                               var,
@@ -50,51 +51,52 @@ namespace cuBERT {
                                                               attention_heads[layer_idx],
                                                               hidden_size, num_attention_heads, attention_head_size);
 
-            float *attention_output_dense_kernel = var.at(
+            T *attention_output_dense_kernel = var.at(
                     var_prefix + "/layer_" + std::to_string(layer_idx) + "/attention/output/dense/kernel");
-            float *attention_output_dense_bias = var.at(
+            T *attention_output_dense_bias = var.at(
                     var_prefix + "/layer_" + std::to_string(layer_idx) + "/attention/output/dense/bias");
-            attention_output_dense[layer_idx] = new Dense(cublas,
+            attention_output_dense[layer_idx] = new Dense<T>(cublas,
                                                           hidden_size, hidden_size,
                                                           attention_output_dense_kernel, attention_output_dense_bias,
                                                           max_batch_size * seq_length);
 
-            float *attention_output_norm_beta = var.at(
+            T *attention_output_norm_beta = var.at(
                     var_prefix + "/layer_" + std::to_string(layer_idx) + "/attention/output/LayerNorm/beta");
-            float *attention_output_norm_gamma = var.at(
+            T *attention_output_norm_gamma = var.at(
                     var_prefix + "/layer_" + std::to_string(layer_idx) + "/attention/output/LayerNorm/gamma");
-            attention_output_norm[layer_idx] = new LayerNorm(max_batch_size * seq_length, hidden_size,
-                                                             attention_output_norm_beta, attention_output_norm_gamma);
+            attention_output_norm[layer_idx] = new LayerNorm<T>(max_batch_size * seq_length, hidden_size,
+                                                                    attention_output_norm_beta, attention_output_norm_gamma);
 
-            float *intermediate_dense_kernel = var.at(
+            T *intermediate_dense_kernel = var.at(
                     var_prefix + "/layer_" + std::to_string(layer_idx) + "/intermediate/dense/kernel");
-            float *intermediate_dense_bias = var.at(
+            T *intermediate_dense_bias = var.at(
                     var_prefix + "/layer_" + std::to_string(layer_idx) + "/intermediate/dense/bias");
-            intermediate_dense[layer_idx] = new Dense(cublas,
+            intermediate_dense[layer_idx] = new Dense<T>(cublas,
                                                       hidden_size, intermediate_size,
                                                       intermediate_dense_kernel, intermediate_dense_bias,
                                                       max_batch_size * seq_length);
-            intermediate_act_fn[layer_idx] = new GELU();
+            intermediate_act_fn[layer_idx] = new GELU<T>();
 
-            float *output_dense_kernel = var.at(
+            T *output_dense_kernel = var.at(
                     var_prefix + "/layer_" + std::to_string(layer_idx) + "/output/dense/kernel");
-            float *output_dense_bias = var.at(
+            T *output_dense_bias = var.at(
                     var_prefix + "/layer_" + std::to_string(layer_idx) + "/output/dense/bias");
-            output_dense[layer_idx] = new Dense(cublas,
+            output_dense[layer_idx] = new Dense<T>(cublas,
                                                 intermediate_size, hidden_size,
                                                 output_dense_kernel, output_dense_bias,
                                                 max_batch_size * seq_length);
 
-            float *output_norm_beta = var.at(
+            T *output_norm_beta = var.at(
                     var_prefix + "/layer_" + std::to_string(layer_idx) + "/output/LayerNorm/beta");
-            float *output_norm_gamma = var.at(
+            T *output_norm_gamma = var.at(
                     var_prefix + "/layer_" + std::to_string(layer_idx) + "/output/LayerNorm/gamma");
-            output_layer_norm[layer_idx] = new LayerNorm(max_batch_size * seq_length, hidden_size,
-                                                         output_norm_beta, output_norm_gamma);
+            output_layer_norm[layer_idx] = new LayerNorm<T>(max_batch_size * seq_length, hidden_size,
+                                                                output_norm_beta, output_norm_gamma);
         }
     }
 
-    Transformer::~Transformer() {
+    template <typename T>
+    Transformer<T>::~Transformer() {
         for (int i = 0; i < num_hidden_layers; ++i) {
             delete output_layer_norm[i];
             delete output_dense[i];
@@ -114,12 +116,14 @@ namespace cuBERT {
         delete attention_mask;
     }
 
-    float *Transformer::compute(size_t batch_size, float *input_gpu, char *attention_mask) {
+    template <typename T>
+    T *Transformer<T>::compute(size_t batch_size, T *input_gpu, char *attention_mask) {
         _pre_compute(batch_size);
         return _in_compute(batch_size, input_gpu, attention_mask);
     }
 
-    void Transformer::_pre_compute(size_t batch_size) {
+    template <typename T>
+    void Transformer<T>::_pre_compute(size_t batch_size) {
         for (int i = 0; i < num_hidden_layers; ++i) {
             attention_self[i]->_pre_compute(batch_size);
             attention_output_dense[i]->_pre_compute(batch_size * seq_length, attention_output[i]);
@@ -128,16 +132,17 @@ namespace cuBERT {
         }
     }
 
-    float *Transformer::_in_compute(size_t batch_size, float *input_gpu, char *attention_mask) {
+    template <typename T>
+    T *Transformer<T>::_in_compute(size_t batch_size, T *input_gpu, char *attention_mask) {
         void* stream = cuBERT::blas_get_stream(cublas);
 
         // broadcast neg_attention_mask
         this->attention_mask->compute(batch_size, attention_mask, neg_attention_mask_buffer);
 
-        float *prev_output = input_gpu;
+        T *prev_output = input_gpu;
 
         for (int i = 0; i < num_hidden_layers; ++i) {
-            float *layer_input = prev_output;
+            T *layer_input = prev_output;
 
             // attention/self
             attention_self[i]->_in_compute(batch_size, layer_input, neg_attention_mask_buffer);
@@ -159,4 +164,9 @@ namespace cuBERT {
 
         return prev_output;
     }
+
+    template class Transformer<float>;
+#ifdef HAVE_CUDA
+    template class Transformer<half>;
+#endif
 }

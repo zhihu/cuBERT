@@ -13,7 +13,7 @@ TEST_F(CommonTest, gelu) {
         expect[i] = inout[i] * 0.5 * (1.0 + erf(inout[i] / sqrt(2.0)));
     }
 
-    GELU gelu;
+    GELU<float> gelu;
 
     float* inout_gpu = (float*) cuBERT::malloc(sizeof(float) * 5);
     cuBERT::memcpy(inout_gpu, inout, sizeof(float) * 5, 1);

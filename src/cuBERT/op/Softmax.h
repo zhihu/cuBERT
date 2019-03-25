@@ -5,25 +5,26 @@
 
 namespace cuBERT {
 
-    template <bool cpu>
-    void softmax_(float *inout,
+    template <typename T>
+    void softmax_(T *inout,
                   const int batch_size,
                   const int channel,
-                  float *sum_gpu,
+                  T *sum_gpu,
                   void *stream);
 
+    template <typename T>
     class Softmax {
     public:
         explicit Softmax(size_t max_batch_size, size_t channel);
 
         virtual ~Softmax();
 
-        void compute_(size_t batch_size, float *inout_gpu, void* stream);
+        void compute_(size_t batch_size, T *inout_gpu, void* stream);
 
     private:
         size_t channel;
 
-        float* sum_gpu;
+        T* sum_gpu;
     };
 }
 

@@ -5,9 +5,9 @@
 
 namespace cuBERT {
 
-    template <bool cpu>
+    template <typename T>
     void _not(const char *in,
-              float *out,
+              T *out,
               const int N,
               void *stream);
 
@@ -15,6 +15,7 @@ namespace cuBERT {
  * 1. compute: 1 - in_gpu
  * 2. broadcast attention mask from (N, seq_length) to (N, num_attention_heads * seq_length, seq_length)
  */
+    template <typename T>
     class AttentionMask {
     public:
         explicit AttentionMask(void* handle, size_t seq_length, size_t num_attention_heads,
@@ -22,7 +23,7 @@ namespace cuBERT {
 
         virtual ~AttentionMask();
 
-        void compute(size_t batch_size, char *in_gpu, float *out_gpu);
+        void compute(size_t batch_size, char *in_gpu, T *out_gpu);
 
     private:
         void* handle;
@@ -31,8 +32,8 @@ namespace cuBERT {
         size_t num_attention_heads;
 
         // cpu/gpu buffer
-        float *ones;
-        float *neg;
+        T *ones;
+        T *neg;
     };
 }
 

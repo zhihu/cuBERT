@@ -11,6 +11,7 @@
 #include "cuBERT/tensorflow/Graph.h"
 
 namespace cuBERT {
+    template <typename T>
     class BertM {
     public:
         explicit BertM(const char *model_file,
@@ -23,14 +24,14 @@ namespace cuBERT {
 
         unsigned int compute(size_t batch_size,
                              int *input_ids, char *input_mask, char *segment_ids,
-                             float *output,
+                             T *output,
                              cuBERT_OutputType output_type = cuBERT_LOGITS);
 
         size_t seq_length;
 
     private:
-        Graph graph;
-        std::vector<Bert *> bert_instances;
+        Graph<T> graph;
+        std::vector<Bert<T> *> bert_instances;
         std::vector<std::mutex *> mutex_instances;
 
         std::atomic<uint8_t> rr;

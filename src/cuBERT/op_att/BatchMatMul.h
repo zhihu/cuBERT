@@ -12,13 +12,14 @@ namespace cuBERT {
      *
      * QK = Q * K^T: [N, seq_length, num_attention_heads, seq_length]
      */
+    template <typename T>
     class Att_Q_K {
     public:
         explicit Att_Q_K(void* handle,
                         size_t max_batch_size,
                         size_t seq_length, size_t num_attention_heads, size_t size_per_head,
-                        float* query, float* key, float* out,
-                        float alpha = 1, float beta = 0);
+                        T* query, T* key, T* out,
+                        float alpha = 1.f, float beta = 0.f);
 
         virtual ~Att_Q_K();
 
@@ -35,18 +36,19 @@ namespace cuBERT {
         float beta;
 
         // cpu/gpu buffer
-        const float **query_array;
-        const float **key_array;
-        float **out_array;
+        const T **query_array;
+        const T **key_array;
+        T **out_array;
     };
 
+    template <typename T>
     class Att_QK_V {
     public:
         explicit Att_QK_V(void* handle,
                          size_t max_batch_size,
                          size_t seq_length, size_t num_attention_heads, size_t size_per_head,
-                         float* qk, float* value, float* out,
-                         float alpha = 1, float beta = 0);
+                         T* qk, T* value, T* out,
+                          float alpha = 1.f, float beta = 0.f);
 
         virtual ~Att_QK_V();
 
@@ -63,9 +65,9 @@ namespace cuBERT {
         float beta;
 
         // cpu/gpu buffer
-        const float **qk_array;
-        const float **value_array;
-        float **out_array;
+        const T **qk_array;
+        const T **value_array;
+        T **out_array;
     };
 }
 

@@ -15,13 +15,14 @@ namespace cuBERT {
      *
      * logits = tf.matmul(output_layer, output_weights, transpose_b=True)
      */
+    template <typename T>
     class AdditionalOutputLayer {
     public:
-        explicit AdditionalOutputLayer(void* handle, size_t hidden_size, float *output_weights);
+        explicit AdditionalOutputLayer(void* handle, size_t hidden_size, T *output_weights);
 
         virtual ~AdditionalOutputLayer();
 
-        void compute(size_t batch_size, float *in_gpu, float *out_gpu);
+        void compute(size_t batch_size, T *in_gpu, T *out_gpu);
 
     private:
         void* handle;
@@ -29,7 +30,7 @@ namespace cuBERT {
         size_t hidden_size;
 
         // cpu/gpu buffer
-        float *output_weights;
+        T *output_weights;
     };
 }
 

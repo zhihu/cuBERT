@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <iostream>
 #ifdef HAVE_CUDA
+#include <cuda.h>
 #include <cuda_runtime.h>
 #include <cublas.h>
 #endif
@@ -19,6 +20,57 @@
 #endif
 
 #include "./common.h"
+
+#ifdef HAVE_CUDA
+#if CUDA_VERSION == 9000
+extern "C" {
+CUBLASAPI cublasStatus_t CUBLASWINAPI cublasGemmBatchedEx  (cublasHandle_t handle, 
+                                                      cublasOperation_t transa,
+                                                      cublasOperation_t transb, 
+                                                      int m,
+                                                      int n,
+                                                      int k,
+                                                      const void *alpha, /* host or device pointer */  
+                                                      const void *const Aarray[], 
+                                                      cudaDataType Atype,
+                                                      int lda,
+                                                      const void *const Barray[],
+                                                      cudaDataType Btype,
+                                                      int ldb, 
+                                                      const void *beta, /* host or device pointer */  
+                                                      void *const Carray[],
+                                                      cudaDataType Ctype,
+                                                      int ldc,
+                                                      int batchCount,
+                                                      cudaDataType computeType,
+                                                      cublasGemmAlgo_t algo); 
+ 
+CUBLASAPI cublasStatus_t CUBLASWINAPI cublasGemmStridedBatchedEx (cublasHandle_t handle,
+                                                                 cublasOperation_t transa,
+                                                                 cublasOperation_t transb, 
+                                                                 int m,
+                                                                 int n,
+                                                                 int k,
+                                                                 const void *alpha,  /* host or device pointer */
+                                                                 const void *A,
+                                                                 cudaDataType Atype,
+                                                                 int lda,
+                                                                 long long int strideA,   /* purposely signed */
+                                                                 const void *B,
+                                                                 cudaDataType Btype,
+                                                                 int ldb,
+                                                                 long long int strideB,
+                                                                 const void *beta,   /* host or device pointer */
+                                                                 void *C,
+                                                                 cudaDataType Ctype,
+                                                                 int ldc,
+                                                                 long long int strideC,
+                                                                 int batchCount,
+                                                                 cudaDataType computeType,
+                                                                 cublasGemmAlgo_t algo);
+}
+#endif
+#endif
 
 namespace cuBERT {
 
@@ -118,17 +170,6 @@ namespace cuBERT {
 #endif
     }
 
-    void fill_n(float *dst, size_t n, float value) {
-#ifdef HAVE_CUDA
-            auto *dst_cpu = new float[n];
-            std::fill_n(dst_cpu, n, value);
-            cuBERT::memcpy(dst, dst_cpu, sizeof(float) * n, 1);
-            delete[]dst_cpu;
-#else
-            std::fill_n(dst, n, value);
-#endif
-    }
-
     void *blas_create() {
 #ifdef HAVE_CUDA
             cublasHandle_t ptr;
@@ -161,14 +202,15 @@ namespace cuBERT {
 #endif
     }
 
-    void blas_sgemm(void *handle,
-                    const bool TransA, const bool TransB,
-                    const int M, const int N, const int K,
-                    const float alpha,
-                    const float *A, const int lda,
-                    const float *B, const int ldb,
-                    const float beta,
-                    float *C, const int ldc) {
+    template<>
+    void blas_gemm<float>(void *handle,
+                          const bool TransA, const bool TransB,
+                          const int M, const int N, const int K,
+                          const float alpha,
+                          const float *A, const int lda,
+                          const float *B, const int ldb,
+                          const float beta,
+                          float *C, const int ldc) {
 #ifdef HAVE_CUDA
             CUBLAS_CHECK(cublasSgemm_v2((cublasHandle_t) handle,
                                         TransA ? CUBLAS_OP_T : CUBLAS_OP_N, TransB ? CUBLAS_OP_T : CUBLAS_OP_N,
@@ -193,15 +235,16 @@ namespace cuBERT {
 #endif
     }
 
-    void blas_sgemm_batch(void *handle,
-                          const bool TransA, const bool TransB,
-                          int m, int n, int k,
-                          const float alpha,
-                          const float **Aarray, int lda,
-                          const float **Barray, int ldb,
-                          const float beta,
-                          float **Carray, int ldc,
-                          int batchCount) {
+    template<>
+    void blas_gemm_batch<float>(void *handle,
+                                const bool TransA, const bool TransB,
+                                int m, int n, int k,
+                                const float alpha,
+                                const float **Aarray, int lda,
+                                const float **Barray, int ldb,
+                                const float beta,
+                                float **Carray, int ldc,
+                                int batchCount) {
 #ifdef HAVE_CUDA
             CUBLAS_CHECK(cublasSgemmBatched((cublasHandle_t) handle,
                                             TransA ? CUBLAS_OP_T : CUBLAS_OP_N, TransB ? CUBLAS_OP_T : CUBLAS_OP_N,
@@ -230,15 +273,16 @@ namespace cuBERT {
 #endif
     }
 
-    void blas_sgemm_strided_batch(void *handle,
-                                  const bool TransA, const bool TransB,
-                                  int m, int n, int k,
-                                  const float alpha,
-                                  const float *A, int lda, long long int strideA,
-                                  const float *B, int ldb, long long int strideB,
-                                  const float beta,
-                                  float *C, int ldc, long long int strideC,
-                                  int batchCount) {
+    template<>
+    void blas_gemm_strided_batch<float>(void *handle,
+                                        const bool TransA, const bool TransB,
+                                        int m, int n, int k,
+                                        const float alpha,
+                                        const float *A, int lda, long long int strideA,
+                                        const float *B, int ldb, long long int strideB,
+                                        const float beta,
+                                        float *C, int ldc, long long int strideC,
+                                        int batchCount) {
 #ifdef HAVE_CUDA
             CUBLAS_CHECK(cublasSgemmStridedBatched((cublasHandle_t) handle,
                                                     TransA ? CUBLAS_OP_T : CUBLAS_OP_N, TransB ? CUBLAS_OP_T : CUBLAS_OP_N,
@@ -274,5 +318,90 @@ namespace cuBERT {
                               1, &batchCount);
             return;
 #endif
+    }
+
+#ifdef HAVE_CUDA
+    template<>
+    void blas_gemm<half>(void *handle,
+                         const bool TransA, const bool TransB,
+                         const int M, const int N, const int K,
+                         const float alpha,
+                         const half *A, const int lda,
+                         const half *B, const int ldb,
+                         const float beta,
+                         half *C, const int ldc) {
+        CUBLAS_CHECK(cublasSgemmEx((cublasHandle_t) handle,
+                                   TransA ? CUBLAS_OP_T : CUBLAS_OP_N, TransB ? CUBLAS_OP_T : CUBLAS_OP_N,
+                                   M, N, K,
+                                   &alpha,
+                                   A, CUDA_R_16F, lda,
+                                   B, CUDA_R_16F, ldb,
+                                   &beta,
+                                   C, CUDA_R_16F, ldc));
+    }
+
+    template<>
+    void blas_gemm_batch<half>(void *handle,
+                               const bool TransA, const bool TransB,
+                               int m, int n, int k,
+                               const float alpha,
+                               const half **Aarray, int lda,
+                               const half **Barray, int ldb,
+                               const float beta,
+                               half **Carray, int ldc,
+                               int batchCount) {
+        CUBLAS_CHECK(cublasGemmBatchedEx((cublasHandle_t) handle,
+                                         TransA ? CUBLAS_OP_T : CUBLAS_OP_N, TransB ? CUBLAS_OP_T : CUBLAS_OP_N,
+                                         m, n, k,
+                                         &alpha,
+                                         (const void **) Aarray, CUDA_R_16F, lda,
+                                         (const void **) Barray, CUDA_R_16F, ldb,
+                                         &beta,
+                                         (void **) Carray, CUDA_R_16F, ldc,
+                                         batchCount,
+                                         CUDA_R_32F, CUBLAS_GEMM_DEFAULT_TENSOR_OP));
+    }
+
+    template<>
+    void blas_gemm_strided_batch<half>(void *handle,
+                                       const bool TransA, const bool TransB,
+                                       int m, int n, int k,
+                                       const float alpha,
+                                       const half *A, int lda, long long int strideA,
+                                       const half *B, int ldb, long long int strideB,
+                                       const float beta,
+                                       half *C, int ldc, long long int strideC,
+                                       int batchCount) {
+            CUBLAS_CHECK(cublasGemmStridedBatchedEx((cublasHandle_t) handle,
+                                                    TransA ? CUBLAS_OP_T : CUBLAS_OP_N, TransB ? CUBLAS_OP_T : CUBLAS_OP_N,
+                                                    m, n, k,
+                                                    &alpha,
+                                                    A, CUDA_R_16F, lda, strideA,
+                                                    B, CUDA_R_16F, ldb, strideB,
+                                                    &beta,
+                                                    C, CUDA_R_16F, ldc, strideC,
+                                                    batchCount,
+                                                    CUDA_R_32F, CUBLAS_GEMM_DEFAULT_TENSOR_OP));
+    }
+#endif
+
+    template <>
+    void T2T<float, float>(const float* in, float* out, size_t n) {
+        std::memcpy(out, in, n * sizeof(float));
+    }
+
+    template <>
+    void T2T<half, half>(const half* in, half* out, size_t n) {
+        std::memcpy(out, in, n * sizeof(half));
+    }
+
+    template <>
+    void T2T<float, half>(const float* in, half* out, size_t n) {
+        float2half(in, out, n);
+    }
+
+    template <>
+    void T2T<half, float>(const half* in, float* out, size_t n) {
+        half2float(in, out, n);
     }
 }
