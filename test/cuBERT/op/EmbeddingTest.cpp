@@ -15,7 +15,7 @@ TEST_F(CommonTest, embedding) {
             9, 10, 11,
     };
 
-    Embedding embedding(vocab_size, embedding_size, embedding_table);
+    Embedding<int, float> embedding(vocab_size, embedding_size, embedding_table);
 
     int input_ids[3] = {2, 2, 1};
     float out[9];

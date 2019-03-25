@@ -3,6 +3,11 @@
 
 extern "C" {
 
+enum cuBERT_ComputeType {
+    cuBERT_COMPUTE_FLOAT = 0,
+    cuBERT_COMPUTE_HALF = 1, /** half precision */
+};
+
 enum cuBERT_OutputType {
     cuBERT_LOGITS = 0,
     cuBERT_POOLED_OUTPUT = 1,
@@ -17,17 +22,20 @@ void* cuBERT_open(const char* model_file,
                   int max_batch_size,
                   int seq_length,
                   int num_hidden_layers,
-                  int num_attention_heads);
+                  int num_attention_heads,
+                  cuBERT_ComputeType compute_type = cuBERT_COMPUTE_FLOAT);
 
 void cuBERT_compute(void* model,
                     int batch_size,
                     int* input_ids,
                     char* input_mask,
                     char* segment_ids,
-                    float* output,
-                    cuBERT_OutputType output_type = cuBERT_LOGITS);
+                    void* output,
+                    cuBERT_OutputType output_type = cuBERT_LOGITS,
+                    cuBERT_ComputeType compute_type = cuBERT_COMPUTE_FLOAT);
 
-void cuBERT_close(void* model);
+void cuBERT_close(void* model,
+                  cuBERT_ComputeType compute_type = cuBERT_COMPUTE_FLOAT);
 
 /** high level API including tokenization **/
 
@@ -41,7 +49,8 @@ void cuBERT_tokenize_compute(void* model,
                              const char** text_a,
                              const char** text_b,
                              float* output,
-                             cuBERT_OutputType output_type = cuBERT_LOGITS);
+                             cuBERT_OutputType output_type = cuBERT_LOGITS,
+                             cuBERT_ComputeType compute_type = cuBERT_COMPUTE_FLOAT);
 
 }
 

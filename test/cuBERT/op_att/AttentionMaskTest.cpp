@@ -9,7 +9,7 @@ TEST_F(CommonTest, attention_mask) {
     size_t num_attention_heads = 3;
     size_t batch_size = 2;
 
-    AttentionMask attention_mask(handle, seq_length, num_attention_heads, 4);
+    AttentionMask<float> attention_mask(handle, seq_length, num_attention_heads, 4);
 
     char in[] = {
             1, 0,

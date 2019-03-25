@@ -11,11 +11,12 @@
 #include "./AttentionMask.h"
 
 namespace cuBERT {
+    template <typename T>
     class Transformer {
     public:
         explicit Transformer(void* cublas,
                              const std::string &var_prefix,
-                             const std::unordered_map<std::string, float *> &var,
+                             const std::unordered_map<std::string, T *> &var,
                              size_t max_batch_size,
                              size_t seq_length,
                              size_t hidden_size = 768,
@@ -31,11 +32,11 @@ namespace cuBERT {
          * @param input_gpu float Tensor of shape [batch_size, seq_length, hidden_size].
          * @param output_gpu
          */
-        float *compute(size_t batch_size, float *input_gpu, char *attention_mask);
+        T *compute(size_t batch_size, T *input_gpu, char *attention_mask);
 
         void _pre_compute(size_t batch_size);
 
-        float *_in_compute(size_t batch_size, float *input_gpu, char *attention_mask);
+        T *_in_compute(size_t batch_size, T *input_gpu, char *attention_mask);
 
     private:
         void* cublas;
@@ -44,21 +45,21 @@ namespace cuBERT {
         size_t seq_length;
         size_t intermediate_size;
 
-        AttentionMask *attention_mask;
-        std::vector<Dense *> attention_output_dense;
-        std::vector<LayerNorm *> attention_output_norm;
-        std::vector<Dense *> intermediate_dense;
-        std::vector<GELU *> intermediate_act_fn;
-        std::vector<Dense *> output_dense;
-        std::vector<LayerNorm *> output_layer_norm;
-        std::vector<AttentionSelf *> attention_self;
+        AttentionMask<T> *attention_mask;
+        std::vector<Dense<T> *> attention_output_dense;
+        std::vector<LayerNorm<T> *> attention_output_norm;
+        std::vector<Dense<T> *> intermediate_dense;
+        std::vector<GELU<T> *> intermediate_act_fn;
+        std::vector<Dense<T> *> output_dense;
+        std::vector<LayerNorm<T> *> output_layer_norm;
+        std::vector<AttentionSelf<T> *> attention_self;
 
         // gpu buffer
-        float *neg_attention_mask_buffer;
-        std::vector<float *> attention_heads;
-        std::vector<float *> attention_output;
-        std::vector<float *> intermediate_output;
-        std::vector<float *> layer_output;
+        T *neg_attention_mask_buffer;
+        std::vector<T *> attention_heads;
+        std::vector<T *> attention_output;
+        std::vector<T *> intermediate_output;
+        std::vector<T *> layer_output;
     };
 }
 

@@ -5,16 +5,17 @@
 
 namespace cuBERT {
 
-    template <bool cpu>
-    void tanh_(float *inout,
+    template <typename T>
+    void tanh_(T *inout,
                const int N,
                void *stream);
 
-    template <bool cpu>
-    void reduce_mean_1(const float *in, float *out,
+    template <typename T>
+    void reduce_mean_1(const T *in, T *out,
                        const int batch_size, const int seq_length, const int hidden_size,
                        void *stream);
 
+    template <typename T>
     class Pooler {
     public:
         /**
@@ -22,22 +23,21 @@ namespace cuBERT {
          * @param in (batch_size, seq_length, hidden_size)
          * @param out (batch_size, hidden_size)
          */
-        virtual void compute(size_t batch_size, float *in, float *out) = 0;
-
-        virtual ~Pooler() = 0;
+        virtual void compute(size_t batch_size, T *in, T *out) = 0;
     };
 
-    class BertPooler : public Pooler {
+    template <typename T>
+    class BertPooler : public Pooler<T> {
     public:
         explicit BertPooler(void* handle,
                             size_t seq_length, size_t hidden_size,
-                            float *kernel,
-                            float *bias,
+                            T *kernel,
+                            T *bias,
                             size_t max_batch_size);
 
-        ~BertPooler() override;
+        ~BertPooler();
 
-        void compute(size_t batch_size, float *input_gpu, float *output_gpu) override;
+        void compute(size_t batch_size, T *input_gpu, T *output_gpu) override;
 
     private:
         void* handle;
@@ -46,21 +46,22 @@ namespace cuBERT {
         size_t seq_length;
 
         // cpu/gpu buffer
-        float *kernel;
-        float *bias;
+        T *kernel;
+        T *bias;
     };
 
     /**
      * output_layer = tf.reduce_mean(model.get_sequence_output(), axis=1)
      */
-    class MeanPooler : public Pooler {
+    template <typename T>
+    class MeanPooler : public Pooler<T> {
     public:
         explicit MeanPooler(void *handle,
                                 size_t seq_length, size_t hidden_size);
 
-        ~MeanPooler() override = default;
+        ~MeanPooler() = default;
 
-        void compute(size_t batch_size, float *in, float *out) override;
+        void compute(size_t batch_size, T *in, T *out) override;
 
     private:
         void* handle;

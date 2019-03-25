@@ -4,7 +4,8 @@
 #include "Bert.h"
 
 namespace cuBERT {
-    Bert::Bert(const std::unordered_map<std::string, float *> &var,
+    template <typename T>
+    Bert<T>::Bert(const std::unordered_map<std::string, T *> &var,
                size_t max_batch_size,
                size_t seq_length,
                size_t vocab_size,
@@ -21,31 +22,31 @@ namespace cuBERT {
         this->cublas = cuBERT::blas_create();
         cuBERT::blas_set_stream(cublas, stream);
 
-        this->bert_embeddings = new BertEmbeddings(cublas, var, max_batch_size,
+        this->bert_embeddings = new BertEmbeddings<T>(cublas, var, max_batch_size,
                                                    vocab_size, type_vocab_size, hidden_size, seq_length);
 
-        this->transformer = new Transformer(cublas, "bert/encoder", var,
+        this->transformer = new Transformer<T>(cublas, "bert/encoder", var,
                                             max_batch_size, seq_length,
                                             hidden_size, num_hidden_layers, num_attention_heads, intermediate_size);
 
         if (var.count("bert/pooler/dense/kernel")) {
-            this->bert_pooler = new BertPooler(cublas, seq_length, hidden_size,
+            this->bert_pooler = new BertPooler<T>(cublas, seq_length, hidden_size,
                                                var.at("bert/pooler/dense/kernel"),
                                                var.at("bert/pooler/dense/bias"),
                                                max_batch_size);
         } else {
-            this->bert_pooler = new MeanPooler(cublas, seq_length, hidden_size);
+            this->bert_pooler = new MeanPooler<T>(cublas, seq_length, hidden_size);
         }
 
         if (var.count("output_weights")) {
-            this->additional_output_layer = new AdditionalOutputLayer(cublas, hidden_size, var.at("output_weights"));
+            this->additional_output_layer = new AdditionalOutputLayer<T>(cublas, hidden_size, var.at("output_weights"));
         } else {
             this->additional_output_layer = nullptr;
         }
 
-        this->_embedding_output = static_cast<float *>(cuBERT::malloc(sizeof(float) * max_batch_size * seq_length * hidden_size));
-        this->_pooled_output = static_cast<float *>(cuBERT::malloc(sizeof(float) * max_batch_size * hidden_size));
-        this->_logits = static_cast<float *>(cuBERT::malloc(sizeof(float) * max_batch_size));
+        this->_embedding_output = static_cast<T *>(cuBERT::malloc(sizeof(T) * max_batch_size * seq_length * hidden_size));
+        this->_pooled_output = static_cast<T *>(cuBERT::malloc(sizeof(T) * max_batch_size * hidden_size));
+        this->_logits = static_cast<T *>(cuBERT::malloc(sizeof(T) * max_batch_size));
 
         this->input_ids_buf = static_cast<int *>(cuBERT::malloc(sizeof(int) * max_batch_size * seq_length));
         this->input_mask_buf = static_cast<char *>(cuBERT::malloc(sizeof(char) * max_batch_size * seq_length));
@@ -56,7 +57,8 @@ namespace cuBERT {
         this->buffer_filled = true;
     }
 
-    Bert::~Bert() {
+    template <typename T>
+    Bert<T>::~Bert() {
         cuBERT::free(segment_ids_buf);
         cuBERT::free(input_mask_buf);
         cuBERT::free(input_ids_buf);
@@ -74,7 +76,8 @@ namespace cuBERT {
         cuBERT::cuda_stream_destroy(stream);
     }
 
-    void Bert::compute(size_t batch_size, int *input_ids, char *input_mask, char *segment_ids) {
+    template <typename T>
+    void Bert<T>::compute(size_t batch_size, int *input_ids, char *input_mask, char *segment_ids) {
         if (batch_size > max_batch_size) {
             char buff[100];
             snprintf(buff, sizeof(buff), "batch_size: %zu > max_batch_size: %zu", batch_size, max_batch_size);
@@ -118,13 +121,14 @@ namespace cuBERT {
         buffer_filled = false;
     }
 
-    void Bert::logits(size_t batch_size, float *logits) {
+    template <typename T>
+    void Bert<T>::logits(size_t batch_size, T *logits) {
         if (additional_output_layer == nullptr) {
             std::cerr << "model does not have additional_output_layer, the output logits is wrong." << std::endl;
         }
 
         void *streamId = cuBERT::blas_get_stream(cublas);
-        cuBERT::memcpyAsync(logits, _logits, sizeof(float) * batch_size, 2, streamId);
+        cuBERT::memcpyAsync(logits, _logits, sizeof(T) * batch_size, 2, streamId);
         cuBERT::cuda_stream_synchronize(streamId);
 
         if (!buffer_filled) {
@@ -133,9 +137,10 @@ namespace cuBERT {
         }
     }
 
-    void Bert::pooled_output(size_t batch_size, float *pooled_output) {
+    template <typename T>
+    void Bert<T>::pooled_output(size_t batch_size, T *pooled_output) {
         void *streamId = cuBERT::blas_get_stream(cublas);
-        cuBERT::memcpyAsync(pooled_output, _pooled_output, sizeof(float) * batch_size * hidden_size, 2, streamId);
+        cuBERT::memcpyAsync(pooled_output, _pooled_output, sizeof(T) * batch_size * hidden_size, 2, streamId);
         cuBERT::cuda_stream_synchronize(streamId);
 
         if (!buffer_filled) {
@@ -144,10 +149,11 @@ namespace cuBERT {
         }
     }
 
-    void Bert::sequence_output(size_t batch_size, float *sequence_output) {
+    template <typename T>
+    void Bert<T>::sequence_output(size_t batch_size, T *sequence_output) {
         void *streamId = cuBERT::blas_get_stream(cublas);
         cuBERT::memcpyAsync(sequence_output, _sequence_output,
-                            sizeof(float) * batch_size * seq_length * hidden_size, 2, streamId);
+                            sizeof(T) * batch_size * seq_length * hidden_size, 2, streamId);
         cuBERT::cuda_stream_synchronize(streamId);
 
         if (!buffer_filled) {
@@ -156,10 +162,11 @@ namespace cuBERT {
         }
     }
 
-    void Bert::embedding_output(size_t batch_size, float *embedding_output) {
+    template <typename T>
+    void Bert<T>::embedding_output(size_t batch_size, T *embedding_output) {
         void *streamId = cuBERT::blas_get_stream(cublas);
         cuBERT::memcpyAsync(embedding_output, _embedding_output,
-                           sizeof(float) * batch_size * seq_length * hidden_size, 2, streamId);
+                           sizeof(T) * batch_size * seq_length * hidden_size, 2, streamId);
         cuBERT::cuda_stream_synchronize(streamId);
 
         if (!buffer_filled) {
@@ -167,4 +174,9 @@ namespace cuBERT {
             buffer_filled = true;
         }
     }
+
+    template class Bert<float>;
+#ifdef HAVE_CUDA
+    template class Bert<half>;
+#endif
 }

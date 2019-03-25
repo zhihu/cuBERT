@@ -3,12 +3,13 @@
 
 namespace cuBERT {
 
-    template <bool cpu>
-    void gelu(size_t N, float *inout, void *stream);
+    template <typename T>
+    void gelu(size_t N, T *inout, void *stream);
 
+    template <typename T>
     class GELU {
     public:
-        void compute_(size_t N, float *inout_gpu, void* stream);
+        void compute_(size_t N, T *inout_gpu, void* stream);
     };
 }
 

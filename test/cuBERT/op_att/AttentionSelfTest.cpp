@@ -68,7 +68,7 @@ TEST_F(CommonTest, attention_self) {
     cuBERT::memcpy(mask_gpu, mask, sizeof(float) * 64, 1);
 
     // compute
-    AttentionSelf attention_self(handle, "attention/self", var, 32, seq_length,
+    AttentionSelf<float> attention_self(handle, "attention/self", var, 32, seq_length,
                                  out_gpu,
                                  num_attention_heads * size_per_head, num_attention_heads, size_per_head);
     attention_self.compute(batch_size, tensor_gpu, mask_gpu);

@@ -1,14 +1,15 @@
 #include <cuda_runtime.h>
+#include <cuda_fp16.h>
 
 #include "Embedding.h"
 
 namespace cuBERT {
-    template<typename T>
+    template<typename T, typename V>
     __global__ void kernel_embedding(const T *__restrict__ input_ids,
                                      const int input_ids_len,
-                                     const float *__restrict__ embedding_table,
+                                     const V *__restrict__ embedding_table,
                                      const int embedding_size,
-                                     float *output) {
+                                     V *output) {
         int idx = blockIdx.x * blockDim.x + threadIdx.x;
         if (idx >= input_ids_len) {
             return;
@@ -17,18 +18,18 @@ namespace cuBERT {
         T input_id = __ldg(input_ids + idx);
         memcpy(output + embedding_size * idx,
                embedding_table + embedding_size * input_id,
-               embedding_size * sizeof(float));
+               embedding_size * sizeof(V));
     }
 
-    template<bool cpu, typename T>
+    template<typename T, typename V>
     __host__ void embedding(const T *input_ids,
                             const int input_ids_len,
-                            const float *embedding_table,
+                            const V *embedding_table,
                             const int embedding_size,
-                            float *output,
+                            V *output,
                             void *stream) {
         const int blocks = (input_ids_len + 127) / 128;
-        kernel_embedding<T> << < blocks, 128, 0, (cudaStream_t) stream >> > (input_ids,
+        kernel_embedding<T, V> << < blocks, 128, 0, (cudaStream_t) stream >> > (input_ids,
                 input_ids_len,
                 embedding_table,
                 embedding_size,
@@ -36,7 +37,7 @@ namespace cuBERT {
     }
 
     template
-    __host__ void embedding<false, int>(const int *input_ids,
+    __host__ void embedding<int, float>(const int *input_ids,
                                         const int input_ids_len,
                                         const float *embedding_table,
                                         const int embedding_size,
@@ -44,10 +45,26 @@ namespace cuBERT {
                                         void *stream);
 
     template
-    __host__ void embedding<false, char>(const char *input_ids,
+    __host__ void embedding<char, float>(const char *input_ids,
                                          const int input_ids_len,
                                          const float *embedding_table,
                                          const int embedding_size,
                                          float *output,
                                          void *stream);
+
+    template
+    __host__ void embedding<int, half>(const int *input_ids,
+                                       const int input_ids_len,
+                                       const half *embedding_table,
+                                       const int embedding_size,
+                                       half *output,
+                                       void *stream);
+
+    template
+    __host__ void embedding<char, half>(const char *input_ids,
+                                        const int input_ids_len,
+                                        const half *embedding_table,
+                                        const int embedding_size,
+                                        half *output,
+                                        void *stream);
 }

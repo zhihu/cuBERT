@@ -87,7 +87,7 @@ TEST_F(CommonTest, transformer) {
 
     size_t hidden_size = num_attention_heads * size_per_head;
 
-    Transformer transformer(handle, "encoder", var, 32,
+    Transformer<float> transformer(handle, "encoder", var, 32,
                             seq_length, hidden_size, 1, num_attention_heads, intermediate_size);
 
     float tensor[48] = {0, 1, 2, 3, 4, 5,
@@ -177,7 +177,7 @@ TEST_F(CommonTest, transformer_complex) {
 
     size_t hidden_size = num_attention_heads * size_per_head;
 
-    Transformer transformer(handle, "encoder", var, 32,
+    Transformer<float> transformer(handle, "encoder", var, 32,
                             seq_length, hidden_size, 2, num_attention_heads, intermediate_size);
 
     float tensor[48] = {0, 1, 2, 3, 4, 5,
@@ -222,3 +222,123 @@ TEST_F(CommonTest, transformer_complex) {
     EXPECT_NEAR(out[46], 0.20395504, 1e-5);
     EXPECT_NEAR(out[47], 1.5245408, 1e-5);
 }
+
+
+#ifdef HAVE_CUDA
+TEST_F(CommonTest, transformer_complex_half) {
+    half query_kernel_half[36]; float2half(query_kernel, query_kernel_half, 36);
+    half query_bias_half[6]; float2half(query_bias, query_bias_half, 6);
+
+    half key_kernel_half[36]; float2half(key_kernel, key_kernel_half, 36);
+    half key_bias_half[6]; float2half(key_bias, key_bias_half, 6);
+
+    half value_kernel_half[36]; float2half(value_kernel, value_kernel_half, 36);
+    half value_bias_half[6]; float2half(value_bias, value_bias_half, 6);
+
+    half attention_output_kernel_half[36]; float2half(attention_output_kernel, attention_output_kernel_half, 36);
+    half attention_output_bias_half[6]; float2half(attention_output_bias, attention_output_bias_half, 6);
+
+    half attention_norm_beta_half[6]; float2half(attention_norm_beta, attention_norm_beta_half, 6);
+    half attention_norm_gamma_half[6]; float2half(attention_norm_gamma, attention_norm_gamma_half, 6);
+
+    half intermediate_kernel_half[30]; float2half(intermediate_kernel, intermediate_kernel_half, 30);
+    half intermediate_bias_half[5]; float2half(intermediate_bias, intermediate_bias_half, 5);
+
+    half output_kernel_half[30]; float2half(output_kernel, output_kernel_half, 30);
+    half output_bias_half[6]; float2half(output_bias, output_bias_half, 6);
+
+    half output_norm_beta_half[6]; float2half(output_norm_beta, output_norm_beta_half, 6);
+    half output_norm_gamma_half[6]; float2half(output_norm_gamma, output_norm_gamma_half, 6);
+
+    std::unordered_map<std::string, half *> var = {
+            {"encoder/layer_0/attention/self/query/kernel",      query_kernel_half},
+            {"encoder/layer_0/attention/self/query/bias",        query_bias_half},
+            {"encoder/layer_0/attention/self/key/kernel",        key_kernel_half},
+            {"encoder/layer_0/attention/self/key/bias",          key_bias_half},
+            {"encoder/layer_0/attention/self/value/kernel",      value_kernel_half},
+            {"encoder/layer_0/attention/self/value/bias",        value_bias_half},
+            {"encoder/layer_0/attention/output/dense/kernel",    attention_output_kernel_half},
+            {"encoder/layer_0/attention/output/dense/bias",      attention_output_bias_half},
+            {"encoder/layer_0/attention/output/LayerNorm/beta",  attention_norm_beta_half},
+            {"encoder/layer_0/attention/output/LayerNorm/gamma", attention_norm_gamma_half},
+            {"encoder/layer_0/intermediate/dense/kernel",        intermediate_kernel_half},
+            {"encoder/layer_0/intermediate/dense/bias",          intermediate_bias_half},
+            {"encoder/layer_0/output/dense/kernel",              output_kernel_half},
+            {"encoder/layer_0/output/dense/bias",                output_bias_half},
+            {"encoder/layer_0/output/LayerNorm/beta",            output_norm_beta_half},
+            {"encoder/layer_0/output/LayerNorm/gamma",           output_norm_gamma_half},
+            {"encoder/layer_1/attention/self/query/kernel",      query_kernel_half},
+            {"encoder/layer_1/attention/self/query/bias",        query_bias_half},
+            {"encoder/layer_1/attention/self/key/kernel",        key_kernel_half},
+            {"encoder/layer_1/attention/self/key/bias",          key_bias_half},
+            {"encoder/layer_1/attention/self/value/kernel",      value_kernel_half},
+            {"encoder/layer_1/attention/self/value/bias",        value_bias_half},
+            {"encoder/layer_1/attention/output/dense/kernel",    attention_output_kernel_half},
+            {"encoder/layer_1/attention/output/dense/bias",      attention_output_bias_half},
+            {"encoder/layer_1/attention/output/LayerNorm/beta",  attention_norm_beta_half},
+            {"encoder/layer_1/attention/output/LayerNorm/gamma", attention_norm_gamma_half},
+            {"encoder/layer_1/intermediate/dense/kernel",        intermediate_kernel_half},
+            {"encoder/layer_1/intermediate/dense/bias",          intermediate_bias_half},
+            {"encoder/layer_1/output/dense/kernel",              output_kernel_half},
+            {"encoder/layer_1/output/dense/bias",                output_bias_half},
+            {"encoder/layer_1/output/LayerNorm/beta",            output_norm_beta_half},
+            {"encoder/layer_1/output/LayerNorm/gamma",           output_norm_gamma_half},
+    };
+
+    size_t batch_size = 2;
+    size_t num_attention_heads = 2;
+    size_t size_per_head = 3;
+    size_t seq_length = 4;
+    size_t intermediate_size = 5;
+
+    size_t hidden_size = num_attention_heads * size_per_head;
+
+    Transformer<half> transformer(handle, "encoder", var, 32,
+                                   seq_length, hidden_size, 2, num_attention_heads, intermediate_size);
+
+    float tensor[48] = {0, 1, 2, 3, 4, 5,
+                        6, 7, 8, 9, 10, 11,
+                        12, 13, 14, 15, 16, 17,
+                        18, 19, 20, 21, 22, 23,
+                        24, 25, 26, 27, 28, 29,
+                        30, 31, 32, 33, 34, 35,
+                        36, 37, 38, 39, 40, 41,
+                        42, 43, 44, 45, 46, 47};
+    half tensor_half[48]; float2half(tensor, tensor_half, 48);
+
+    char mask[8];
+    std::fill_n(mask, 8, 1);
+    mask[0] = 0;
+
+    float out[48];
+    half out_half[48];
+
+    // gpu
+    half *tensor_gpu = (half*) cuBERT::malloc(sizeof(half) * 48);
+    char *mask_gpu = (char*) cuBERT::malloc(sizeof(char) * 8);
+
+    cuBERT::memcpy(tensor_gpu, tensor_half, sizeof(half) * 48, 1);
+    cuBERT::memcpy(mask_gpu, mask, sizeof(char) * 8, 1);
+
+    // compute
+    half *out_gpu = transformer.compute(batch_size, tensor_gpu, mask_gpu);
+
+    cuBERT::memcpy(out_half, out_gpu, sizeof(half) * 48, 2);
+    half2float(out_half, out, 48);
+    cuBERT::free(tensor_gpu);
+    cuBERT::free(mask_gpu);
+
+    EXPECT_NEAR(out[0], -1.6749241, 2e-3);
+    EXPECT_NEAR(out[1], -0.5803416, 1e-3);
+    EXPECT_NEAR(out[2], 0.07921408, 1e-3);
+    EXPECT_NEAR(out[3], 0.18109897, 1e-3);
+    EXPECT_NEAR(out[4], 0.5763312, 1e-3);
+    EXPECT_NEAR(out[5], 1.4929073, 1e-3);
+    EXPECT_NEAR(out[42], -1.7720084, 1e-2);
+    EXPECT_NEAR(out[43], -0.3701498, 1e-2);
+    EXPECT_NEAR(out[44], 0.3161025, 1e-2);
+    EXPECT_NEAR(out[45], 0.15598607, 1e-2);
+    EXPECT_NEAR(out[46], 0.20395504, 1e-2);
+    EXPECT_NEAR(out[47], 1.5245408, 1e-2);
+}
+#endif

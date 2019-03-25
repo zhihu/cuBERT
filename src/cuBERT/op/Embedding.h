@@ -6,28 +6,28 @@
 
 namespace cuBERT {
 
-    template<bool cpu, typename T>
+    template<typename T, typename V>
     void embedding(const T *input_ids,
                    const int input_ids_len,
-                   const float *embedding_table,
+                   const V *embedding_table,
                    const int embedding_size,
-                   float *output,
+                   V *output,
                    void *stream);
 
+    template<typename T, typename V>
     class Embedding {
     public:
-        explicit Embedding(size_t vocab_size, size_t embedding_size, float *embedding_table);
+        explicit Embedding(size_t vocab_size, size_t embedding_size, V *embedding_table);
 
         virtual ~Embedding();
 
-        template<typename T>
-        void compute(const T *input_ids_gpu, size_t input_ids_len, float *output_gpu, void* stream);
+        void compute(const T *input_ids_gpu, size_t input_ids_len, V *output_gpu, void* stream);
 
     private:
         size_t vocab_size;
         size_t embedding_size;
 
-        float *embedding_table;
+        V *embedding_table;
     };
 }
 

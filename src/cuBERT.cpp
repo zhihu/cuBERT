@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <string>
 #include <vector>
+#include <stdexcept>
 
 #include "cuBERT.h"
 #include "cuBERT/common.h"
@@ -19,12 +20,23 @@ void *cuBERT_open(const char *model_file,
                   int max_batch_size,
                   int seq_length,
                   int num_hidden_layers,
-                  int num_attention_heads) {
-    auto *model = new cuBERT::BertM(model_file,
-                                    max_batch_size,
-                                    seq_length,
-                                    num_hidden_layers, num_attention_heads);
-    return model;
+                  int num_attention_heads,
+                  cuBERT_ComputeType compute_type) {
+    if (compute_type == cuBERT_COMPUTE_FLOAT) {
+        return new cuBERT::BertM<float>(model_file,
+                                        max_batch_size,
+                                        seq_length,
+                                        num_hidden_layers, num_attention_heads);
+    } else {
+#ifdef HAVE_CUDA
+        return new cuBERT::BertM<half>(model_file,
+                                       max_batch_size,
+                                       seq_length,
+                                       num_hidden_layers, num_attention_heads);
+#else
+        throw std::invalid_argument("half precision not supported by CPU");
+#endif
+    }
 }
 
 void cuBERT_compute(void *model,
@@ -32,15 +44,35 @@ void cuBERT_compute(void *model,
                     int *input_ids,
                     char *input_mask,
                     char *segment_ids,
-                    float *output,
-                    cuBERT_OutputType output_type) {
-    ((cuBERT::BertM *) model)->compute(batch_size, input_ids, input_mask, segment_ids, output, output_type);
+                    void *output,
+                    cuBERT_OutputType output_type,
+                    cuBERT_ComputeType compute_type) {
+    if (compute_type == cuBERT_COMPUTE_FLOAT) {
+        ((cuBERT::BertM<float> *) model)->compute(batch_size,
+                                                  input_ids, input_mask, segment_ids,
+                                                  (float*) output, output_type);
+    } else {
+#ifdef HAVE_CUDA
+        ((cuBERT::BertM<half> *) model)->compute(batch_size,
+                                                 input_ids, input_mask, segment_ids,
+                                                 (half*) output, output_type);
+#else
+        throw std::invalid_argument("half precision not supported by CPU");
+#endif
+    }
 }
 
-void cuBERT_close(void *model) {
-    delete (cuBERT::BertM *) model;
+void cuBERT_close(void *model, cuBERT_ComputeType compute_type) {
+    if (compute_type == cuBERT_COMPUTE_FLOAT) {
+        delete (cuBERT::BertM<float> *) model;
+    } else {
+#ifdef HAVE_CUDA
+        delete (cuBERT::BertM<half> *) model;
+#else
+        throw std::invalid_argument("half precision not supported by CPU");
+#endif
+    }
 }
-
 
 void* cuBERT_open_tokenizer(const char* vocab_file, int do_lower_case) {
     return new cuBERT::FullTokenizer(vocab_file, do_lower_case);
@@ -154,8 +186,19 @@ void cuBERT_tokenize_compute(void* model,
                              const char** text_a,
                              const char** text_b,
                              float* output,
-                             cuBERT_OutputType output_type) {
-    size_t max_seq_length = ((cuBERT::BertM *) model)->seq_length;
+                             cuBERT_OutputType output_type,
+                             cuBERT_ComputeType compute_type) {
+    size_t max_seq_length;
+    if (compute_type == cuBERT_COMPUTE_FLOAT) {
+        max_seq_length = ((cuBERT::BertM<float> *) model)->seq_length;
+    } else {
+#ifdef HAVE_CUDA
+        max_seq_length = ((cuBERT::BertM<half> *) model)->seq_length;
+#else
+        throw std::invalid_argument("half precision not supported by CPU");
+#endif
+    }
+
     int input_ids[batch_size * max_seq_length];
     char input_mask[batch_size * max_seq_length];
     char segment_ids[batch_size * max_seq_length];

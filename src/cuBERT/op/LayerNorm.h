@@ -2,34 +2,35 @@
 #define CUBERT_LAYERNORM_H
 
 namespace cuBERT {
-    template <bool cpu>
-    void layer_norm_(const float *in,
-                     float *inout,
+    template <typename T>
+    void layer_norm_(const T *in,
+                     T *inout,
                      const int batch_size,
                      const int channels,
-                     float *mean_gpu,
-                     float *var_gpu,
-                     const float *beta,
-                     const float *gamma,
+                     T *mean_gpu,
+                     T *var_gpu,
+                     const T *beta,
+                     const T *gamma,
                      void *stream);
 
+    template <typename T>
     class LayerNorm {
     public:
-        explicit LayerNorm(size_t max_batch_size, size_t channels, float *beta, float *gamma);
+        explicit LayerNorm(size_t max_batch_size, size_t channels, T *beta, T *gamma);
 
         virtual ~LayerNorm();
 
-        void compute_(size_t batch_size, float *in_gpu, float *inout_gpu, void* stream);
+        void compute_(size_t batch_size, T *in_gpu, T *inout_gpu, void* stream);
 
     private:
         size_t channels;
 
         // cpu/gpu buffer
-        float *beta;
-        float *gamma;
+        T *beta;
+        T *gamma;
 
-        float *mean_gpu;
-        float *var_gpu;
+        T *mean_gpu;
+        T *var_gpu;
     };
 }
 

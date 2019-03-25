@@ -2,29 +2,35 @@
 #include "AdditionalOutputLayer.h"
 
 namespace cuBERT {
-    const static float ZERO = 0;
-    const static float ONE = 1;
 
-    AdditionalOutputLayer::AdditionalOutputLayer(void* handle, size_t hidden_size, float *output_weights) {
+    template <typename T>
+    AdditionalOutputLayer<T>::AdditionalOutputLayer(void* handle, size_t hidden_size, T *output_weights) {
         this->handle = handle;
         this->hidden_size = hidden_size;
 
-        this->output_weights = static_cast<float *>(cuBERT::malloc(sizeof(float) * hidden_size));
-        cuBERT::memcpy(this->output_weights, output_weights, sizeof(float) * hidden_size, 1);
+        this->output_weights = static_cast<T *>(cuBERT::malloc(sizeof(T) * hidden_size));
+        cuBERT::memcpy(this->output_weights, output_weights, sizeof(T) * hidden_size, 1);
     }
 
-    AdditionalOutputLayer::~AdditionalOutputLayer() {
+    template <typename T>
+    AdditionalOutputLayer<T>::~AdditionalOutputLayer() {
         cuBERT::free(output_weights);
     }
 
-    void AdditionalOutputLayer::compute(size_t batch_size, float *in_gpu, float *out_gpu) {
+    template <typename T>
+    void AdditionalOutputLayer<T>::compute(size_t batch_size, T *in_gpu, T *out_gpu) {
         // TODO: can be simplified by sapy
-        cuBERT::blas_sgemm(handle, false, false,
+        cuBERT::blas_gemm(handle, false, false,
                            1, batch_size, hidden_size,
-                           ONE,
+                           1.f,
                            output_weights, 1,
                            in_gpu, hidden_size,
-                           ZERO,
+                           0.f,
                            out_gpu, 1);
     }
+
+    template class AdditionalOutputLayer<float>;
+#ifdef HAVE_CUDA
+    template class AdditionalOutputLayer<half>;
+#endif
 }

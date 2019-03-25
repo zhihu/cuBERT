@@ -9,7 +9,7 @@ TEST_F(CommonTest, softmax_) {
     float *inout_gpu = (float*) cuBERT::malloc(sizeof(float) * 6);
     cuBERT::memcpy(inout_gpu, inout, sizeof(float) * 6, 1);
 
-    Softmax softmax(4, 3);
+    Softmax<float> softmax(4, 3);
     softmax.compute_(2, inout_gpu, nullptr);
 
     cuBERT::memcpy(inout, inout_gpu, sizeof(float) * 6, 2);

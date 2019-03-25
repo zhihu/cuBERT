@@ -10,7 +10,7 @@ TEST_F(CommonTest, layer_norm_ext) {
     float gamma[3] = {1, 2, 3};
 
     size_t max_batch_size = 2;
-    LayerNorm layer_norm(max_batch_size, 3, beta, gamma);
+    LayerNorm<float> layer_norm(max_batch_size, 3, beta, gamma);
 
     float in[6] = {8, 8, 8, 2, 2, 2};
     float inout[6] = {1, 2, 3, 3, 2, 1};

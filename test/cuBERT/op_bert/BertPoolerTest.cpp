@@ -13,7 +13,7 @@ TEST_F(CommonTest, bert_pooler) {
                       0, 1};
     float bias[] = {2, 3};
 
-    BertPooler pooler(handle, seq_length, hidden_size, kernel, bias, 32);
+    BertPooler<float> pooler(handle, seq_length, hidden_size, kernel, bias, 32);
 
     float in[12] = {
             0, 1,
@@ -46,7 +46,7 @@ TEST_F(CommonTest, mean_pooler) {
     size_t seq_length = 3;
     size_t hidden_size = 2;
 
-    MeanPooler pooler(handle, seq_length, hidden_size);
+    MeanPooler<float> pooler(handle, seq_length, hidden_size);
 
     float in[12] = {
             0, 1,

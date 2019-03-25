@@ -8,7 +8,7 @@ TEST_F(CommonTest, dense) {
     float kernel[6] = {1, 2, 3, 4, 5, 6};
     float bias[3] = {-3, -2, -1};
 
-    Dense dense(handle, 2, 3, kernel, bias, 16);
+    Dense<float> dense(handle, 2, 3, kernel, bias, 16);
 
     float input[6] = {1, 2, 3, 4, 5, 6};
     float *input_gpu = (float*) cuBERT::malloc(6 * sizeof(float));
