@@ -33,7 +33,20 @@ ONLY BERT (Transformer) is supported.
 |tensorflow|1504.0  |69.9  |
 |mklBERT   |984.9   |24.0  |
 
-Note: MKL should be run under `OMP_NUM_THREADS=? KMP_BLOCKTIME=0 KMP_AFFINITY=granularity=fine,verbose,compact,1,0`
+Note: MKL should be run under `OMP_NUM_THREADS=?` to control its thread
+number. Other environment variables and their possible values includes:
+
+* `KMP_BLOCKTIME=0`
+* `KMP_AFFINITY=granularity=fine,verbose,compact,1,0`
+
+### Mixed Precision
+
+cuBERT can be accelerated by [Tensor Core](https://developer.nvidia.com/tensor-cores)
+and [Mixed Precision](https://devblogs.nvidia.com/tensor-cores-mixed-precision-scientific-computing)
+on NVIDIA Volta and Turing GPUs. We support mixed precision as variables
+stored in fp16 with computation taken in fp32. The typical accuracy error
+is less than 1% compared with single precision inference, while the speed
+achieves more than 2x acceleration.
 
 # API
 
