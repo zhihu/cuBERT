@@ -2,9 +2,8 @@ dist: xenial
 
 before_install:
   - mkdir build install
-  - cd build
-  - wget https://www.dropbox.com/s/acg6w7okwn9i6s5/bert_frozen_seq32.pb
-  - wget https://www.dropbox.com/s/1t9ti7sam6mmz5w/vocab.txt
+  - wget https://www.dropbox.com/s/acg6w7okwn9i6s5/bert_frozen_seq32.pb -P build
+  - wget https://www.dropbox.com/s/1t9ti7sam6mmz5w/vocab.txt -P build
 
 script:
   - cd build
