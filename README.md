@@ -104,7 +104,7 @@ sudo make install
 ### Run Unit Test
 
 Download BERT test model `bert_frozen_seq32.pb` and `vocab.txt` from
-[Google Drive](https://drive.google.com/drive/folders/1UG9ijvwcf_Fe50EPiE8ObAJbupFLrs-k?usp=sharing), 
+[Dropbox](https://www.dropbox.com/sh/ulcdmu9ysyg5lk7/AADndzKXOrHIXLYRc5k60Q-Ta?dl=0), 
 and put them under dir `build` before run `make test` or `./cuBERT_test`.
 
 # Dependency

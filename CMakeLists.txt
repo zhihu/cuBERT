@@ -45,7 +45,8 @@ if(cuBERT_ENABLE_MKL_SUPPORT)
 endif(cuBERT_ENABLE_MKL_SUPPORT)
 
 if(cuBERT_ENABLE_GPU)
-    find_package(CUDA)
+    # minimum 9.0 in cuda version
+    find_package(CUDA 9.0 REQUIRED)
     if(NOT CUDA_FOUND)
         message(FATAL_ERROR "CUDA not found.")
     endif()
