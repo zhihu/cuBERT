@@ -1,0 +1,13 @@
+dist: xenial
+
+before_install:
+  - mkdir build install
+  - cd build
+  - wget https://www.dropbox.com/s/acg6w7okwn9i6s5/bert_frozen_seq32.pb
+  - wget https://www.dropbox.com/s/1t9ti7sam6mmz5w/vocab.txt
+
+script:
+  - cd build
+  - cmake .. -DcuBERT_ENABLE_MKL_SUPPORT=ON -DCMAKE_INSTALL_PREFIX=../install
+  - make install
+  - OMP_NUM_THREADS=4 make test
