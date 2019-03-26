@@ -1,6 +1,8 @@
 Fast implementation of BERT inference directly on NVIDIA (CUDA, CUBLAS) and Intel MKL
 =====================================================================================
 
+[![Build Status](https://travis-ci.org/zhihu/cuBERT.svg?branch=master)](https://travis-ci.org/zhihu/cuBERT)
+
 Highly customized and optimized BERT inference directly on NVIDIA (CUDA,
 CUBLAS) or Intel MKL, without tensorflow and its framework overhead.
 
