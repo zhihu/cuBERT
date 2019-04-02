@@ -8,8 +8,8 @@
 #include "cuBERT/tokenization.h"
 #include "cuBERT/BertM.h"
 
-void cuBERT_initialize(bool force_cpu) {
-    cuBERT::initialize(force_cpu);
+void cuBERT_initialize() {
+    cuBERT::initialize();
 }
 
 void cuBERT_finalize() {

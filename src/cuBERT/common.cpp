@@ -94,7 +94,7 @@ namespace cuBERT {
 
 #endif
 
-    void initialize(bool force_cpu) {}
+    void initialize() {}
 
     void finalize() {}
 
