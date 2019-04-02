@@ -14,7 +14,7 @@ typedef half_float::half half;
 
 namespace cuBERT {
 
-    void initialize(bool force_cpu = false);
+    void initialize();
     void finalize();
     constexpr bool gpu() {
 #ifdef HAVE_CUDA

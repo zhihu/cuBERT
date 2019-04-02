@@ -15,7 +15,7 @@ enum cuBERT_OutputType {
     cuBERT_EMBEDDING_OUTPUT = 3,
 };
 
-void cuBERT_initialize(bool force_cpu = false);
+void cuBERT_initialize();
 void cuBERT_finalize();
 
 void* cuBERT_open(const char* model_file,

@@ -6,6 +6,15 @@
 
 #include "tensorflow/c/c_api.h"
 
+const int max_batch_size = 128;
+const int batch_size = 128;
+const int seq_length = 32;
+const int hidden_size = 768;
+
+// define model output
+const int output_size = batch_size * hidden_size;
+const char* output_name = "bert/pooler/dense/Tanh";
+
 TF_Output t_inputs[3];
 TF_Output t_output;
 
@@ -29,7 +38,7 @@ void tf_open(const char *filename) {
     t_inputs[0] = {TF_GraphOperationByName(graph, "input_ids"), 0};
     t_inputs[1] = {TF_GraphOperationByName(graph, "input_mask"), 0};
     t_inputs[2] = {TF_GraphOperationByName(graph, "segment_ids"), 0};
-    t_output = {TF_GraphOperationByName(graph, "loss/output"), 0};
+    t_output = {TF_GraphOperationByName(graph, output_name), 0};
 
     TF_DeleteBuffer(buffer);
     TF_DeleteImportGraphDefOptions(gopts);
@@ -67,12 +76,26 @@ void random_input(std::default_random_engine& e,
     }
 }
 
+void benchmark(TF_Tensor* tf_input_ids,
+               TF_Tensor* tf_input_mask,
+               TF_Tensor* tf_segment_ids,
+               std::ofstream& result) {
+    TF_Tensor* output;
+
+    auto start = std::chrono::high_resolution_clock::now();
+    tf_compute(tf_input_ids, tf_input_mask, tf_segment_ids, &output);
+    auto finish = std::chrono::high_resolution_clock::now();
+    long long milli = std::chrono::duration_cast<std::chrono::milliseconds>(finish - start).count();
+    std::cout << "TF: " << milli << "ms" << std::endl;
+
+    for (int j = 0; j < output_size; ++j) {
+        result << ((float*) TF_TensorData(output))[j] << std::endl;
+    }
+    TF_DeleteTensor(output);
+}
+
 int main() {
     std::default_random_engine e(0);
-
-    int max_batch_size = 128;
-    int batch_size = 128;
-    int seq_length = 32;
 
     // tensorflow
     int64_t dims[2] = {batch_size, seq_length};
@@ -86,36 +109,14 @@ int main() {
 
     std::cout << "=== warm_up ===" << std::endl;
     for (int i = 0; i < 10; ++i) {
-        TF_Tensor* output;
         random_input(e, tf_input_ids, tf_input_mask, tf_segment_ids, batch_size * seq_length);
-
-        auto start = std::chrono::high_resolution_clock::now();
-        tf_compute(tf_input_ids, tf_input_mask, tf_segment_ids, &output);
-        auto finish = std::chrono::high_resolution_clock::now();
-        long long milli = std::chrono::duration_cast<std::chrono::milliseconds>(finish - start).count();
-        std::cout << "TF: " << milli << "ms" << std::endl;
-
-        for (int j = 0; j < batch_size; ++j) {
-            result << ((float*) TF_TensorData(output))[j] << std::endl;
-        }
-        TF_DeleteTensor(output);
+        benchmark(tf_input_ids, tf_input_mask, tf_segment_ids, result);
     }
 
     std::cout << "=== benchmark ===" << std::endl;
     for (int i = 0; i < 10; ++i) {
-        TF_Tensor* output;
         random_input(e, tf_input_ids, tf_input_mask, tf_segment_ids, batch_size * seq_length);
-
-        auto start = std::chrono::high_resolution_clock::now();
-        tf_compute(tf_input_ids, tf_input_mask, tf_segment_ids, &output);
-        auto finish = std::chrono::high_resolution_clock::now();
-        long long milli = std::chrono::duration_cast<std::chrono::milliseconds>(finish - start).count();
-        std::cout << "TF: " << milli << "ms" << std::endl;
-
-        for (int j = 0; j < batch_size; ++j) {
-            result << ((float*) TF_TensorData(output))[j] << std::endl;
-        }
-        TF_DeleteTensor(output);
+        benchmark(tf_input_ids, tf_input_mask, tf_segment_ids, result);
     }
 
     TF_DeleteTensor(tf_segment_ids);

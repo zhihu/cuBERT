@@ -10,13 +10,7 @@
 class CommonTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        char* force_cpu = std::getenv("CUBERT_FORCE_CPU");
-        if (force_cpu != nullptr && std::strcmp(force_cpu, "0") != 0) {
-            cuBERT::initialize(true);
-        } else {
-            cuBERT::initialize();
-        }
-
+        cuBERT::initialize();
         handle = cuBERT::blas_create();
     }
 
