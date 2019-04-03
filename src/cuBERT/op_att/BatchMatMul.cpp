@@ -22,11 +22,11 @@ cuBERT::Att_Q_K<T>::Att_Q_K(void* handle,
     const T **query_array_cpu = this->query_array;
     const T **key_array_cpu = this->key_array;
     T **out_array_cpu = this->out_array;
-    if (cuBERT::gpu()) {
-        query_array_cpu = new const T*[max_batch_size * num_attention_heads];
-        key_array_cpu = new const T*[max_batch_size * num_attention_heads];
-        out_array_cpu = new T*[max_batch_size * num_attention_heads];
-    }
+#ifdef HAVE_CUDA
+    query_array_cpu = new const T*[max_batch_size * num_attention_heads];
+    key_array_cpu = new const T*[max_batch_size * num_attention_heads];
+    out_array_cpu = new T*[max_batch_size * num_attention_heads];
+#endif
     for (int b = 0; b < max_batch_size; ++b) {
         for (int h = 0; h < num_attention_heads; ++h) {
             size_t idx = b * seq_length * size_per_head * num_attention_heads + size_per_head * h;
@@ -35,15 +35,14 @@ cuBERT::Att_Q_K<T>::Att_Q_K(void* handle,
             out_array_cpu[b * num_attention_heads + h] = out + b * seq_length * seq_length * num_attention_heads + seq_length * h;
         }
     }
-    if (cuBERT::gpu()) {
-        cuBERT::memcpy(query_array, query_array_cpu, sizeof(T *) * max_batch_size * num_attention_heads, 1);
-        cuBERT::memcpy(key_array, key_array_cpu, sizeof(T *) * max_batch_size * num_attention_heads, 1);
-        cuBERT::memcpy(out_array, out_array_cpu, sizeof(T *) * max_batch_size * num_attention_heads, 1);
-
-        delete []out_array_cpu;
-        delete []key_array_cpu;
-        delete []query_array_cpu;
-    }
+#ifdef HAVE_CUDA
+    cuBERT::memcpy(query_array, query_array_cpu, sizeof(T *) * max_batch_size * num_attention_heads, 1);
+    cuBERT::memcpy(key_array, key_array_cpu, sizeof(T *) * max_batch_size * num_attention_heads, 1);
+    cuBERT::memcpy(out_array, out_array_cpu, sizeof(T *) * max_batch_size * num_attention_heads, 1);
+    delete []out_array_cpu;
+    delete []key_array_cpu;
+    delete []query_array_cpu;
+#endif
 }
 
 template <typename T>
@@ -93,11 +92,11 @@ cuBERT::Att_QK_V<T>::Att_QK_V(void* handle,
     const T **qk_array_cpu = this->qk_array;
     const T **value_array_cpu = this->value_array;
     T **out_array_cpu = this->out_array;
-    if (cuBERT::gpu()) {
-        qk_array_cpu = new const T*[max_batch_size * num_attention_heads];
-        value_array_cpu = new const T*[max_batch_size * num_attention_heads];
-        out_array_cpu = new T*[max_batch_size * num_attention_heads];
-    }
+#ifdef HAVE_CUDA
+    qk_array_cpu = new const T*[max_batch_size * num_attention_heads];
+    value_array_cpu = new const T*[max_batch_size * num_attention_heads];
+    out_array_cpu = new T*[max_batch_size * num_attention_heads];
+#endif
     for (int b = 0; b < max_batch_size; ++b) {
         for (int h = 0; h < num_attention_heads; ++h) {
             size_t idx = b * seq_length * size_per_head * num_attention_heads + size_per_head * h;
@@ -106,15 +105,14 @@ cuBERT::Att_QK_V<T>::Att_QK_V(void* handle,
             out_array_cpu[b * num_attention_heads + h] = out + idx;
         }
     }
-    if (cuBERT::gpu()) {
-        cuBERT::memcpy(qk_array, qk_array_cpu, sizeof(T *) * max_batch_size * num_attention_heads, 1);
-        cuBERT::memcpy(value_array, value_array_cpu, sizeof(T *) * max_batch_size * num_attention_heads, 1);
-        cuBERT::memcpy(out_array, out_array_cpu, sizeof(T *) * max_batch_size * num_attention_heads, 1);
-
-        delete []out_array_cpu;
-        delete []value_array_cpu;
-        delete []qk_array_cpu;
-    }
+#ifdef HAVE_CUDA
+    cuBERT::memcpy(qk_array, qk_array_cpu, sizeof(T *) * max_batch_size * num_attention_heads, 1);
+    cuBERT::memcpy(value_array, value_array_cpu, sizeof(T *) * max_batch_size * num_attention_heads, 1);
+    cuBERT::memcpy(out_array, out_array_cpu, sizeof(T *) * max_batch_size * num_attention_heads, 1);
+    delete []out_array_cpu;
+    delete []value_array_cpu;
+    delete []qk_array_cpu;
+#endif
 }
 
 template <typename T>
