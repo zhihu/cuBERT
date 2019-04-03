@@ -16,23 +16,17 @@ namespace cuBERT {
                        size_t num_hidden_layers,
                        size_t num_attention_heads)
             : rr(0), graph(model_file), seq_length(seq_length) {
+#ifdef HAVE_CUDA
         int count = cuBERT::get_gpu_count();
-        std::cerr << "Found GPU count: " << count << std::endl;
-
         if (count == 0) {
-            if (cuBERT::gpu()) {
-                throw std::invalid_argument("No GPU device detected, but caller choose to use gpu.");
-            } else {
-                std::cerr << "Use CPU instead" << std::endl;
-
-                char *cpu_models = std::getenv("CUBERT_NUM_CPU_MODELS");
-                if (cpu_models != nullptr) {
-                    count = std::atoi(cpu_models);
-                } else {
-                    count = 1;
-                }
-            }
+            throw std::invalid_argument("No GPU device detected");
         }
+        std::cerr << "Found GPU count: " << count << std::endl;
+#else
+        char *cpu_models = std::getenv("CUBERT_NUM_CPU_MODELS");
+        int count = cpu_models == nullptr ? 1 : std::atoi(cpu_models);
+        std::cerr << "Found CPU CUBERT_NUM_CPU_MODELS: " << count << std::endl;
+#endif
 
         for (int device = 0; device < count; ++device) {
             auto start = std::chrono::high_resolution_clock::now();

@@ -86,17 +86,17 @@ namespace cuBERT {
             return;
         }
 
-        if (cuBERT::gpu()) {
-            // copy inputs
-            void *streamId = blas_get_stream(cublas);
-            cuBERT::memcpyAsync(input_ids_buf, input_ids, sizeof(int) * batch_size * seq_length, 1, streamId);
-            cuBERT::memcpyAsync(input_mask_buf, input_mask, sizeof(char) * batch_size * seq_length, 1, streamId);
-            cuBERT::memcpyAsync(segment_ids_buf, segment_ids, sizeof(char) * batch_size * seq_length, 1, streamId);
+#ifdef HAVE_CUDA
+        // copy inputs
+        void *streamId = blas_get_stream(cublas);
+        cuBERT::memcpyAsync(input_ids_buf, input_ids, sizeof(int) * batch_size * seq_length, 1, streamId);
+        cuBERT::memcpyAsync(input_mask_buf, input_mask, sizeof(char) * batch_size * seq_length, 1, streamId);
+        cuBERT::memcpyAsync(segment_ids_buf, segment_ids, sizeof(char) * batch_size * seq_length, 1, streamId);
 
-            input_ids = input_ids_buf;
-            input_mask = input_mask_buf;
-            segment_ids = segment_ids_buf;
-        }
+        input_ids = input_ids_buf;
+        input_mask = input_mask_buf;
+        segment_ids = segment_ids_buf;
+#endif
 
         // pre-compute buffers
         if (!buffer_filled) {

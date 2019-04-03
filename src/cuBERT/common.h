@@ -16,13 +16,6 @@ namespace cuBERT {
 
     void initialize();
     void finalize();
-    constexpr bool gpu() {
-#ifdef HAVE_CUDA
-        return true;
-#else
-        return false;
-#endif
-    }
 
     int get_gpu_count();
     void set_gpu(int device);
