@@ -103,6 +103,17 @@ make -j4
 sudo make install
 ```
 
+# Build python package
+```python
+python setup.py sdist
+pip install dist/cuBERT-version.tar.gz
+```
+
+All apis are same as defined in [API .h header](/src/cuBERT.h).More information could be found in
+[binded-cc](/python/cuBERT/pybind/cuBERT_pybind.cc), [test_tokenize_compute](/python/cuBERT/tests/test_tokenize_compute.py),
+[test_compute](/python/cuBERT/tests/test_compute.py).
+
+
 ### Run Unit Test
 
 Download BERT test model `bert_frozen_seq32.pb` and `vocab.txt` from

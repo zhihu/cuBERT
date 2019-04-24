@@ -10,3 +10,8 @@ script:
   - cmake .. -DcuBERT_ENABLE_MKL_SUPPORT=ON -DCMAKE_INSTALL_PREFIX=../install
   - make install
   - OMP_NUM_THREADS=4 make test
+  - cd .. && python setup.py sdist && pip install dist/cuBERT-0.1.tar.gz -vvv
+  - cp build/bert_frozen_seq32.pb python/cuBERT/tests/
+  - cp build/vocab.txt python/cuBERT/tests/
+  - python python/cuBERT/tests/test_compute.py
+  - python python/cuBERT/tests/test_tokenize_compute.py

@@ -1,0 +1,8 @@
+include README.md LICENSE test_vocab.txt
+global-include CMakeLists.txt *.cmake
+recursive-include src *
+recursive-include tensorflow *
+recursive-include pybind11/include *.h
+recursive-include python/cuBERT *.cc *.py
+recursive-include test *
+recursive-include benchmark *
