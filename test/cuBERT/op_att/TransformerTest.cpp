@@ -306,7 +306,7 @@ TEST_F(CommonTest, transformer_complex_half) {
                         42, 43, 44, 45, 46, 47};
     half tensor_half[48]; float2half(tensor, tensor_half, 48);
 
-    char mask[8];
+    int8_t mask[8];
     std::fill_n(mask, 8, 1);
     mask[0] = 0;
 
@@ -315,10 +315,10 @@ TEST_F(CommonTest, transformer_complex_half) {
 
     // gpu
     half *tensor_gpu = (half*) cuBERT::malloc(sizeof(half) * 48);
-    char *mask_gpu = (char*) cuBERT::malloc(sizeof(char) * 8);
+    int8_t *mask_gpu = (int8_t*) cuBERT::malloc(sizeof(int8_t) * 8);
 
     cuBERT::memcpy(tensor_gpu, tensor_half, sizeof(half) * 48, 1);
-    cuBERT::memcpy(mask_gpu, mask, sizeof(char) * 8, 1);
+    cuBERT::memcpy(mask_gpu, mask, sizeof(int8_t) * 8, 1);
 
     // compute
     half *out_gpu = transformer.compute(batch_size, tensor_gpu, mask_gpu);

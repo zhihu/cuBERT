@@ -49,8 +49,8 @@ namespace cuBERT {
 
         // input buffer
         int *input_ids_buf;
-        char *input_mask_buf;
-        char *segment_ids_buf;
+        int8_t *input_mask_buf;
+        int8_t *segment_ids_buf;
 
         // cpu/gpu output buffers
         T *_embedding_output;

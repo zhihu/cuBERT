@@ -51,8 +51,8 @@ namespace cuBERT {
         this->_logits = static_cast<T *>(cuBERT::malloc(sizeof(T) * max_batch_size));
 
         this->input_ids_buf = static_cast<int *>(cuBERT::malloc(sizeof(int) * max_batch_size * seq_length));
-        this->input_mask_buf = static_cast<char *>(cuBERT::malloc(sizeof(char) * max_batch_size * seq_length));
-        this->segment_ids_buf = static_cast<char *>(cuBERT::malloc(sizeof(char) * max_batch_size * seq_length));
+        this->input_mask_buf = static_cast<int8_t *>(cuBERT::malloc(sizeof(int8_t) * max_batch_size * seq_length));
+        this->segment_ids_buf = static_cast<int8_t *>(cuBERT::malloc(sizeof(int8_t) * max_batch_size * seq_length));
 
         // pre-compute buffers
         transformer->_pre_compute(max_batch_size);
@@ -90,8 +90,8 @@ namespace cuBERT {
         // copy inputs
         void *streamId = blas_get_stream(cublas);
         cuBERT::memcpyAsync(input_ids_buf, input_ids, sizeof(int) * batch_size * seq_length, 1, streamId);
-        cuBERT::memcpyAsync(input_mask_buf, input_mask, sizeof(char) * batch_size * seq_length, 1, streamId);
-        cuBERT::memcpyAsync(segment_ids_buf, segment_ids, sizeof(char) * batch_size * seq_length, 1, streamId);
+        cuBERT::memcpyAsync(input_mask_buf, input_mask, sizeof(int8_t) * batch_size * seq_length, 1, streamId);
+        cuBERT::memcpyAsync(segment_ids_buf, segment_ids, sizeof(int8_t) * batch_size * seq_length, 1, streamId);
 
         input_ids = input_ids_buf;
         input_mask = input_mask_buf;
