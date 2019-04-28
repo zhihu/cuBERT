@@ -84,7 +84,7 @@ Following outputs are supported:
 
 |cuBERT_OutputType      |python code                   |
 |---                    |---                           |
-|cuBERT_LOGITS          |`output_weights = tf.get_variable("output_weights", [1, hidden_size])` <br> `logits = tf.matmul(output_layer, output_weights, transpose_b=True)`|
+|cuBERT_LOGITS          |[`model.get_pooled_output()` * output_weights + output_bias](https://github.com/google-research/bert/blob/d66a146741588fb208450bde15aa7db143baaa69/run_classifier.py#L607)|
 |cuBERT_POOLED_OUTPUT   |`model.get_pooled_output()`   |
 |cuBERT_SEQUENCE_OUTPUT |`model.get_sequence_output()` |
 |cuBERT_EMBEDDING_OUTPUT|`model.get_embedding_output()`|

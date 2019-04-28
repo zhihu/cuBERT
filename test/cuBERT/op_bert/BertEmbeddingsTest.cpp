@@ -45,16 +45,16 @@ TEST_F(CommonTest, bert_embedding) {
     size_t batch_size = 2;
     int input_ids[8] = {3, 0, 1, 4,
                         2, 0, 2, 1};
-    char segment_ids[8] = {1, 1, 0, 1,
+    int8_t segment_ids[8] = {1, 1, 0, 1,
                           0, 1, 0, 0};
     float out[24];
 
     int* input_ids_gpu = (int*) cuBERT::malloc(sizeof(int) * 8);
-    char* segment_ids_gpu = (char*) cuBERT::malloc(sizeof(char) * 8);
+    int8_t* segment_ids_gpu = (int8_t*) cuBERT::malloc(sizeof(int8_t) * 8);
     float* out_gpu = (float*) cuBERT::malloc(sizeof(float) * 24);
 
     cuBERT::memcpy(input_ids_gpu, input_ids, sizeof(int) * 8, 1);
-    cuBERT::memcpy(segment_ids_gpu, segment_ids, sizeof(char) * 8, 1);
+    cuBERT::memcpy(segment_ids_gpu, segment_ids, sizeof(int8_t) * 8, 1);
 
     bert_embeddings.compute(batch_size, input_ids_gpu, segment_ids_gpu, out_gpu);
 

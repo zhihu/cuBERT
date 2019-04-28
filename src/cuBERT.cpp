@@ -42,8 +42,8 @@ void *cuBERT_open(const char *model_file,
 void cuBERT_compute(void *model,
                     int batch_size,
                     int *input_ids,
-                    char *input_mask,
-                    char *segment_ids,
+                    int8_t *input_mask,
+                    int8_t *segment_ids,
                     void *output,
                     cuBERT_OutputType output_type,
                     cuBERT_ComputeType compute_type) {
@@ -114,7 +114,7 @@ void _truncate_seq_pair(std::vector<std::string>* tokens_a,
 void convert_single_example(cuBERT::FullTokenizer* tokenizer,
                             size_t max_seq_length,
                             const char* text_a, const char* text_b,
-                            int *input_ids, char *input_mask, char *segment_ids) {
+                            int *input_ids, int8_t *input_mask, int8_t *segment_ids) {
     std::vector<std::string> tokens_a;
     tokens_a.reserve(max_seq_length);
 
@@ -200,8 +200,8 @@ void cuBERT_tokenize_compute(void* model,
     }
 
     int input_ids[batch_size * max_seq_length];
-    char input_mask[batch_size * max_seq_length];
-    char segment_ids[batch_size * max_seq_length];
+    int8_t input_mask[batch_size * max_seq_length];
+    int8_t segment_ids[batch_size * max_seq_length];
 
     for (int batch_idx = 0; batch_idx < batch_size; ++batch_idx) {
         convert_single_example((cuBERT::FullTokenizer *) tokenizer,

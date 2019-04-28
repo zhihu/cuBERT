@@ -13,7 +13,8 @@ namespace cuBERT {
                size_t hidden_size,
                size_t num_hidden_layers,
                size_t num_attention_heads,
-               size_t intermediate_size) {
+               size_t intermediate_size,
+               size_t num_labels) {
         this->max_batch_size = max_batch_size;
         this->seq_length = seq_length;
         this->hidden_size = hidden_size;
@@ -39,7 +40,8 @@ namespace cuBERT {
         }
 
         if (var.count("output_weights")) {
-            this->additional_output_layer = new AdditionalOutputLayer<T>(cublas, hidden_size, var.at("output_weights"));
+            T* output_bias = var.count("output_bias") ? var.at("output_bias") : nullptr;
+            this->additional_output_layer = new ClassifierOutputLayer<T>(cublas, hidden_size, num_labels, var.at("output_weights"), output_bias, max_batch_size);
         } else {
             this->additional_output_layer = nullptr;
         }
@@ -49,8 +51,8 @@ namespace cuBERT {
         this->_logits = static_cast<T *>(cuBERT::malloc(sizeof(T) * max_batch_size));
 
         this->input_ids_buf = static_cast<int *>(cuBERT::malloc(sizeof(int) * max_batch_size * seq_length));
-        this->input_mask_buf = static_cast<char *>(cuBERT::malloc(sizeof(char) * max_batch_size * seq_length));
-        this->segment_ids_buf = static_cast<char *>(cuBERT::malloc(sizeof(char) * max_batch_size * seq_length));
+        this->input_mask_buf = static_cast<int8_t *>(cuBERT::malloc(sizeof(int8_t) * max_batch_size * seq_length));
+        this->segment_ids_buf = static_cast<int8_t *>(cuBERT::malloc(sizeof(int8_t) * max_batch_size * seq_length));
 
         // pre-compute buffers
         transformer->_pre_compute(max_batch_size);
@@ -77,11 +79,9 @@ namespace cuBERT {
     }
 
     template <typename T>
-    void Bert<T>::compute(size_t batch_size, int *input_ids, char *input_mask, char *segment_ids) {
+    void Bert<T>::compute(size_t batch_size, int *input_ids, int8_t *input_mask, int8_t *segment_ids) {
         if (batch_size > max_batch_size) {
-            char buff[100];
-            snprintf(buff, sizeof(buff), "batch_size: %zu > max_batch_size: %zu", batch_size, max_batch_size);
-            throw std::invalid_argument(buff);	
+            throw std::invalid_argument("batch_size > max_batch_size");	
         } else if (batch_size == 0) {
             return;
         }
@@ -90,8 +90,8 @@ namespace cuBERT {
         // copy inputs
         void *streamId = blas_get_stream(cublas);
         cuBERT::memcpyAsync(input_ids_buf, input_ids, sizeof(int) * batch_size * seq_length, 1, streamId);
-        cuBERT::memcpyAsync(input_mask_buf, input_mask, sizeof(char) * batch_size * seq_length, 1, streamId);
-        cuBERT::memcpyAsync(segment_ids_buf, segment_ids, sizeof(char) * batch_size * seq_length, 1, streamId);
+        cuBERT::memcpyAsync(input_mask_buf, input_mask, sizeof(int8_t) * batch_size * seq_length, 1, streamId);
+        cuBERT::memcpyAsync(segment_ids_buf, segment_ids, sizeof(int8_t) * batch_size * seq_length, 1, streamId);
 
         input_ids = input_ids_buf;
         input_mask = input_mask_buf;
@@ -101,6 +101,9 @@ namespace cuBERT {
         // pre-compute buffers
         if (!buffer_filled) {
             transformer->_pre_compute(batch_size);
+            if (additional_output_layer != nullptr) {
+                additional_output_layer->_pre_compute(batch_size, _logits);
+            }
             buffer_filled = true;
         }
 
@@ -114,7 +117,7 @@ namespace cuBERT {
         bert_pooler->compute(batch_size, _sequence_output, _pooled_output);
 
         if (additional_output_layer != nullptr) {
-            additional_output_layer->compute(batch_size, _pooled_output, _logits);
+            additional_output_layer->_in_compute(batch_size, _pooled_output, _logits);
         }
 
         // buffers should be re-computed in the next request

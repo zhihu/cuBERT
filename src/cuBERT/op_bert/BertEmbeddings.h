@@ -21,7 +21,7 @@ namespace cuBERT {
 
         virtual ~BertEmbeddings();
 
-        void compute(size_t batch_size, int *input_ids_gpu, char *token_type_ids_gpu, T *out_gpu);
+        void compute(size_t batch_size, int *input_ids_gpu, int8_t *token_type_ids_gpu, T *out_gpu);
 
     private:
         void* handle;
@@ -30,7 +30,7 @@ namespace cuBERT {
         size_t hidden_size;
 
         Embedding<int, T> *word_embeddings;
-        Embedding<char, T> *token_type_embeddings;
+        Embedding<int8_t, T> *token_type_embeddings;
         LayerNorm<T> *layer_norm;
 
         // gpu buffer

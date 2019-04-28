@@ -20,12 +20,12 @@ namespace cuBERT {
     }
 
     template<>
-    void embedding<char, float>(const char *input_ids,
-                                const int input_ids_len,
-                                const float *embedding_table,
-                                const int embedding_size,
-                                float *output,
-                                void *stream) {
+    void embedding<int8_t, float>(const int8_t *input_ids,
+                                  const int input_ids_len,
+                                  const float *embedding_table,
+                                  const int embedding_size,
+                                  float *output,
+                                  void *stream) {
         for (int i = 0; i < input_ids_len; ++i) {
             std::memcpy(output, embedding_table + embedding_size * input_ids[i], embedding_size * sizeof(float));
             output += embedding_size;
@@ -53,9 +53,9 @@ namespace cuBERT {
     }
 
     template class Embedding<int, float>;
-    template class Embedding<char, float>;
+    template class Embedding<int8_t, float>;
 #ifdef HAVE_CUDA
     template class Embedding<int, half>;
-    template class Embedding<char, half>;
+    template class Embedding<int8_t, half>;
 #endif
 }

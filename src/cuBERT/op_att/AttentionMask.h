@@ -6,7 +6,7 @@
 namespace cuBERT {
 
     template <typename T>
-    void _not(const char *in,
+    void _not(const int8_t *in,
               T *out,
               const int N,
               void *stream);
@@ -23,7 +23,7 @@ namespace cuBERT {
 
         virtual ~AttentionMask();
 
-        void compute(size_t batch_size, char *in_gpu, T *out_gpu);
+        void compute(size_t batch_size, int8_t *in_gpu, T *out_gpu);
 
     private:
         void* handle;

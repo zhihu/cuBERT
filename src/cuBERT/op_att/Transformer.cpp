@@ -117,7 +117,7 @@ namespace cuBERT {
     }
 
     template <typename T>
-    T *Transformer<T>::compute(size_t batch_size, T *input_gpu, char *attention_mask) {
+    T *Transformer<T>::compute(size_t batch_size, T *input_gpu, int8_t *attention_mask) {
         _pre_compute(batch_size);
         return _in_compute(batch_size, input_gpu, attention_mask);
     }
@@ -133,7 +133,7 @@ namespace cuBERT {
     }
 
     template <typename T>
-    T *Transformer<T>::_in_compute(size_t batch_size, T *input_gpu, char *attention_mask) {
+    T *Transformer<T>::_in_compute(size_t batch_size, T *input_gpu, int8_t *attention_mask) {
         void* stream = cuBERT::blas_get_stream(cublas);
 
         // broadcast neg_attention_mask

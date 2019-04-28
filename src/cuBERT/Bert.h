@@ -21,11 +21,12 @@ namespace cuBERT {
                       size_t hidden_size = 768,
                       size_t num_hidden_layers = 12,
                       size_t num_attention_heads = 12,
-                      size_t intermediate_size = 3072);
+                      size_t intermediate_size = 3072,
+                      size_t num_labels = 1);
 
         virtual ~Bert();
 
-        void compute(size_t batch_size, int *input_ids, char *input_mask, char *segment_ids);
+        void compute(size_t batch_size, int *input_ids, int8_t *input_mask, int8_t *segment_ids);
 
         // ouput methods, cpu/gpu outputs
         void logits(size_t batch_size, T *logits);
@@ -44,12 +45,12 @@ namespace cuBERT {
         BertEmbeddings<T> *bert_embeddings;
         Transformer<T> *transformer;
         Pooler<T> *bert_pooler;
-        AdditionalOutputLayer<T> *additional_output_layer;
+        ClassifierOutputLayer<T> *additional_output_layer;
 
         // input buffer
         int *input_ids_buf;
-        char *input_mask_buf;
-        char *segment_ids_buf;
+        int8_t *input_mask_buf;
+        int8_t *segment_ids_buf;
 
         // cpu/gpu output buffers
         T *_embedding_output;

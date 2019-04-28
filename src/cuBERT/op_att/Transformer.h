@@ -32,11 +32,11 @@ namespace cuBERT {
          * @param input_gpu float Tensor of shape [batch_size, seq_length, hidden_size].
          * @param output_gpu
          */
-        T *compute(size_t batch_size, T *input_gpu, char *attention_mask);
+        T *compute(size_t batch_size, T *input_gpu, int8_t *attention_mask);
 
         void _pre_compute(size_t batch_size);
 
-        T *_in_compute(size_t batch_size, T *input_gpu, char *attention_mask);
+        T *_in_compute(size_t batch_size, T *input_gpu, int8_t *attention_mask);
 
     private:
         void* cublas;

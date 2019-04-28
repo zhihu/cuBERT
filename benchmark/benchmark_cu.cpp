@@ -23,7 +23,7 @@ const int output_size = batch_size * hidden_size;
 cuBERT_OutputType output_type = cuBERT_POOLED_OUTPUT;
 
 void random_input(std::default_random_engine& e,
-                  int* input_ids, char* input_mask, char* segment_ids, size_t length) {
+                  int* input_ids, int8_t* input_mask, int8_t* segment_ids, size_t length) {
     std::uniform_int_distribution<int> id_dist(0, 21120);
     std::uniform_int_distribution<int> zo_dist(0, 1);
     for (int i = 0; i < length; ++i) {
@@ -35,8 +35,8 @@ void random_input(std::default_random_engine& e,
 
 void benchmark(void* model,
                int* input_ids,
-               char* input_mask,
-               char* segment_ids,
+               int8_t* input_mask,
+               int8_t* segment_ids,
                Dtype* logits,
                std::ofstream& result) {
     auto start = std::chrono::high_resolution_clock::now();
@@ -58,8 +58,8 @@ int main() {
 
     // cuBERT
     int input_ids[batch_size * seq_length];
-    char input_mask[batch_size * seq_length];
-    char segment_ids[batch_size * seq_length];
+    int8_t input_mask[batch_size * seq_length];
+    int8_t segment_ids[batch_size * seq_length];
     Dtype logits[output_size];
 
     void* model = cuBERT_open("bert_frozen_seq32.pb", max_batch_size, seq_length, 12, 12, compute_type);

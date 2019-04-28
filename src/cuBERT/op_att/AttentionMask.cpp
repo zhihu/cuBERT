@@ -6,7 +6,7 @@ namespace cuBERT {
 
 #ifdef HAVE_MKL
     template<>
-    void _not<float>(const char *in,
+    void _not<float>(const int8_t *in,
                      float *out,
                      const int N,
                      void *stream) {
@@ -38,7 +38,7 @@ namespace cuBERT {
     }
 
     template <typename T>
-    void AttentionMask<T>::compute(size_t batch_size, char *in, T *out_gpu) {
+    void AttentionMask<T>::compute(size_t batch_size, int8_t *in, T *out_gpu) {
         void *stream = cuBERT::blas_get_stream(handle);
         _not<T>(in, neg, batch_size * seq_length, stream);
 
