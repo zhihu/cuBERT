@@ -11,16 +11,16 @@ TEST_F(CommonTest, attention_mask) {
 
     AttentionMask<float> attention_mask(handle, seq_length, num_attention_heads, 4);
 
-    char in[] = {
+    int8_t in[] = {
             1, 0,
             0, 0,
     };
     float out[24];
 
-    char* in_gpu = (char*) cuBERT::malloc(sizeof(char) * 4);
+    int8_t* in_gpu = (int8_t*) cuBERT::malloc(sizeof(int8_t) * 4);
     float* out_gpu = (float*) cuBERT::malloc(sizeof(float) * 24);
 
-    cuBERT::memcpy(in_gpu, in, sizeof(char) * 4, 1);
+    cuBERT::memcpy(in_gpu, in, sizeof(int8_t) * 4, 1);
 
     attention_mask.compute(batch_size, in_gpu, out_gpu);
 

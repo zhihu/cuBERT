@@ -17,8 +17,8 @@ namespace cuBERT {
 
         this->word_embeddings = new Embedding<int, T>(vocab_size, hidden_size,
                                               var.at("bert/embeddings/word_embeddings"));
-        this->token_type_embeddings = new Embedding<char, T>(type_vocab_size, hidden_size,
-                                                    var.at("bert/embeddings/token_type_embeddings"));
+        this->token_type_embeddings = new Embedding<int8_t, T>(type_vocab_size, hidden_size,
+                                                               var.at("bert/embeddings/token_type_embeddings"));
         this->layer_norm = new LayerNorm<T>(max_batch_size * seq_length, hidden_size,
                                                  var.at("bert/embeddings/LayerNorm/beta"),
                                                  var.at("bert/embeddings/LayerNorm/gamma"));
@@ -46,7 +46,7 @@ namespace cuBERT {
     }
 
     template <typename T>
-    void BertEmbeddings<T>::compute(size_t batch_size, int *input_ids_gpu, char *token_type_ids_gpu, T *out_gpu) {
+    void BertEmbeddings<T>::compute(size_t batch_size, int *input_ids_gpu, int8_t *token_type_ids_gpu, T *out_gpu) {
         void *stream = cuBERT::blas_get_stream(handle);
 
         word_embeddings->compute(input_ids_gpu, batch_size * seq_length, out_gpu, stream);

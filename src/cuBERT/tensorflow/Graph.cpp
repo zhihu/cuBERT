@@ -61,6 +61,8 @@ namespace cuBERT {
                 hidden_size = tensorProto.tensor_shape().dim(1).size();
             } else if (nodeDef.name() == "bert/encoder/layer_0/intermediate/dense/bias") {
                 intermediate_size = tensorProto.tensor_shape().dim(0).size();
+            } else if (nodeDef.name() == "output_weights") {
+                num_labels = tensorProto.tensor_shape().dim(0).size();
             }
         }
 

@@ -15,7 +15,7 @@ protected:
     }
 };
 
-void random_input(int* input_ids, char* input_mask, char* segment_ids, size_t length) {
+void random_input(int* input_ids, int8_t* input_mask, int8_t* segment_ids, size_t length) {
     std::random_device r;
     std::default_random_engine e(r());
 
@@ -34,8 +34,8 @@ TEST_F(cuBertTest, compute) {
     int seq_length = 32;
 
     int input_ids[batch_size * seq_length];
-    char input_mask[batch_size * seq_length];
-    char segment_ids[batch_size * seq_length];
+    int8_t input_mask[batch_size * seq_length];
+    int8_t segment_ids[batch_size * seq_length];
     float logits[batch_size];
     random_input(input_ids, input_mask, segment_ids, batch_size * seq_length);
 

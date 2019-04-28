@@ -33,12 +33,13 @@ namespace cuBERT {
             cuBERT::set_gpu(device);
 
             auto *bert = new Bert<T>(graph.var, max_batch_size, seq_length,
-                                  graph.vocab_size,
-                                  graph.type_vocab_size,
-                                  graph.hidden_size,
-                                  num_hidden_layers,
-                                  num_attention_heads,
-                                  graph.intermediate_size);
+                                     graph.vocab_size,
+                                     graph.type_vocab_size,
+                                     graph.hidden_size,
+                                     num_hidden_layers,
+                                     num_attention_heads,
+                                     graph.intermediate_size,
+                                     graph.num_labels);
             bert_instances.push_back(bert);
 
             mutex_instances.push_back(new std::mutex());
@@ -62,7 +63,7 @@ namespace cuBERT {
 
     template <typename T>
     unsigned int BertM<T>::compute(size_t batch_size,
-                                int *input_ids, char *input_mask, char *segment_ids,
+                                int *input_ids, int8_t *input_mask, int8_t *segment_ids,
                                 T *output,
                                 cuBERT_OutputType output_type) {
         uint8_t count = rr++;

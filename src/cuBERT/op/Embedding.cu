@@ -45,12 +45,12 @@ namespace cuBERT {
                                         void *stream);
 
     template
-    __host__ void embedding<char, float>(const char *input_ids,
-                                         const int input_ids_len,
-                                         const float *embedding_table,
-                                         const int embedding_size,
-                                         float *output,
-                                         void *stream);
+    __host__ void embedding<int8_t, float>(const int8_t *input_ids,
+                                           const int input_ids_len,
+                                           const float *embedding_table,
+                                           const int embedding_size,
+                                           float *output,
+                                           void *stream);
 
     template
     __host__ void embedding<int, half>(const int *input_ids,
@@ -61,10 +61,10 @@ namespace cuBERT {
                                        void *stream);
 
     template
-    __host__ void embedding<char, half>(const char *input_ids,
-                                        const int input_ids_len,
-                                        const half *embedding_table,
-                                        const int embedding_size,
-                                        half *output,
-                                        void *stream);
+    __host__ void embedding<int8_t, half>(const int8_t *input_ids,
+                                          const int input_ids_len,
+                                          const half *embedding_table,
+                                          const int embedding_size,
+                                          half *output,
+                                          void *stream);
 }

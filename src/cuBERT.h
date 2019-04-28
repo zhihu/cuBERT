@@ -1,6 +1,12 @@
 #ifndef CUBERT_LIBRARY_H
 #define CUBERT_LIBRARY_H
 
+#if __cplusplus <= 199711L
+typedef signed char int8_t;
+#else
+#include <cstdint>
+#endif
+
 extern "C" {
 
 enum cuBERT_ComputeType {
@@ -28,8 +34,8 @@ void* cuBERT_open(const char* model_file,
 void cuBERT_compute(void* model,
                     int batch_size,
                     int* input_ids,
-                    char* input_mask,
-                    char* segment_ids,
+                    int8_t* input_mask,
+                    int8_t* segment_ids,
                     void* output,
                     cuBERT_OutputType output_type = cuBERT_LOGITS,
                     cuBERT_ComputeType compute_type = cuBERT_COMPUTE_FLOAT);
