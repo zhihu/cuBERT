@@ -23,7 +23,7 @@ segment_ids = np.array([
 
 output_type=cuBERT.OutputType.LOGITS
 compute_type=cuBERT.ComputeType.FLOAT
-output = np.zeros([2], dtype=np.float32, order='C')
+output = np.zeros([batch_size], dtype=np.float32, order='C')
 
 model = cuBERT.Model("../build/bert_frozen_seq32.pb", max_batch_size, seq_length, 12, 12, 
                      compute_type=compute_type)

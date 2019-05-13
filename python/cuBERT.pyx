@@ -67,10 +67,15 @@ cdef class Model:
                 np.ndarray[np.int8_t, ndim=2, mode='c'] segment_ids,
                 np.ndarray output,
                 _cuBERT.cuBERT_OutputType output_type = _cuBERT.cuBERT_OutputType.cuBERT_LOGITS):
-        if not input_ids.flags['C_CONTIGUOUS'] or not input_mask.flags['C_CONTIGUOUS'] or not segment_ids.flags['C_CONTIGUOUS'] or not output.flags['C_CONTIGUOUS']:
+        if not input_ids.flags['C_CONTIGUOUS'] or \
+                not input_mask.flags['C_CONTIGUOUS'] or \
+                not segment_ids.flags['C_CONTIGUOUS'] or \
+                not output.flags['C_CONTIGUOUS']:
             raise ValueError('numpy array should be C_CONTIGUOUS')
         cdef int batch_size = input_ids.shape[0]
-        if batch_size != input_mask.shape[0] or batch_size != segment_ids.shape[0] or batch_size != output.shape[0]:
+        if batch_size != input_mask.shape[0] or \
+                batch_size != segment_ids.shape[0] or \
+                batch_size != output.shape[0]:
             raise ValueError('numpy shape mismatch')
         _cuBERT.cuBERT_compute(self._c_model,
                                batch_size,

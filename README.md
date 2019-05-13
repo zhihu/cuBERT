@@ -109,6 +109,28 @@ Download BERT test model `bert_frozen_seq32.pb` and `vocab.txt` from
 [Dropbox](https://www.dropbox.com/sh/ulcdmu9ysyg5lk7/AADndzKXOrHIXLYRc5k60Q-Ta?dl=0), 
 and put them under dir `build` before run `make test` or `./cuBERT_test`.
 
+### Python
+
+We provide simple Python wrapper by Cython, and it can be built and 
+installed after C++ building:
+
+```shell
+cd python
+LDFLAGS="-L../build/" python setup.py bdist_wheel
+
+# install
+pip install dist/cuBERT-xxx.whl
+
+# test
+LD_LIBRARY_PATH=../build/ python cuBERT_test.py
+```
+
+If you have already installed the C++ dynamic library to /usr/local by 
+`sudo make install`, the `LDFLAGS` and `LD_LIBRARY_PATH` could be omitted.
+
+Please check the Python API usage and examples at [cuBERT_test.py](/python/cuBERT_test.py)
+for more detailed information.
+
 # Dependency
 
 ### Protobuf
