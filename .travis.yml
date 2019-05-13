@@ -20,6 +20,5 @@ script:
   - make install
   - OMP_NUM_THREADS=4 make test
   - cd ../python
-  - LDFLAGS="-L../install/lib/" python setup.py bdist_wheel
-  - pip install dist/cuBERT-0.0.1-cp36-cp36m-macosx_10_7_x86_64.whl
+  - LDFLAGS="-L../install/lib/" python setup.py build_ext -i
   - LD_LIBRARY_PATH=../install/lib/ python cuBERT_test.py

@@ -12,6 +12,14 @@ cdef bytes as_str(s):
         return s.encode('utf8')
     raise TypeError('Cannot convert %s to string' % type(s))
 
+cdef const char** string_array_to_ptr(list text):
+    if not text:
+        return NULL
+    cdef const char** _c_text = <const char**> malloc(len(text) * sizeof(char*))
+    for i in range(len(text)):
+        _c_text[i] = text[i]
+    return _c_text
+
 class ComputeType:
     FLOAT = _cuBERT.cuBERT_ComputeType.cuBERT_COMPUTE_FLOAT
     HALF = _cuBERT.cuBERT_ComputeType.cuBERT_COMPUTE_HALF
@@ -54,7 +62,6 @@ cdef class Model:
     @cython.boundscheck(False)
     @cython.wraparound(False)
     def compute(self, 
-                int batch_size, 
                 np.ndarray[np.int32_t, ndim=2, mode='c'] input_ids,
                 np.ndarray[np.int8_t, ndim=2, mode='c'] input_mask,
                 np.ndarray[np.int8_t, ndim=2, mode='c'] segment_ids,
@@ -62,6 +69,9 @@ cdef class Model:
                 _cuBERT.cuBERT_OutputType output_type = _cuBERT.cuBERT_OutputType.cuBERT_LOGITS):
         if not input_ids.flags['C_CONTIGUOUS'] or not input_mask.flags['C_CONTIGUOUS'] or not segment_ids.flags['C_CONTIGUOUS'] or not output.flags['C_CONTIGUOUS']:
             raise ValueError('numpy array should be C_CONTIGUOUS')
+        cdef int batch_size = input_ids.shape[0]
+        if batch_size != input_mask.shape[0] or batch_size != segment_ids.shape[0] or batch_size != output.shape[0]:
+            raise ValueError('numpy shape mismatch')
         _cuBERT.cuBERT_compute(self._c_model,
                                batch_size,
                                <int*> input_ids.data,
@@ -74,20 +84,19 @@ cdef class Model:
     @cython.boundscheck(False)
     @cython.wraparound(False)
     def tokenize_compute(self, 
-                         int batch_size, 
                          list text_a, 
                          list text_b, 
                          np.ndarray output,
                          _cuBERT.cuBERT_OutputType output_type = _cuBERT.cuBERT_OutputType.cuBERT_LOGITS):
         if not output.flags['C_CONTIGUOUS']:
             raise ValueError('numpy array should be C_CONTIGUOUS')
+        cdef int batch_size = len(text_a)
+        if (text_b and batch_size != len(text_b)) or batch_size != output.shape[0]:
+            raise ValueError('numpy shape mismatch')
         cdef list text_a_enc = [as_str(word) for word in text_a]
-        cdef list text_b_enc = [as_str(word) for word in text_b]
-        cdef const char** c_text_a = <const char**> malloc(batch_size * sizeof(char*))
-        cdef const char** c_text_b = <const char**> malloc(batch_size * sizeof(char*))
-        for i in range(batch_size):
-            c_text_a[i] = text_a_enc[i]
-            c_text_b[i] = text_b_enc[i]
+        cdef list text_b_enc = [as_str(word) for word in text_b] if text_b else None
+        cdef const char** c_text_a = string_array_to_ptr(text_a_enc)  
+        cdef const char** c_text_b = string_array_to_ptr(text_b_enc)
         _cuBERT.cuBERT_tokenize_compute(self._c_model, 
                                         self._c_tokenizer,
                                         batch_size,
@@ -96,5 +105,6 @@ cdef class Model:
                                         <void*> output.data, 
                                         output_type,
                                         self._c_compute_type)
-        free(c_text_b)
+        if text_b:
+            free(c_text_b)
         free(c_text_a)

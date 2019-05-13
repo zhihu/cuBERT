@@ -27,7 +27,7 @@ output = np.zeros([2], dtype=np.float32, order='C')
 
 model = cuBERT.Model("../build/bert_frozen_seq32.pb", max_batch_size, seq_length, 12, 12, 
                      compute_type=compute_type)
-model.compute(batch_size, input_ids, input_mask, segment_ids, output, output_type=output_type)
+model.compute(input_ids, input_mask, segment_ids, output, output_type=output_type)
 np.testing.assert_almost_equal([-2.9427543, -1.4876306], output, 5)
 
 
@@ -36,5 +36,5 @@ text_b = [u"在家刷知乎", u"知乎发现更大的世界"]
 model = cuBERT.Model("../build/bert_frozen_seq32.pb", max_batch_size, seq_length, 12, 12, 
                      compute_type=compute_type,
                      vocab_file="../build/vocab.txt")
-model.tokenize_compute(batch_size, text_a, text_b, output, output_type=output_type)
+model.tokenize_compute(text_a, text_b, output, output_type=output_type)
 np.testing.assert_almost_equal([-2.51366, -1.47348], output, 5)
