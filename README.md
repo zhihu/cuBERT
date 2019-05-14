@@ -112,7 +112,7 @@ and put them under dir `build` before run `make test` or `./cuBERT_test`.
 ### Python
 
 We provide simple Python wrapper by Cython, and it can be built and 
-installed after C++ building:
+installed after C++ building as follows:
 
 ```shell
 cd python
@@ -125,11 +125,11 @@ pip install dist/cuBERT-xxx.whl
 LD_LIBRARY_PATH=../build/ python cuBERT_test.py
 ```
 
-If you have already installed the C++ dynamic library to /usr/local by 
-`sudo make install`, the `LDFLAGS` and `LD_LIBRARY_PATH` could be omitted.
+If you have already installed the C++ dynamic library to `/usr/local` by 
+`sudo make install`, the `LDFLAGS` and `LD_LIBRARY_PATH` flags could be omitted.
 
 Please check the Python API usage and examples at [cuBERT_test.py](/python/cuBERT_test.py)
-for more detailed information.
+for more details.
 
 # Dependency
 

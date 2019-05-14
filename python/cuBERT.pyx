@@ -1,9 +1,13 @@
 # cython: infer_types=True
 from libc.stdlib cimport malloc, free
+import atexit
 import numpy as np
 cimport numpy as np
 cimport cython
 cimport _cuBERT
+
+_cuBERT.cuBERT_initialize()
+atexit.register(_cuBERT.cuBERT_finalize)
 
 cdef bytes as_str(s):
     if isinstance(s, bytes):
