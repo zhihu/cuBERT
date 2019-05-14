@@ -20,5 +20,5 @@ script:
   - make install
   - OMP_NUM_THREADS=4 make test
   - cd ../python
-  - LDFLAGS="-L../install/lib/" python setup.py build_ext -i
+  - python setup.py build_ext -i
   - LD_LIBRARY_PATH=../install/lib/ python cuBERT_test.py

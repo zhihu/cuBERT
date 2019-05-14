@@ -116,7 +116,7 @@ installed after C++ building as follows:
 
 ```shell
 cd python
-LDFLAGS="-L../build/" python setup.py bdist_wheel
+python setup.py bdist_wheel
 
 # install
 pip install dist/cuBERT-xxx.whl
@@ -125,11 +125,23 @@ pip install dist/cuBERT-xxx.whl
 LD_LIBRARY_PATH=../build/ python cuBERT_test.py
 ```
 
-If you have already installed the C++ dynamic library to `/usr/local` by 
-`sudo make install`, the `LDFLAGS` and `LD_LIBRARY_PATH` flags could be omitted.
+If you have already installed `libcuBERT.so` to `/usr/local` by `sudo make install`
+, then the `LD_LIBRARY_PATH` flag could be omitted.
 
 Please check the Python API usage and examples at [cuBERT_test.py](/python/cuBERT_test.py)
 for more details.
+
+If you would like to make a release distribution which includes `libcuBERT.so` 
+inside wheel package, please try [auditwheel](https://github.com/pypa/auditwheel)
+. They provide docker image to build and install, or you can try on your 
+own machine as follows:
+
+* install auditwheel by `pip3 install auditwheel`
+* install latest stable (>=0.10) [patchelf](https://github.com/NixOS/patchelf)
+* audit previous wheel package by `LD_LIBRARY_PATH=/path/to/cuBERT/build/ auditwheel repair dist/cuBERT-xxx.whl`
+* the new wheel package will be located under folder `./wheelhouse`
+* `pip install wheelhouse/cuBERT-xxx-manylinux1_x86_64.whl`
+* run test with `python cuBERT_test.py`
 
 # Dependency
 
