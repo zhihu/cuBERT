@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 import numpy as np
-import cuBERT
+import libcubert as cuBERT
 
 max_batch_size = 128
 batch_size = 2

@@ -21,4 +21,4 @@ script:
   - OMP_NUM_THREADS=4 make test
   - cd ../python
   - python setup.py build_ext -i
-  - LD_LIBRARY_PATH=../install/lib/ python cuBERT_test.py
+  - python cuBERT_test.py
