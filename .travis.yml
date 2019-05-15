@@ -1,12 +1,24 @@
 dist: xenial
+language: python
+python:
+  - "2.7"
+  - "3.6"
+virtualenv:
+  system_site_packages: false
 
 before_install:
   - mkdir build install
   - wget https://www.dropbox.com/s/acg6w7okwn9i6s5/bert_frozen_seq32.pb -P build
   - wget https://www.dropbox.com/s/1t9ti7sam6mmz5w/vocab.txt -P build
 
+install:
+  - pip install numpy cython wheel
+
 script:
   - cd build
   - cmake .. -DcuBERT_ENABLE_MKL_SUPPORT=ON -DCMAKE_INSTALL_PREFIX=../install
   - make install
   - OMP_NUM_THREADS=4 make test
+  - cd ../python
+  - python setup.py build_ext -i
+  - LD_LIBRARY_PATH=../install/lib/ python cuBERT_test.py
