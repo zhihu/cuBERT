@@ -125,6 +125,9 @@ pip install dist/cuBERT-xxx.whl
 python cuBERT_test.py
 ```
 
+Please check the Python API usage and examples at [cuBERT_test.py](/python/cuBERT_test.py)	
+for more details.
+
 # Dependency
 
 ### Protobuf
