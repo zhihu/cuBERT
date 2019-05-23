@@ -8,6 +8,10 @@ import java.nio.ByteOrder;
 
 public class Model implements AutoCloseable {
 
+    static {
+        CLibrary.INSTANCE.cuBERT_initialize();
+    }
+
     private Pointer _c_model;
 
     private Pointer _c_tokenizer;

@@ -100,6 +100,7 @@ cmake -DCMAKE_BUILD_TYPE=Release -DcuBERT_ENABLE_MKL_SUPPORT=ON ..
 make -j4
 
 # install to /usr/local
+# it will also install MKL if -DcuBERT_ENABLE_MKL_SUPPORT=ON
 sudo make install
 ```
 
