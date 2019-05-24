@@ -41,6 +41,7 @@ namespace cuBERT {
         size_t max_batch_size;
         size_t seq_length;
         size_t hidden_size;
+        size_t num_labels;
 
         BertEmbeddings<T> *bert_embeddings;
         Transformer<T> *transformer;
