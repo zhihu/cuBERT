@@ -104,6 +104,9 @@ make -j4
 sudo make install
 ```
 
+If you would like to run tfBERT_benchmark for performance comparison,
+please first install tensorflow C API from https://www.tensorflow.org/install/lang_c.
+
 ### Run Unit Test
 
 Download BERT test model `bert_frozen_seq32.pb` and `vocab.txt` from
