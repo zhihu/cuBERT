@@ -18,6 +18,7 @@ namespace cuBERT {
         this->max_batch_size = max_batch_size;
         this->seq_length = seq_length;
         this->hidden_size = hidden_size;
+        this->num_labels = num_labels;
 
         this->stream = cuBERT::cuda_stream_create();
         this->cublas = cuBERT::blas_create();
@@ -48,7 +49,7 @@ namespace cuBERT {
 
         this->_embedding_output = static_cast<T *>(cuBERT::malloc(sizeof(T) * max_batch_size * seq_length * hidden_size));
         this->_pooled_output = static_cast<T *>(cuBERT::malloc(sizeof(T) * max_batch_size * hidden_size));
-        this->_logits = static_cast<T *>(cuBERT::malloc(sizeof(T) * max_batch_size));
+        this->_logits = static_cast<T *>(cuBERT::malloc(sizeof(T) * max_batch_size * num_labels));
 
         this->input_ids_buf = static_cast<int *>(cuBERT::malloc(sizeof(int) * max_batch_size * seq_length));
         this->input_mask_buf = static_cast<int8_t *>(cuBERT::malloc(sizeof(int8_t) * max_batch_size * seq_length));
@@ -131,7 +132,7 @@ namespace cuBERT {
         }
 
         void *streamId = cuBERT::blas_get_stream(cublas);
-        cuBERT::memcpyAsync(logits, _logits, sizeof(T) * batch_size, 2, streamId);
+        cuBERT::memcpyAsync(logits, _logits, sizeof(T) * batch_size * num_labels, 2, streamId);
         cuBERT::cuda_stream_synchronize(streamId);
 
         if (!buffer_filled) {
