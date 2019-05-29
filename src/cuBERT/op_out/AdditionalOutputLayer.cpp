@@ -13,9 +13,11 @@ namespace cuBERT {
         this->handle = handle;
         this->hidden_size = hidden_size;
         this->num_labels = num_labels;
+        
+        std::cerr << "hidden_size:" << this->hidden_size << " num_labels:" << this->num_labels << std::endl;
 
-        this->output_weights = static_cast<T *>(cuBERT::malloc(sizeof(T) * hidden_size));
-        cuBERT::memcpy(this->output_weights, output_weights, sizeof(T) * hidden_size, 1);
+        this->output_weights = static_cast<T *>(cuBERT::malloc(sizeof(T) * hidden_size * this->num_labels));
+        cuBERT::memcpy(this->output_weights, output_weights, sizeof(T) * hidden_size * this->num_labels, 1);
 
         if (output_bias != nullptr) {
             this->output_bias = static_cast<T *>(cuBERT::malloc(sizeof(T) * num_labels * max_batch_size));
@@ -25,6 +27,7 @@ namespace cuBERT {
         } else {
             this->output_bias = nullptr;
         }
+
     }
 
     template <typename T>
