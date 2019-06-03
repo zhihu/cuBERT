@@ -84,7 +84,8 @@ Following outputs are supported:
 
 |cuBERT_OutputType      |python code                   |
 |---                    |---                           |
-|cuBERT_LOGITS          |[`model.get_pooled_output()` * output_weights + output_bias](https://github.com/google-research/bert/blob/d66a146741588fb208450bde15aa7db143baaa69/run_classifier.py#L607)|
+|cuBERT_LOGITS          |[`model.get_pooled_output() * output_weights + output_bias`](https://github.com/google-research/bert/blob/d66a146741588fb208450bde15aa7db143baaa69/run_classifier.py#L607)|
+|cuBERT_PROBS           |`probs = tf.nn.softmax(logits, axis=-1)`|
 |cuBERT_POOLED_OUTPUT   |`model.get_pooled_output()`   |
 |cuBERT_SEQUENCE_OUTPUT |`model.get_sequence_output()` |
 |cuBERT_EMBEDDING_OUTPUT|`model.get_embedding_output()`|
@@ -248,3 +249,4 @@ to achieve the best trade-off. Good luck!
 * fanliwen
 * wangruixin
 * fangkuan
+* sunxian

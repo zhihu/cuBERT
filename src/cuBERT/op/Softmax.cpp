@@ -8,7 +8,8 @@ namespace cuBERT {
 
 #ifdef HAVE_MKL
     template<>
-    void softmax_<float>(float *inout,
+    void softmax_<float>(float *in,
+                         float *out,
                          const int batch_size,
                          const int channel,
                          float *sum_gpu,
@@ -17,12 +18,12 @@ namespace cuBERT {
         for (int batch_idx = 0; batch_idx < batch_size; ++batch_idx) {
             float sum = 0;
             for (int i = batch_idx * channel; i < (batch_idx + 1) * channel; ++i) {
-                inout[i] = expf(inout[i]);
-                sum += inout[i];
+                out[i] = expf(in[i]);
+                sum += out[i];
             }
 
             for (int i = batch_idx * channel; i < (batch_idx + 1) * channel; ++i) {
-                inout[i] = inout[i] / sum;
+                out[i] = out[i] / sum;
             }
         }
     }
@@ -40,8 +41,13 @@ namespace cuBERT {
     }
 
     template <typename T>
-    void Softmax<T>::compute_(size_t batch_size, T *inout_gpu, void* stream) {
-        softmax_<T>(inout_gpu, batch_size, channel, sum_gpu, stream);
+    void Softmax<T>::compute_(size_t batch_size, T *inout, void* stream) {
+        softmax_<T>(inout, inout, batch_size, channel, sum_gpu, stream);
+    }
+
+    template <typename T>
+    void Softmax<T>::compute_(size_t batch_size, T *in, T *out, void* stream) {
+        softmax_<T>(in, out, batch_size, channel, sum_gpu, stream);
     }
 
     template class Softmax<float>;

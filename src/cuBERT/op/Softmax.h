@@ -6,7 +6,8 @@
 namespace cuBERT {
 
     template <typename T>
-    void softmax_(T *inout,
+    void softmax_(T *in,
+                  T *out,
                   const int batch_size,
                   const int channel,
                   T *sum_gpu,
@@ -19,7 +20,9 @@ namespace cuBERT {
 
         virtual ~Softmax();
 
-        void compute_(size_t batch_size, T *inout_gpu, void* stream);
+        void compute_(size_t batch_size, T *inout, void* stream);
+
+        void compute_(size_t batch_size, T *in, T *out, void* stream);
 
     private:
         size_t channel;

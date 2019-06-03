@@ -5,4 +5,5 @@ public enum OutputType {
     POOLED_OUTPUT,
     SEQUENCE_OUTPUT,
     EMBEDDING_OUTPUT,
+    PROBS,
 }

@@ -13,8 +13,6 @@ namespace cuBERT {
         this->handle = handle;
         this->hidden_size = hidden_size;
         this->num_labels = num_labels;
-        
-        std::cerr << "hidden_size:" << this->hidden_size << " num_labels:" << this->num_labels << std::endl;
 
         this->output_weights = static_cast<T *>(cuBERT::malloc(sizeof(T) * hidden_size * this->num_labels));
         cuBERT::memcpy(this->output_weights, output_weights, sizeof(T) * hidden_size * this->num_labels, 1);
@@ -28,10 +26,13 @@ namespace cuBERT {
             this->output_bias = nullptr;
         }
 
+        this->softmax = new Softmax<T>(max_batch_size, num_labels);
     }
 
     template <typename T>
     ClassifierOutputLayer<T>::~ClassifierOutputLayer() {
+        delete softmax;
+
         if (output_bias != nullptr) {
             cuBERT::free(output_bias);
         }
@@ -47,7 +48,7 @@ namespace cuBERT {
     }
 
     template<typename T>
-    void ClassifierOutputLayer<T>::_in_compute(size_t batch_size, T *input, T *output) {
+    void ClassifierOutputLayer<T>::_in_compute(size_t batch_size, T *input, T *output_logits, T *output_probs) {
         float beta = output_bias == nullptr ? 0.f : 1.f;
         cuBERT::blas_gemm(handle, true, false,
                           num_labels, batch_size, hidden_size,
@@ -55,13 +56,17 @@ namespace cuBERT {
                           output_weights, hidden_size,
                           input, hidden_size,
                           beta,
-                          output, num_labels);
+                          output_logits, num_labels);
+        if (output_probs != nullptr) {
+            void* streamId = blas_get_stream(handle);
+            softmax->compute_(batch_size, output_logits, output_probs, streamId);
+        }
     }
 
     template <typename T>
-    void ClassifierOutputLayer<T>::compute(size_t batch_size, T *input, T *output) {
-        _pre_compute(batch_size, output);
-        _in_compute(batch_size, input, output);
+    void ClassifierOutputLayer<T>::compute(size_t batch_size, T *input, T *output_logits, T *output_probs) {
+        _pre_compute(batch_size, output_logits);
+        _in_compute(batch_size, input, output_logits, output_probs);
     }
 
     template class ClassifierOutputLayer<float>;

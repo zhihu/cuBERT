@@ -4,7 +4,6 @@
 
 #include <cstddef>
 
-
 #include "cuBERT/op/Softmax.h"
 
 namespace cuBERT {
@@ -21,6 +20,8 @@ namespace cuBERT {
      *
      * logits = tf.matmul(output_layer, output_weights, transpose_b=True)
      * logits = tf.nn.bias_add(logits, output_bias)
+     * 
+     * probabilities = tf.nn.softmax(logits, axis=-1)
      */
     template <typename T>
     class ClassifierOutputLayer {
@@ -36,9 +37,9 @@ namespace cuBERT {
 
         void _pre_compute(size_t batch_size, T *output);
 
-        void _in_compute(size_t batch_size, T *input, T *output);
+        void _in_compute(size_t batch_size, T *input, T *output_logits, T *output_probs);
 
-        void compute(size_t batch_size, T *in_gpu, T *out_gpu);
+        void compute(size_t batch_size, T *in_gpu, T *output_logits, T *output_probs);
 
     private:
         void* handle;
@@ -49,6 +50,8 @@ namespace cuBERT {
         // cpu/gpu buffer
         T *output_weights;
         T *output_bias;
+
+        Softmax<T> *softmax;
     };
 }
 

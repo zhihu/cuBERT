@@ -19,6 +19,7 @@ enum cuBERT_OutputType {
     cuBERT_POOLED_OUTPUT = 1,
     cuBERT_SEQUENCE_OUTPUT = 2,
     cuBERT_EMBEDDING_OUTPUT = 3,
+    cuBERT_PROBS = 4,
 };
 
 void cuBERT_initialize();
