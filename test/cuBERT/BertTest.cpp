@@ -104,7 +104,7 @@ TEST_F(BertHalfTest, compute) {
     float logits[2];
     half logits_half[2];
 
-    bert.logits(2, logits_half);
+    bert.logits(2, logits_half, nullptr);
     half2float(logits_half, logits, 2);
 
     EXPECT_NEAR(logits[0], -2.9427543, 0.01);

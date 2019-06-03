@@ -4,9 +4,9 @@ Fast implementation of BERT inference directly on NVIDIA (CUDA, CUBLAS) and Inte
 [![Build Status](https://travis-ci.org/zhihu/cuBERT.svg?branch=master)](https://travis-ci.org/zhihu/cuBERT)
 
 Highly customized and optimized BERT inference directly on NVIDIA (CUDA,
-CUBLAS) or Intel MKL, without tensorflow and its framework overhead.
+CUBLAS) or Intel MKL, *without* tensorflow and its framework overhead.
 
-ONLY BERT (Transformer) is supported.
+**ONLY** BERT (Transformer) is supported.
 
 # Benchmark
 
@@ -23,17 +23,17 @@ ONLY BERT (Transformer) is supported.
 
 ### GPU (cuBERT)
 
-|batch size|128 (ms)|32 (ms)|
-|---       |---     |---    |
-|tensorflow|255.2   |70.0   |
-|cuBERT    |184.6   |54.5   |
+|batch size|128 (ms) |32 (ms) |
+|---       |---      |---     |
+|tensorflow|255.2    |70.0    |
+|cuBERT    |**184.6**|**54.5**|
 
 ### CPU (mklBERT)
 
-|batch size|128 (ms)|1 (ms)|
-|---       |---     |---   |
-|tensorflow|1504.0  |69.9  |
-|mklBERT   |984.9   |24.0  |
+|batch size|128 (ms) |1 (ms)  |
+|---       |---      |---     |
+|tensorflow|1504.0   |69.9    |
+|mklBERT   |**984.9**|**24.0**|
 
 Note: MKL should be run under `OMP_NUM_THREADS=?` to control its thread
 number. Other environment variables and their possible values includes:
