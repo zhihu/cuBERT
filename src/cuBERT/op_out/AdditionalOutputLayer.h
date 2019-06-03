@@ -4,6 +4,9 @@
 
 #include <cstddef>
 
+
+#include "cuBERT/op/Softmax.h"
+
 namespace cuBERT {
 
     /**

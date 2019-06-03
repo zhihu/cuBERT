@@ -89,7 +89,7 @@ Following outputs are supported:
 |cuBERT_SEQUENCE_OUTPUT |`model.get_sequence_output()` |
 |cuBERT_EMBEDDING_OUTPUT|`model.get_embedding_output()`|
 
-# Build
+# Build from Source
 
 ```shell
 mkdir build && cd build
@@ -149,6 +149,18 @@ in the JVM start-up script.
 
 Please check the Java API usage and example at [ModelTest.java](/java/src/test/java/com/zhihu/cubert/ModelTest.java)
 for more details.
+
+# Install
+
+Pre-built python binary package (currently only with MKL on Linux) can
+be installed as follows:
+
+* Download and install [MKL](https://github.com/intel/mkl-dnn/releases)
+to system path.
+
+* Download the wheel package and `pip install cuBERT-xxx-linux_x86_64.whl`
+
+* run `python -c 'import libcubert'` to verify your installation.
 
 # Dependency
 
