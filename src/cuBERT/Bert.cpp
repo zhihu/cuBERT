@@ -58,6 +58,9 @@ namespace cuBERT {
 
         // pre-compute buffers
         transformer->_pre_compute(max_batch_size);
+        if (additional_output_layer != nullptr) {
+            additional_output_layer->_pre_compute(max_batch_size, _logits);
+        }
         this->buffer_filled = true;
     }
 
@@ -144,6 +147,9 @@ namespace cuBERT {
 
         if (!buffer_filled) {
             transformer->_pre_compute(batch_size);
+            if (additional_output_layer != nullptr) {
+                additional_output_layer->_pre_compute(batch_size, _logits);
+            }
             buffer_filled = true;
         }
     }
@@ -156,6 +162,9 @@ namespace cuBERT {
 
         if (!buffer_filled) {
             transformer->_pre_compute(batch_size);
+            if (additional_output_layer != nullptr) {
+                additional_output_layer->_pre_compute(batch_size, _logits);
+            }
             buffer_filled = true;
         }
     }
@@ -169,6 +178,9 @@ namespace cuBERT {
 
         if (!buffer_filled) {
             transformer->_pre_compute(batch_size);
+            if (additional_output_layer != nullptr) {
+                additional_output_layer->_pre_compute(batch_size, _logits);
+            }
             buffer_filled = true;
         }
     }
@@ -182,6 +194,9 @@ namespace cuBERT {
 
         if (!buffer_filled) {
             transformer->_pre_compute(batch_size);
+            if (additional_output_layer != nullptr) {
+                additional_output_layer->_pre_compute(batch_size, _logits);
+            }
             buffer_filled = true;
         }
     }
