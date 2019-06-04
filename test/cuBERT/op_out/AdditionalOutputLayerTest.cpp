@@ -22,7 +22,7 @@ TEST_F(CommonTest, additional_output) {
 
     cuBERT::memcpy(in_gpu, in, sizeof(float) * 6, 1);
 
-    aol.compute(2, in_gpu, out_gpu);
+    aol.compute(2, in_gpu, out_gpu, nullptr);
 
     cuBERT::memcpy(out, out_gpu, sizeof(float) * 2, 2);
     cuBERT::free(in_gpu);

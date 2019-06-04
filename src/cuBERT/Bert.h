@@ -29,7 +29,7 @@ namespace cuBERT {
         void compute(size_t batch_size, int *input_ids, int8_t *input_mask, int8_t *segment_ids);
 
         // ouput methods, cpu/gpu outputs
-        void logits(size_t batch_size, T *logits);
+        void logits(size_t batch_size, T *logits, T *probs);
         void pooled_output(size_t batch_size, T *pooled_output);
         void sequence_output(size_t batch_size, T *sequence_output);
         void embedding_output(size_t batch_size, T *embedding_output);
@@ -58,6 +58,7 @@ namespace cuBERT {
         T *_sequence_output;
         T *_pooled_output;
         T *_logits;
+        T *_probs;
 
         // for pre-compute
         // FIXME: _sequence_output will be flushed

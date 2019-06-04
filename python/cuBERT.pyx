@@ -33,6 +33,7 @@ class OutputType:
     POOLED_OUTPUT = _cuBERT.cuBERT_OutputType.cuBERT_POOLED_OUTPUT
     SEQUENCE_OUTPUT = _cuBERT.cuBERT_OutputType.cuBERT_SEQUENCE_OUTPUT
     EMBEDDING_OUTPUT = _cuBERT.cuBERT_OutputType.cuBERT_EMBEDDING_OUTPUT
+    PROBS = _cuBERT.cuBERT_OutputType.cuBERT_PROBS
 
 cdef class Model:
     cdef void* _c_model

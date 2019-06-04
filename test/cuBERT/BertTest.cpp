@@ -49,7 +49,7 @@ TEST_F(BertTest, compute) {
     EXPECT_FLOAT_EQ(embedding_output[49151], 0.33240327);
 
     float logits[2];
-    bert.logits(2, logits);
+    bert.logits(2, logits, nullptr);
     EXPECT_NEAR(logits[0], -2.9427543, 1e-5);
     EXPECT_NEAR(logits[1], -1.4876306, 1e-5);
 }
@@ -104,7 +104,7 @@ TEST_F(BertHalfTest, compute) {
     float logits[2];
     half logits_half[2];
 
-    bert.logits(2, logits_half);
+    bert.logits(2, logits_half, nullptr);
     half2float(logits_half, logits, 2);
 
     EXPECT_NEAR(logits[0], -2.9427543, 0.01);

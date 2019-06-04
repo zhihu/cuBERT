@@ -50,6 +50,7 @@ namespace cuBERT {
         this->_embedding_output = static_cast<T *>(cuBERT::malloc(sizeof(T) * max_batch_size * seq_length * hidden_size));
         this->_pooled_output = static_cast<T *>(cuBERT::malloc(sizeof(T) * max_batch_size * hidden_size));
         this->_logits = static_cast<T *>(cuBERT::malloc(sizeof(T) * max_batch_size * num_labels));
+        this->_probs = static_cast<T *>(cuBERT::malloc(sizeof(T) * max_batch_size * num_labels));
 
         this->input_ids_buf = static_cast<int *>(cuBERT::malloc(sizeof(int) * max_batch_size * seq_length));
         this->input_mask_buf = static_cast<int8_t *>(cuBERT::malloc(sizeof(int8_t) * max_batch_size * seq_length));
@@ -57,6 +58,9 @@ namespace cuBERT {
 
         // pre-compute buffers
         transformer->_pre_compute(max_batch_size);
+        if (additional_output_layer != nullptr) {
+            additional_output_layer->_pre_compute(max_batch_size, _logits);
+        }
         this->buffer_filled = true;
     }
 
@@ -66,6 +70,7 @@ namespace cuBERT {
         cuBERT::free(input_mask_buf);
         cuBERT::free(input_ids_buf);
 
+        cuBERT::free(_probs);
         cuBERT::free(_logits);
         cuBERT::free(_pooled_output);
         cuBERT::free(_embedding_output);
@@ -118,7 +123,7 @@ namespace cuBERT {
         bert_pooler->compute(batch_size, _sequence_output, _pooled_output);
 
         if (additional_output_layer != nullptr) {
-            additional_output_layer->_in_compute(batch_size, _pooled_output, _logits);
+            additional_output_layer->_in_compute(batch_size, _pooled_output, _logits, _probs);
         }
 
         // buffers should be re-computed in the next request
@@ -126,17 +131,25 @@ namespace cuBERT {
     }
 
     template <typename T>
-    void Bert<T>::logits(size_t batch_size, T *logits) {
+    void Bert<T>::logits(size_t batch_size, T *logits, T *probs) {
         if (additional_output_layer == nullptr) {
             std::cerr << "model does not have additional_output_layer, the output logits is wrong." << std::endl;
         }
 
         void *streamId = cuBERT::blas_get_stream(cublas);
-        cuBERT::memcpyAsync(logits, _logits, sizeof(T) * batch_size * num_labels, 2, streamId);
+        if (logits != nullptr) {
+            cuBERT::memcpyAsync(logits, _logits, sizeof(T) * batch_size * num_labels, 2, streamId);
+        }
+        if (probs != nullptr) {
+            cuBERT::memcpyAsync(probs, _probs, sizeof(T) * batch_size * num_labels, 2, streamId);
+        }
         cuBERT::cuda_stream_synchronize(streamId);
 
         if (!buffer_filled) {
             transformer->_pre_compute(batch_size);
+            if (additional_output_layer != nullptr) {
+                additional_output_layer->_pre_compute(batch_size, _logits);
+            }
             buffer_filled = true;
         }
     }
@@ -149,6 +162,9 @@ namespace cuBERT {
 
         if (!buffer_filled) {
             transformer->_pre_compute(batch_size);
+            if (additional_output_layer != nullptr) {
+                additional_output_layer->_pre_compute(batch_size, _logits);
+            }
             buffer_filled = true;
         }
     }
@@ -162,6 +178,9 @@ namespace cuBERT {
 
         if (!buffer_filled) {
             transformer->_pre_compute(batch_size);
+            if (additional_output_layer != nullptr) {
+                additional_output_layer->_pre_compute(batch_size, _logits);
+            }
             buffer_filled = true;
         }
     }
@@ -175,6 +194,9 @@ namespace cuBERT {
 
         if (!buffer_filled) {
             transformer->_pre_compute(batch_size);
+            if (additional_output_layer != nullptr) {
+                additional_output_layer->_pre_compute(batch_size, _logits);
+            }
             buffer_filled = true;
         }
     }

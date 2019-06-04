@@ -77,7 +77,10 @@ namespace cuBERT {
         bert_instance->compute(batch_size, input_ids, input_mask, segment_ids);
         switch (output_type) {
             case cuBERT_LOGITS:
-                bert_instance->logits(batch_size, output);
+                bert_instance->logits(batch_size, output, nullptr);
+                break;
+            case cuBERT_PROBS:
+                bert_instance->logits(batch_size, nullptr, output);
                 break;
             case cuBERT_POOLED_OUTPUT:
                 bert_instance->pooled_output(batch_size, output);

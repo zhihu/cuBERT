@@ -3,7 +3,7 @@ cdef extern from "../src/cuBERT.h":
         cuBERT_COMPUTE_FLOAT, cuBERT_COMPUTE_HALF
     
     cdef enum cuBERT_OutputType:
-        cuBERT_LOGITS, cuBERT_POOLED_OUTPUT, cuBERT_SEQUENCE_OUTPUT, cuBERT_EMBEDDING_OUTPUT
+        cuBERT_LOGITS, cuBERT_POOLED_OUTPUT, cuBERT_SEQUENCE_OUTPUT, cuBERT_EMBEDDING_OUTPUT, cuBERT_PROBS
 
     void cuBERT_initialize() except +;
     void cuBERT_finalize() except +;
