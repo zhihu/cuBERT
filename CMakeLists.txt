@@ -65,7 +65,6 @@ if(cuBERT_ENABLE_GPU)
     set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};-O3;-use_fast_math;-Xptxas -O3;-Xcompiler -O3)
     set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};-ftz=true)  # Flush denormals to zero
 
-    list(APPEND cuBERT_EXTERNAL_LIBRARIES ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES})
     include_directories(${CUDA_INCLUDE_DIRS})
 endif(cuBERT_ENABLE_GPU)
 
@@ -96,6 +95,7 @@ set(SOURCE_FILES
 if (cuBERT_ENABLE_GPU)
     cuda_add_library(cuBERT SHARED ${SOURCE_FILES})
     set_target_properties(cuBERT PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+    cuda_add_cublas_to_target(cuBERT)
 else ()
     add_library(cuBERT SHARED ${SOURCE_FILES})
 endif ()
