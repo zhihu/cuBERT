@@ -29,7 +29,11 @@ namespace cuBERT {
         for (int i = blockIdx.x; i < batch_size; i += gridDim.x) {
             float val = -FLT_MAX;
             for (int j = threadIdx.x; j < channel; j += blockDim.x) {
+#if __CUDA_ARCH__ >= 350
                 val = CUB_MAX((float) __ldg(in + i * channel + j), val);
+#else
+                val = CUB_MAX((float) in[i * channel + j], val);
+#endif
             }
             val = cub::BlockReduce<float, 128>(temp_storage).Reduce(val, cub::Max());
             if (threadIdx.x == 0) {
@@ -51,7 +55,11 @@ namespace cuBERT {
         }
 
         int batch_idx = idx / channel;
+#if __CUDA_ARCH__ >= 350
         out[idx] = (float) __ldg(in + idx) - (float) __ldg(max_in + batch_idx);
+#else
+        out[idx] = (float) in[idx] - (float) max_in[batch_idx];
+#endif
     }
 
     template <typename T>
@@ -63,7 +71,11 @@ namespace cuBERT {
         for (int i = blockIdx.x; i < batch_size; i += gridDim.x) {
             float s_val = 0.f;
             for (int j = threadIdx.x; j < channel; j += blockDim.x) {
+#if __CUDA_ARCH__ >= 350
                 s_val += (float) __ldg(in + i * channel + j);
+#else
+                s_val += (float) in[i * channel + j];
+#endif
             }
             s_val = cub::BlockReduce<float, 128>(s_storage).Sum(s_val);
             if (threadIdx.x == 0) {
@@ -81,7 +93,11 @@ namespace cuBERT {
         }
 
         int batch_idx = idx / channel;
+#if __CUDA_ARCH__ >= 350
         inout[idx] = (float) __ldg(inout + idx) / (float) __ldg(sum_in + batch_idx);
+#else
+        inout[idx] = (float) inout[idx] / (float) sum_in[batch_idx];
+#endif
     }
 
     template <typename T>
