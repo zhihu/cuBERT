@@ -22,7 +22,11 @@ namespace cuBERT {
             float v_val = 0;
             for (int j = threadIdx.x; j < channel; j += blockDim.x) {
                 const int X_index = i * channel + j;
+#if __CUDA_ARCH__ >= 350
                 const float t = (float) __ldg(in + X_index) + (float) __ldg(inout + X_index);
+#else
+                const float t = (float) in[X_index] + (float) inout[X_index];
+#endif
                 m_val += t;
                 v_val += t * t;
             }
@@ -54,16 +58,28 @@ namespace cuBERT {
         int batch_idx = idx / channel;
         int channel_idx = idx % channel;
 
+#if __CUDA_ARCH__ >= 350
         float mean = (float) __ldg(mean_in + batch_idx);
         float var = (float) __ldg(var_in + batch_idx);
+#else
+        float mean = (float) mean_in[batch_idx];
+        float var = (float) var_in[batch_idx];
+#endif
 
         // 1 / sqrt(var)
         var = rsqrtf(var + 1e-12);
 
+#if __CUDA_ARCH__ >= 350
         float _beta = (float) __ldg(beta + channel_idx);
         float _gamma = (float) __ldg(gamma + channel_idx);
         float _inout = (float) __ldg(inout + idx);
         float _in = (float) __ldg(in + idx);
+#else
+        float _beta = (float) beta[channel_idx];
+        float _gamma = (float) gamma[channel_idx];
+        float _inout = (float) inout[idx];
+        float _in = (float) in[idx];
+#endif
         inout[idx] = _beta + _gamma * var * (_inout + _in - mean);
     }
 

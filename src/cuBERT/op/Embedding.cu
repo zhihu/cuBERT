@@ -15,7 +15,11 @@ namespace cuBERT {
             return;
         }
 
+#if __CUDA_ARCH__ >= 350
         T input_id = __ldg(input_ids + idx);
+#else
+        T input_id = input_ids[idx];
+#endif
         memcpy(output + embedding_size * idx,
                embedding_table + embedding_size * input_id,
                embedding_size * sizeof(V));

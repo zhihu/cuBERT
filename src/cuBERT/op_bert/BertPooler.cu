@@ -47,7 +47,11 @@ namespace cuBERT {
         float sum = 0.f;
 #pragma unroll
         for (int seq_idx = 0; seq_idx < seq_length; ++seq_idx) {
+#if __CUDA_ARCH__ >= 350
             sum += (float) __ldg(in + tmp + seq_idx * channel);
+#else
+            sum += (float) in[tmp + seq_idx * channel];
+#endif
         }
 
         out[idx] = sum / seq_length;
