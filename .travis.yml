@@ -5,6 +5,10 @@ python:
   - "3.6"
 virtualenv:
   system_site_packages: false
+addons:
+  apt:
+    packages:
+    - maven
 
 before_install:
   - mkdir build install
@@ -22,3 +26,5 @@ script:
   - cd ../python
   - python setup.py build_ext -i
   - python cuBERT_test.py
+  - cd ../java
+  - mvn test
