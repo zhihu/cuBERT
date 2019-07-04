@@ -330,14 +330,15 @@ namespace cuBERT {
                          const half *B, const int ldb,
                          const float beta,
                          half *C, const int ldc) {
-        CUBLAS_CHECK(cublasSgemmEx((cublasHandle_t) handle,
+        CUBLAS_CHECK(cublasGemmEx((cublasHandle_t) handle,
                                    TransA ? CUBLAS_OP_T : CUBLAS_OP_N, TransB ? CUBLAS_OP_T : CUBLAS_OP_N,
                                    M, N, K,
                                    &alpha,
                                    A, CUDA_R_16F, lda,
                                    B, CUDA_R_16F, ldb,
                                    &beta,
-                                   C, CUDA_R_16F, ldc));
+                                   C, CUDA_R_16F, ldc,
+                                   CUDA_R_32F, CUBLAS_GEMM_DEFAULT_TENSOR_OP));
     }
 
     template<>
