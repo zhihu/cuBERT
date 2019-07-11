@@ -69,6 +69,8 @@ ExternalProject_Add(protobuf
         -DCMAKE_VERBOSE_MAKEFILE:BOOL=OFF
         -Dprotobuf_BUILD_TESTS:BOOL=OFF
         # -DZLIB_ROOT=${ZLIB_INSTALL}
+        -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
+        -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
         ${PROTOBUF_ADDITIONAL_CMAKE_OPTIONS}
         INSTALL_COMMAND ""
         CMAKE_CACHE_ARGS
@@ -78,4 +80,6 @@ ExternalProject_Add(protobuf
         -Dprotobuf_BUILD_TESTS:BOOL=OFF
         -Dprotobuf_MSVC_STATIC_RUNTIME:BOOL=OFF
         # -DZLIB_ROOT:STRING=${ZLIB_INSTALL}
+        -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
+        -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
         )
