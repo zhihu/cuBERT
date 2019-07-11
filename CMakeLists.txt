@@ -5,6 +5,8 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/)
 
+add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
+
 option(cuBERT_ENABLE_GPU "Enable GPU support" OFF)
 option(cuBERT_ENABLE_MKL_SUPPORT "Enable Intel MKL support" OFF)
 

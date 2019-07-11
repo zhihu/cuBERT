@@ -36,6 +36,7 @@ ExternalProject_Add(googletest
         PREFIX googletest
         GIT_REPOSITORY ${googletest_URL}
         GIT_TAG ${googletest_TAG}
+        GIT_SHALLOW 1
         DOWNLOAD_DIR "${DOWNLOAD_LOCATION}"
         BUILD_IN_SOURCE 1
         BUILD_BYPRODUCTS ${googletest_STATIC_LIBRARIES}
@@ -46,4 +47,7 @@ ExternalProject_Add(googletest
         -DBUILD_GMOCK:BOOL=OFF
         -DBUILD_GTEST:BOOL=ON
         -Dgtest_force_shared_crt:BOOL=ON
+        CMAKE_ARGS
+        -DCMAKE_C_FLAGS="-D_GLIBCXX_USE_CXX11_ABI=0"
+        -DCMAKE_CXX_FLAGS="-D_GLIBCXX_USE_CXX11_ABI=0"
         )
