@@ -1,4 +1,5 @@
 #include <iostream>
+#include <chrono>
 
 #include "cuBERT/common.h"
 #include "cuBERT/op/Dense.h"
@@ -32,7 +33,7 @@ void benchmark_gemm(void* handle, int inputs, int units, int batch_size) {
     Dtype *output_gpu = (Dtype*) cuBERT::malloc(batch_size * units * sizeof(Dtype));
 
     for (int algo = algo_begin; algo <= algo_end; algo++) {
-        cuBERT::Dense<Dtype> dense(handle, hidden_size, hidden_size, kernel, bias, max_batch_size * seq_length, algo);
+        cuBERT::Dense<Dtype> dense(handle, inputs, units, kernel, bias, batch_size, algo);
 
         auto start = std::chrono::high_resolution_clock::now();
         for (int i = 0; i < iter; i++) {
