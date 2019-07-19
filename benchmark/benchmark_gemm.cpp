@@ -13,8 +13,7 @@ typedef float Dtype;
 const int algo_begin = -1;
 const int algo_end = 23;
 
-const int max_batch_size = 128;
-const int batch_size = 128;
+const int max_batch_size = 512;
 const int seq_length = 32;
 const int hidden_size = 768;
 const int intermediate_size = 3072;
@@ -39,7 +38,7 @@ void benchmark_gemm(void* handle, int inputs, int units, int batch_size) {
         for (int i = 0; i < iter; i++) {
             // copy input to GPU
             cuBERT::memcpy(input_gpu, input, batch_size * inputs * sizeof(Dtype), 1);
-            dense.compute(max_batch_size * seq_length, input_gpu, output_gpu);
+            dense.compute(batch_size, input_gpu, output_gpu);
             // copy output to CPU
             cuBERT::memcpy(output, output_gpu, batch_size * units * sizeof(Dtype), 2);
         }
