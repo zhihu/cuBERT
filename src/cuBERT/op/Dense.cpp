@@ -9,10 +9,12 @@ namespace cuBERT {
                  size_t units,
                  T *kernel,
                  T *bias,
-                 size_t max_batch_size) {
+                 size_t max_batch_size,
+                 int algo) {
         this->handle = handle;
         this->inputs = inputs;
         this->units = units;
+        this->algo = algo;
 
         this->kernel = static_cast<T *>(cuBERT::malloc(sizeof(T) * inputs * units));
         cuBERT::memcpy(this->kernel, kernel, inputs * units * sizeof(T), 1);
@@ -50,7 +52,8 @@ namespace cuBERT {
                            kernel, units,
                            input, inputs,
                            1.f,
-                           output, units);
+                           output, units,
+                           algo);
     }
 
     template class Dense<float>;

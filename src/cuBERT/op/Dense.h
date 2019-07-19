@@ -21,7 +21,8 @@ namespace cuBERT {
                        size_t units,
                        T *kernel,
                        T *bias,
-                       size_t max_batch_size);
+                       size_t max_batch_size,
+                       int algo = -1);
 
         virtual ~Dense();
 
@@ -36,6 +37,7 @@ namespace cuBERT {
 
         size_t inputs;
         size_t units;
+        int algo;
 
         // gpu/cpu buffer
         T *kernel;

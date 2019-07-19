@@ -114,6 +114,9 @@ if (tensorflow_FOUND)
     target_link_libraries(tfBERT_benchmark ${tensorflow_LIBRARIES})
 endif ()
 
+add_executable(gemm_benchmark benchmark/benchmark_gemm.cpp)
+target_link_libraries(gemm_benchmark cuBERT)
+
 enable_testing()
 configure_file(test_vocab.txt ${CMAKE_CURRENT_BINARY_DIR}/test_vocab.txt COPYONLY)
 include(googletest)

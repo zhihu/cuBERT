@@ -34,6 +34,7 @@ namespace cuBERT {
 
         float alpha;
         float beta;
+        int algo;
 
         // cpu/gpu buffer
         const T **query_array;
@@ -63,6 +64,7 @@ namespace cuBERT {
 
         float alpha;
         float beta;
+        int algo;
 
         // cpu/gpu buffer
         const T **qk_array;

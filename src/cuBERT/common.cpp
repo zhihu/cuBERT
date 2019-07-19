@@ -210,16 +210,19 @@ namespace cuBERT {
                           const float *A, const int lda,
                           const float *B, const int ldb,
                           const float beta,
-                          float *C, const int ldc) {
+                          float *C, const int ldc,
+                          int algo) {
 #ifdef HAVE_CUDA
-            CUBLAS_CHECK(cublasSgemm_v2((cublasHandle_t) handle,
-                                        TransA ? CUBLAS_OP_T : CUBLAS_OP_N, TransB ? CUBLAS_OP_T : CUBLAS_OP_N,
-                                        M, N, K,
-                                        &alpha,
-                                        A, lda,
-                                        B, ldb,
-                                        &beta,
-                                        C, ldc));
+            CUBLAS_CHECK(cublasGemmEx((cublasHandle_t) handle,
+                                      TransA ? CUBLAS_OP_T : CUBLAS_OP_N, TransB ? CUBLAS_OP_T : CUBLAS_OP_N,
+                                      M, N, K,
+                                      &alpha,
+                                      A, CUDA_R_32F, lda,
+                                      B, CUDA_R_32F, ldb,
+                                      &beta,
+                                      C, CUDA_R_32F, ldc,
+                                      CUDA_R_32F,
+                                      (cublasGemmAlgo_t) algo));
             return;
 #endif
 #ifdef HAVE_MKL
@@ -244,17 +247,20 @@ namespace cuBERT {
                                 const float **Barray, int ldb,
                                 const float beta,
                                 float **Carray, int ldc,
-                                int batchCount) {
+                                int batchCount, 
+                                int algo) {
 #ifdef HAVE_CUDA
-            CUBLAS_CHECK(cublasSgemmBatched((cublasHandle_t) handle,
-                                            TransA ? CUBLAS_OP_T : CUBLAS_OP_N, TransB ? CUBLAS_OP_T : CUBLAS_OP_N,
-                                            m, n, k,
-                                            &alpha,
-                                            Aarray, lda,
-                                            Barray, ldb,
-                                            &beta,
-                                            Carray, ldc,
-                                            batchCount));
+            CUBLAS_CHECK(cublasGemmBatchedEx((cublasHandle_t) handle,
+                                             TransA ? CUBLAS_OP_T : CUBLAS_OP_N, TransB ? CUBLAS_OP_T : CUBLAS_OP_N,
+                                             m, n, k,
+                                             &alpha,
+                                             (const void **) Aarray, CUDA_R_32F, lda,
+                                             (const void **) Barray, CUDA_R_32F, ldb,
+                                             &beta,
+                                             (void **) Carray, CUDA_R_32F, ldc,
+                                             batchCount,
+                                             CUDA_R_32F,
+                                             (cublasGemmAlgo_t) algo));
             return;
 #endif
 #ifdef HAVE_MKL
@@ -329,7 +335,8 @@ namespace cuBERT {
                          const half *A, const int lda,
                          const half *B, const int ldb,
                          const float beta,
-                         half *C, const int ldc) {
+                         half *C, const int ldc,
+                         int algo) {
         CUBLAS_CHECK(cublasGemmEx((cublasHandle_t) handle,
                                    TransA ? CUBLAS_OP_T : CUBLAS_OP_N, TransB ? CUBLAS_OP_T : CUBLAS_OP_N,
                                    M, N, K,
@@ -338,7 +345,8 @@ namespace cuBERT {
                                    B, CUDA_R_16F, ldb,
                                    &beta,
                                    C, CUDA_R_16F, ldc,
-                                   CUDA_R_32F, CUBLAS_GEMM_DEFAULT_TENSOR_OP));
+                                   CUDA_R_32F,
+                                   (cublasGemmAlgo_t) algo));
     }
 
     template<>
@@ -350,7 +358,8 @@ namespace cuBERT {
                                const half **Barray, int ldb,
                                const float beta,
                                half **Carray, int ldc,
-                               int batchCount) {
+                               int batchCount, 
+                               int algo) {
         CUBLAS_CHECK(cublasGemmBatchedEx((cublasHandle_t) handle,
                                          TransA ? CUBLAS_OP_T : CUBLAS_OP_N, TransB ? CUBLAS_OP_T : CUBLAS_OP_N,
                                          m, n, k,
@@ -360,7 +369,8 @@ namespace cuBERT {
                                          &beta,
                                          (void **) Carray, CUDA_R_16F, ldc,
                                          batchCount,
-                                         CUDA_R_32F, CUBLAS_GEMM_DEFAULT_TENSOR_OP));
+                                         CUDA_R_32F,
+                                         (cublasGemmAlgo_t) algo));
     }
 
     template<>
@@ -404,5 +414,33 @@ namespace cuBERT {
     template <>
     void T2T<half, float>(const half* in, float* out, size_t n) {
         half2float(in, out, n);
+    }
+
+    template <>
+    int gemm_algo<float>(const char* env) {
+        char* val = std::getenv(env);
+        if (val == nullptr) {
+#ifdef HAVE_CUDA
+            return (int) CUBLAS_GEMM_DEFAULT;
+#endif
+#ifdef HAVE_MKL
+            return 0;
+#endif
+        }
+        return std::atoi(val);
+    }
+
+    template <>
+    int gemm_algo<half>(const char* env) {
+        char* val = std::getenv(env);
+        if (val == nullptr) {
+#ifdef HAVE_CUDA
+            return (int) CUBLAS_GEMM_DEFAULT_TENSOR_OP;
+#endif
+#ifdef HAVE_MKL
+            return 0;
+#endif
+        }
+        return std::atoi(val);
     }
 }

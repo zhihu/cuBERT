@@ -19,26 +19,34 @@ namespace cuBERT {
 
         this->context_layer_out = context_layer_out;
 
+        // inputs = hidden_size
+        // units = hidden_size
+        // max_batch_size = max_batch_size * seq_length
+        int gemm_algo_attention = gemm_algo<T>("GEMM_ALGO_ATTENTION");
+
         T *query_layer_kernel = var.at(var_prefix + "/query/kernel");
         T *query_layer_bias = var.at(var_prefix + "/query/bias");
         query_layer = new Dense<T>(cublas,
                                 width, num_attention_heads * size_per_head,
                                 query_layer_kernel, query_layer_bias,
-                                max_batch_size * seq_length);
+                                max_batch_size * seq_length,
+                                gemm_algo_attention);
 
         T *key_layer_kernel = var.at(var_prefix + "/key/kernel");
         T *key_layer_bias = var.at(var_prefix + "/key/bias");
         key_layer = new Dense<T>(cublas,
                               width, num_attention_heads * size_per_head,
                               key_layer_kernel, key_layer_bias,
-                              max_batch_size * seq_length);
+                              max_batch_size * seq_length,
+                              gemm_algo_attention);
 
         T *value_layer_kernel = var.at(var_prefix + "/value/kernel");
         T *value_layer_bias = var.at(var_prefix + "/value/bias");
         value_layer = new Dense<T>(cublas,
                                 width, num_attention_heads * size_per_head,
                                 value_layer_kernel, value_layer_bias,
-                                max_batch_size * seq_length);
+                                max_batch_size * seq_length,
+                                gemm_algo_attention);
 
         softmax = new Softmax<T>(max_batch_size * num_attention_heads * seq_length, seq_length);
 

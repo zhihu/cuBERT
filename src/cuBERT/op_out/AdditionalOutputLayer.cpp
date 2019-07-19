@@ -13,6 +13,7 @@ namespace cuBERT {
         this->handle = handle;
         this->hidden_size = hidden_size;
         this->num_labels = num_labels;
+        this->algo = gemm_algo<T>("GEMM_ALGO_OUT");
 
         this->output_weights = static_cast<T *>(cuBERT::malloc(sizeof(T) * hidden_size * this->num_labels));
         cuBERT::memcpy(this->output_weights, output_weights, sizeof(T) * hidden_size * this->num_labels, 1);
@@ -56,7 +57,8 @@ namespace cuBERT {
                           output_weights, hidden_size,
                           input, hidden_size,
                           beta,
-                          output_logits, num_labels);
+                          output_logits, num_labels,
+                          algo);
         if (output_probs != nullptr) {
             void* streamId = blas_get_stream(handle);
             softmax->compute_(batch_size, output_logits, output_probs, streamId);
