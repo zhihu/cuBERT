@@ -63,7 +63,8 @@ namespace cuBERT {
                    const T *A, const int lda,
                    const T *B, const int ldb,
                    const float beta,
-                   T *C, const int ldc);
+                   T *C, const int ldc,
+                   int algo = -1);
 
     template<typename T>
     void blas_gemm_batch(void *handle,
@@ -74,7 +75,8 @@ namespace cuBERT {
                          const T **Barray, int ldb,
                          const float beta,
                          T **Carray, int ldc,
-                         int batchCount);
+                         int batchCount, 
+                         int algo = -1);
 
     template<typename T>
     void blas_gemm_strided_batch(void *handle,
@@ -103,6 +105,9 @@ namespace cuBERT {
 
     template <typename T, typename V>
     void T2T(const T* in, V* out, size_t n);
+
+    template <typename T>
+    int gemm_algo(const char* env);
 }
 
 #endif //CUBERT_COMMON_H

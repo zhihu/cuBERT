@@ -14,6 +14,7 @@ namespace cuBERT {
 
         this->seq_length = seq_length;
         this->hidden_size = hidden_size;
+        this->algo = gemm_algo<T>("GEMM_ALGO_EMBEDDINGS");
 
         this->word_embeddings = new Embedding<int, T>(vocab_size, hidden_size,
                                               var.at("bert/embeddings/word_embeddings"));
@@ -58,7 +59,8 @@ namespace cuBERT {
                            position_embeddings, seq_length * hidden_size,
                            ones, 1,
                            1.f,
-                           out_gpu, seq_length * hidden_size);
+                           out_gpu, seq_length * hidden_size,
+                           algo);
 
         layer_norm->compute_(batch_size * seq_length, token_type_embeddings_out, out_gpu, stream);
     }

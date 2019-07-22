@@ -41,6 +41,7 @@ namespace cuBERT {
 
         this->hidden_size = hidden_size;
         this->seq_length = seq_length;
+        this->algo = gemm_algo<T>("GEMM_ALGO_POOLER");
 
         this->kernel = static_cast<T *>(cuBERT::malloc(sizeof(T) * hidden_size * hidden_size));
         cuBERT::memcpy(this->kernel, kernel, sizeof(T) * hidden_size * hidden_size, 1);
@@ -69,7 +70,8 @@ namespace cuBERT {
                           kernel, hidden_size,
                           input, hidden_size * seq_length,
                           1.f,
-                          output, hidden_size);
+                          output, hidden_size,
+                          algo);
 
         tanh_<T>(output, batch_size * hidden_size, streamId);
     }

@@ -46,6 +46,7 @@ namespace cuBERT {
 
         size_t hidden_size;
         size_t num_labels;
+        int algo;
 
         // cpu/gpu buffer
         T *output_weights;

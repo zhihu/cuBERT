@@ -27,7 +27,8 @@ set(cuBERT_EXTERNAL_LIBRARIES
         ${protobuf_STATIC_LIBRARIES})
 set(cuBERT_EXTERNAL_DEPENDENCIES
         cub
-        protobuf)
+        protobuf
+        googletest)
 
 include_directories(
         # Source and generated code.
@@ -112,6 +113,11 @@ if (tensorflow_FOUND)
     add_executable(tfBERT_benchmark benchmark/benchmark_tf.cpp)
     target_include_directories(tfBERT_benchmark PUBLIC ${tensorflow_INCLUDE_DIR})
     target_link_libraries(tfBERT_benchmark ${tensorflow_LIBRARIES})
+endif ()
+
+if (cuBERT_ENABLE_GPU)
+    add_executable(gemm_benchmark benchmark/benchmark_gemm.cpp)
+    target_link_libraries(gemm_benchmark cuBERT)
 endif ()
 
 enable_testing()

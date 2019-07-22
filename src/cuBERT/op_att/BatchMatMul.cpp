@@ -14,6 +14,7 @@ cuBERT::Att_Q_K<T>::Att_Q_K(void* handle,
 
     this->alpha = alpha;
     this->beta = beta;
+    this->algo = gemm_algo<T>("GEMM_BATCH_ALGO_QK");
 
     this->query_array = static_cast<const T **>(cuBERT::malloc(sizeof(T *) * max_batch_size * num_attention_heads));
     this->key_array = static_cast<const T **>(cuBERT::malloc(sizeof(T *) * max_batch_size * num_attention_heads));
@@ -62,7 +63,8 @@ void cuBERT::Att_Q_K<T>::compute(size_t batch_size) {
                              query_array, size_per_head * num_attention_heads,
                              beta,
                              out_array, seq_length * num_attention_heads,
-                             num_attention_heads * batch_size);
+                             num_attention_heads * batch_size,
+                             algo);
 }
 
 template class cuBERT::Att_Q_K<float>;
@@ -84,6 +86,7 @@ cuBERT::Att_QK_V<T>::Att_QK_V(void* handle,
 
     this->alpha = alpha;
     this->beta = beta;
+    this->algo = gemm_algo<T>("GEMM_BATCH_ALGO_QKV");
 
     this->qk_array = static_cast<const T **>(cuBERT::malloc(sizeof(T *) * max_batch_size * num_attention_heads));
     this->value_array = static_cast<const T **>(cuBERT::malloc(sizeof(T *) * max_batch_size * num_attention_heads));
@@ -132,7 +135,8 @@ void cuBERT::Att_QK_V<T>::compute(size_t batch_size) {
                              qk_array, seq_length * num_attention_heads,
                              beta,
                              out_array, size_per_head * num_attention_heads,
-                             num_attention_heads * batch_size);
+                             num_attention_heads * batch_size,
+                             algo);
 }
 
 template class cuBERT::Att_QK_V<float>;

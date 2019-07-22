@@ -44,6 +44,7 @@ namespace cuBERT {
 
         size_t hidden_size;
         size_t seq_length;
+        int algo;
 
         // cpu/gpu buffer
         T *kernel;

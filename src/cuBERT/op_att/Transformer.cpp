@@ -58,7 +58,8 @@ namespace cuBERT {
             attention_output_dense[layer_idx] = new Dense<T>(cublas,
                                                           hidden_size, hidden_size,
                                                           attention_output_dense_kernel, attention_output_dense_bias,
-                                                          max_batch_size * seq_length);
+                                                          max_batch_size * seq_length,
+                                                          gemm_algo<T>("GEMM_ALGO_ATTENTION"));
 
             T *attention_output_norm_beta = var.at(
                     var_prefix + "/layer_" + std::to_string(layer_idx) + "/attention/output/LayerNorm/beta");
@@ -67,6 +68,9 @@ namespace cuBERT {
             attention_output_norm[layer_idx] = new LayerNorm<T>(max_batch_size * seq_length, hidden_size,
                                                                     attention_output_norm_beta, attention_output_norm_gamma);
 
+            // inputs = hidden_size
+            // units = intermediate_size
+            // max_batch_size = max_batch_size * seq_length
             T *intermediate_dense_kernel = var.at(
                     var_prefix + "/layer_" + std::to_string(layer_idx) + "/intermediate/dense/kernel");
             T *intermediate_dense_bias = var.at(
@@ -74,9 +78,13 @@ namespace cuBERT {
             intermediate_dense[layer_idx] = new Dense<T>(cublas,
                                                       hidden_size, intermediate_size,
                                                       intermediate_dense_kernel, intermediate_dense_bias,
-                                                      max_batch_size * seq_length);
+                                                      max_batch_size * seq_length,
+                                                      gemm_algo<T>("GEMM_ALGO_INTERMEDIATE"));
             intermediate_act_fn[layer_idx] = new GELU<T>();
 
+            // inputs = intermediate_size
+            // units = hidden_size
+            // max_batch_size = max_batch_size * seq_length
             T *output_dense_kernel = var.at(
                     var_prefix + "/layer_" + std::to_string(layer_idx) + "/output/dense/kernel");
             T *output_dense_bias = var.at(
@@ -84,7 +92,8 @@ namespace cuBERT {
             output_dense[layer_idx] = new Dense<T>(cublas,
                                                 intermediate_size, hidden_size,
                                                 output_dense_kernel, output_dense_bias,
-                                                max_batch_size * seq_length);
+                                                max_batch_size * seq_length,
+                                                gemm_algo<T>("GEMM_ALGO_OUTPUT"));
 
             T *output_norm_beta = var.at(
                     var_prefix + "/layer_" + std::to_string(layer_idx) + "/output/LayerNorm/beta");

@@ -28,6 +28,7 @@ namespace cuBERT {
 
         size_t seq_length;
         size_t hidden_size;
+        int algo;
 
         Embedding<int, T> *word_embeddings;
         Embedding<int8_t, T> *token_type_embeddings;
