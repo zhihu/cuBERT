@@ -1,17 +1,19 @@
 #include <iostream>
 #include <chrono>
+#include <string>
+#include <cstdlib>
 
 #include "cuBERT/common.h"
 #include "cuBERT/op/Dense.h"
 #include "cuBERT/op_att/BatchMatMul.h"
 
 // define half/float precision
-// typedef half_float::half Dtype;
-// const int algo_begin = 99;
-// const int algo_end = 115;
-typedef float Dtype;
-const int algo_begin = -1;
-const int algo_end = 23;
+typedef half Dtype;
+const int algo_begin = 99;
+const int algo_end = 115;
+// typedef float Dtype;
+// const int algo_begin = -1;
+// const int algo_end = 23;
 
 const int max_batch_size = 512;
 const int seq_length = 32;
@@ -35,13 +37,13 @@ void benchmark_gemm(void* handle, int inputs, int units, int batch_size) {
         cuBERT::Dense<Dtype> dense(handle, inputs, units, kernel, bias, batch_size, algo);
 
         auto start = std::chrono::high_resolution_clock::now();
+        // copy input to GPU
+        cuBERT::memcpy(input_gpu, input, batch_size * inputs * sizeof(Dtype), 1);
         for (int i = 0; i < iter; i++) {
-            // copy input to GPU
-            cuBERT::memcpy(input_gpu, input, batch_size * inputs * sizeof(Dtype), 1);
             dense.compute(batch_size, input_gpu, output_gpu);
-            // copy output to CPU
-            cuBERT::memcpy(output, output_gpu, batch_size * units * sizeof(Dtype), 2);
         }
+        // copy output to CPU
+        cuBERT::memcpy(output, output_gpu, batch_size * units * sizeof(Dtype), 2);
         auto finish = std::chrono::high_resolution_clock::now();
         long long milli = std::chrono::duration_cast<std::chrono::milliseconds>(finish - start).count();
         std::cout << algo << ": " << milli << "ms" << std::endl;
@@ -86,54 +88,72 @@ void benchmark_output(void* handle) {
 }
 
 void benchmark_qk(void* handle) {
+    std::cout << "GEMM_BATCH_ALGO_QK:" << std::endl;
+
     Dtype *out = new Dtype[max_batch_size * num_attention_heads * seq_length * seq_length];
 
     Dtype *query_gpu = (Dtype*) cuBERT::malloc(sizeof(Dtype) * max_batch_size * seq_length * hidden_size);
     Dtype *key_gpu = (Dtype*) cuBERT::malloc(sizeof(Dtype) * max_batch_size * seq_length * hidden_size);
     Dtype *out_gpu = (Dtype*) cuBERT::malloc(sizeof(Dtype) * max_batch_size * num_attention_heads * seq_length * seq_length);
 
-    cuBERT::Att_Q_K<Dtype> bqk(handle, max_batch_size, seq_length, num_attention_heads, attention_head_size,
-                               query_gpu, key_gpu, out_gpu,
-                               1.0 / std::sqrt(attention_head_size), -10000.0f);
+    for (int algo = algo_begin; algo <= algo_end; algo++) {
+        std::string algo_str = std::to_string(algo);
+        setenv("GEMM_BATCH_ALGO_QK", algo_str.c_str(), 1);
 
-    auto start = std::chrono::high_resolution_clock::now();
-    for (int i = 0; i < iter; i++) {
-        bqk.compute(max_batch_size);
+        cuBERT::Att_Q_K<Dtype> bqk(handle, max_batch_size, seq_length, num_attention_heads, attention_head_size,
+                                query_gpu, key_gpu, out_gpu,
+                                1.0 / std::sqrt(attention_head_size), -10000.0f);
+
+        auto start = std::chrono::high_resolution_clock::now();
+        for (int i = 0; i < iter; i++) {
+            bqk.compute(max_batch_size);
+        }
         cuBERT::memcpy(out, out_gpu, sizeof(Dtype) * max_batch_size * num_attention_heads * seq_length * seq_length, 2);
+        auto finish = std::chrono::high_resolution_clock::now();
+        long long milli = std::chrono::duration_cast<std::chrono::milliseconds>(finish - start).count();
+        std::cout << algo << ": " << milli << "ms" << std::endl;
     }
-    auto finish = std::chrono::high_resolution_clock::now();
-    long long milli = std::chrono::duration_cast<std::chrono::milliseconds>(finish - start).count();
-    std::cout << "qk: " << milli << "ms" << std::endl;
 
     cuBERT::free(out_gpu);
     cuBERT::free(key_gpu);
     cuBERT::free(query_gpu);
     delete []out;
+
+    std::cout << std::endl;
 }
 
 void benchmark_qkv(void* handle) {
+    std::cout << "GEMM_BATCH_ALGO_QKV:" << std::endl;
+
     Dtype *out = new Dtype[max_batch_size * seq_length * hidden_size];
 
     Dtype *qk_gpu = (Dtype*) cuBERT::malloc(sizeof(Dtype) * max_batch_size * num_attention_heads * seq_length * seq_length);
     Dtype *value_gpu = (Dtype*) cuBERT::malloc(sizeof(Dtype) * max_batch_size * seq_length * hidden_size);
     Dtype *out_gpu = (Dtype*) cuBERT::malloc(sizeof(Dtype) * max_batch_size * seq_length * hidden_size);
 
-    cuBERT::Att_QK_V<Dtype> bqkv(handle, max_batch_size, seq_length, num_attention_heads, attention_head_size,
-                                 qk_gpu, value_gpu, out_gpu);
-    
-    auto start = std::chrono::high_resolution_clock::now();
-    for (int i = 0; i < iter; i++) {
-        bqkv.compute(max_batch_size);
-        cuBERT::memcpy(out, out_gpu, sizeof(Dtype) * max_batch_size * seq_length * hidden_size, 2);   
+    for (int algo = algo_begin; algo <= algo_end; algo++) {
+        std::string algo_str = std::to_string(algo);
+        setenv("GEMM_BATCH_ALGO_QKV", algo_str.c_str(), 1);
+
+        cuBERT::Att_QK_V<Dtype> bqkv(handle, max_batch_size, seq_length, num_attention_heads, attention_head_size,
+                                    qk_gpu, value_gpu, out_gpu);
+
+        auto start = std::chrono::high_resolution_clock::now();
+        for (int i = 0; i < iter; i++) {
+            bqkv.compute(max_batch_size);
+        }
+        cuBERT::memcpy(out, out_gpu, sizeof(Dtype) * max_batch_size * seq_length * hidden_size, 2);
+        auto finish = std::chrono::high_resolution_clock::now();
+        long long milli = std::chrono::duration_cast<std::chrono::milliseconds>(finish - start).count();
+        std::cout << algo << ": " << milli << "ms" << std::endl;
     }
-    auto finish = std::chrono::high_resolution_clock::now();
-    long long milli = std::chrono::duration_cast<std::chrono::milliseconds>(finish - start).count();
-    std::cout << "qkv: " << milli << "ms" << std::endl;
 
     cuBERT::free(out_gpu);
     cuBERT::free(value_gpu);
     cuBERT::free(qk_gpu);
     delete []out;
+
+    std::cout << std::endl;
 }
 
 int main() {
@@ -141,8 +161,16 @@ int main() {
     void *handle = cuBERT::blas_create();
 
     benchmark_attention(handle);
+    benchmark_attention(handle);
+    benchmark_intermediate(handle);
     benchmark_intermediate(handle);
     benchmark_output(handle);
+    benchmark_output(handle);
+
+    benchmark_qk(handle);
+    benchmark_qk(handle);
+    benchmark_qkv(handle);
+    benchmark_qkv(handle);
 
     cuBERT::blas_destroy(handle);
     cuBERT::finalize();
