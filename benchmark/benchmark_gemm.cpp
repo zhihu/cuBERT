@@ -8,7 +8,12 @@
 #include "cuBERT/op_att/BatchMatMul.h"
 
 // define half/float precision
+#ifdef HAVE_MKL
+typedef half_float::half Dtype;
+#endif
+#ifdef HAVE_CUDA
 typedef half Dtype;
+#endif
 const int algo_begin = 99;
 const int algo_end = 115;
 // typedef float Dtype;

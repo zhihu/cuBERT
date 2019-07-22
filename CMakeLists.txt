@@ -27,7 +27,8 @@ set(cuBERT_EXTERNAL_LIBRARIES
         ${protobuf_STATIC_LIBRARIES})
 set(cuBERT_EXTERNAL_DEPENDENCIES
         cub
-        protobuf)
+        protobuf
+        googletest)
 
 include_directories(
         # Source and generated code.
