@@ -8,9 +8,9 @@ virtualenv:
 addons:
   apt:
     packages:
-    - g++
     - maven
     - protobuf-compiler
+    - libprotobuf-dev
 
 before_install:
   - mkdir build install
