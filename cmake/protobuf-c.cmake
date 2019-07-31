@@ -13,6 +13,7 @@ ExternalProject_Add(protobuf-c
     BUILD_IN_SOURCE 1
     SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/protobuf-c/src/protobuf-c
     CONFIGURE_COMMAND ${CMAKE_CURRENT_BINARY_DIR}/protobuf-c/src/protobuf-c/autogen.sh
-    BUILD_COMMAND ${CMAKE_CURRENT_BINARY_DIR}/protobuf-c/src/protobuf-c/configure --prefix=${CMAKE_CURRENT_BINARY_DIR}/protobuf-c
+    BUILD_COMMAND ${CMAKE_CURRENT_BINARY_DIR}/protobuf-c/src/protobuf-c/configure 
+      --prefix=${CMAKE_CURRENT_BINARY_DIR}/protobuf-c CFLAGS='-D_GLIBCXX_USE_CXX11_ABI=0' CXXFLAGS='-D_GLIBCXX_USE_CXX11_ABI=0'
     INSTALL_COMMAND make install
 )
