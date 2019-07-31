@@ -8,6 +8,7 @@ virtualenv:
 addons:
   apt:
     packages:
+    - g++
     - maven
     - protobuf-compiler
 
