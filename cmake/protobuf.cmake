@@ -25,23 +25,7 @@ ExternalProject_Add(protobuf
         DOWNLOAD_DIR "${DOWNLOAD_LOCATION}"
         BUILD_IN_SOURCE 1
         SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/protobuf/src/protobuf
-        # SOURCE_SUBDIR cmake/ # Requires CMake 3.7, this will allow removal of CONFIGURE_COMMAND
-        # CONFIGURE_COMMAND resets some settings made in CMAKE_CACHE_ARGS and the generator used
-        CONFIGURE_COMMAND ${CMAKE_COMMAND} cmake/
-        -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON
-        -DCMAKE_BUILD_TYPE:STRING=Release
-        -DCMAKE_VERBOSE_MAKEFILE:BOOL=OFF
-        -Dprotobuf_BUILD_TESTS:BOOL=OFF
-        -DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/protobuf
-        -DCMAKE_C_FLAGS="-D_GLIBCXX_USE_CXX11_ABI=0"
-        -DCMAKE_CXX_FLAGS="-D_GLIBCXX_USE_CXX11_ABI=0"
-        CMAKE_CACHE_ARGS
-        -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON
-        -DCMAKE_BUILD_TYPE:STRING=Release
-        -DCMAKE_VERBOSE_MAKEFILE:BOOL=OFF
-        -Dprotobuf_BUILD_TESTS:BOOL=OFF
-        -Dprotobuf_MSVC_STATIC_RUNTIME:BOOL=OFF
-        -DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/protobuf
-        -DCMAKE_C_FLAGS="-D_GLIBCXX_USE_CXX11_ABI=0"
-        -DCMAKE_CXX_FLAGS="-D_GLIBCXX_USE_CXX11_ABI=0"
+        CONFIGURE_COMMAND ${CMAKE_CURRENT_BINARY_DIR}/protobuf/src/protobuf/autogen.sh
+        BUILD_COMMAND ${CMAKE_CURRENT_BINARY_DIR}/protobuf/src/protobuf/configure --prefix=${CMAKE_CURRENT_BINARY_DIR}/protobuf
+        INSTALL_COMMAND make install
         )
