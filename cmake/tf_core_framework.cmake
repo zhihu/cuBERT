@@ -35,8 +35,8 @@ function(RELATIVE_PROTOBUF_GENERATE_CPP SRCS HDRS ROOT_DIR)
         list(APPEND ${HDRS} "${CMAKE_CURRENT_BINARY_DIR}/${REL_DIR}/${FIL_WE}.pb-c.h")
 
         add_custom_command(
-                OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${REL_DIR}/${FIL_WE}.pb.cc"
-                "${CMAKE_CURRENT_BINARY_DIR}/${REL_DIR}/${FIL_WE}.pb.h"
+                OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${REL_DIR}/${FIL_WE}.pb-c.c"
+                "${CMAKE_CURRENT_BINARY_DIR}/${REL_DIR}/${FIL_WE}.pb-c.h"
                 COMMAND  ${protobuf-c_PROTOC_EXECUTABLE}
                 ARGS --c_out  ${CMAKE_CURRENT_BINARY_DIR} -I ${ROOT_DIR} ${ABS_FIL} -I ${protobuf-c_INCLUDE_DIRS}
                 DEPENDS ${ABS_FIL} protobuf-c
@@ -61,4 +61,3 @@ RELATIVE_PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS
         )
 
 add_library(tf_protos_cc ${PROTO_SRCS} ${PROTO_HDRS})
-add_dependencies(tf_protos_cc protobuf-c)
