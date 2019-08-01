@@ -9,8 +9,6 @@ addons:
   apt:
     packages:
     - maven
-    - protobuf-compiler
-    - libprotobuf-dev
 
 before_install:
   - mkdir build install
