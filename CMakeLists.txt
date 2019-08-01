@@ -28,6 +28,7 @@ set(cuBERT_EXTERNAL_LIBRARIES
         ${protobuf-c_STATIC_LIBRARIES})
 set(cuBERT_EXTERNAL_DEPENDENCIES
         cub
+        protobuf
         protobuf-c
         googletest)
 

@@ -61,3 +61,4 @@ RELATIVE_PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS
         )
 
 add_library(tf_protos_cc ${PROTO_SRCS} ${PROTO_HDRS})
+add_dependencies(tf_protos_cc protobuf-c)
