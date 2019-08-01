@@ -17,12 +17,6 @@ include (ExternalProject)
 set(PROTOBUF_URL https://github.com/google/protobuf.git)
 set(PROTOBUF_TAG v3.6.0)
 
-set(Protobuf_LIBRARY ${CMAKE_CURRENT_BINARY_DIR}/protobuf/lib/libprotobuf.a)
-set(Protobuf_PROTOC_LIBRARY ${CMAKE_CURRENT_BINARY_DIR}/protobuf/lib/libprotoc.a)
-set(Protobuf_INCLUDE_DIR ${CMAKE_CURRENT_BINARY_DIR}/protobuf/include)
-set(Protobuf_PROTOC_EXECUTABLE ${CMAKE_CURRENT_BINARY_DIR}/protobuf/bin/protoc)
-set(Protobuf_LITE_LIBRARY ${CMAKE_CURRENT_BINARY_DIR}/protobuf/lib/libprotobuf-lite.a)
-
 ExternalProject_Add(protobuf
         PREFIX protobuf
         GIT_REPOSITORY ${PROTOBUF_URL}
