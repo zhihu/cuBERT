@@ -21,6 +21,7 @@ if (OPENMP_FOUND)
 endif()
 
 include(cub)
+include(protobuf)
 include(protobuf-c)
 
 set(cuBERT_EXTERNAL_LIBRARIES

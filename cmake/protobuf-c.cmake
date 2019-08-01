@@ -4,8 +4,6 @@ set(protobuf-c_INCLUDE_DIRS ${CMAKE_CURRENT_BINARY_DIR}/protobuf-c/include)
 set(protobuf-c_STATIC_LIBRARIES ${CMAKE_CURRENT_BINARY_DIR}/protobuf-c/lib/libprotobuf-c.a)
 set(protobuf-c_PROTOC_EXECUTABLE ${CMAKE_CURRENT_BINARY_DIR}/protobuf-c/bin/protoc-c)
 
-include(protobuf)
-
 ExternalProject_Add(protobuf-c
     PREFIX protobuf-c
     DEPENDS protobuf
