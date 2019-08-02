@@ -4,7 +4,6 @@
 #include <stdexcept>
 #include <chrono>
 
-#include "tensorflow/core/framework/graph.pb.h"
 #include "cuBERT/common.h"
 #include "BertM.h"
 

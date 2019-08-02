@@ -4,7 +4,6 @@
 #include <string>
 #include <unordered_map>
 
-#include "tensorflow/core/framework/graph.pb.h"
 #include "cuBERT/common.h"
 
 namespace cuBERT {

@@ -22,12 +22,14 @@ endif()
 
 include(cub)
 include(protobuf)
+include(protobuf-c)
 
 set(cuBERT_EXTERNAL_LIBRARIES
-        ${protobuf_STATIC_LIBRARIES})
+        ${protobuf-c_STATIC_LIBRARIES})
 set(cuBERT_EXTERNAL_DEPENDENCIES
         cub
         protobuf
+        protobuf-c
         googletest)
 
 include_directories(
@@ -36,7 +38,7 @@ include_directories(
         ${CMAKE_CURRENT_BINARY_DIR}
         # External dependencies.
         ${cub_INCLUDE_DIR}
-        ${PROTOBUF_INCLUDE_DIRS})
+        ${protobuf-c_INCLUDE_DIRS})
 
 # MKL Support
 if(cuBERT_ENABLE_MKL_SUPPORT)

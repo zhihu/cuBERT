@@ -95,7 +95,7 @@ Following outputs are supported:
 ```shell
 mkdir build && cd build
 # if build with CUDA
-cmake -DCMAKE_BUILD_TYPE=Release -DcuBERT_ENABLE_GPU=ON ..
+cmake -DCMAKE_BUILD_TYPE=Release -DcuBERT_ENABLE_GPU=ON -DCUDA_ARCH_NAME=Common ..
 # or build with MKL
 cmake -DCMAKE_BUILD_TYPE=Release -DcuBERT_ENABLE_MKL_SUPPORT=ON ..
 make -j4
@@ -167,19 +167,8 @@ to system path.
 
 ### Protobuf
 
-This library is built and linked against Google Protobuf 3.6.0 (same as
-tensorflow 1.12). As different versions of Protobuf can not co-exist in 
-one single program, cuBERT is in-compatible with other Protobuf versions.
-
-Check tensorflow protobuf version at their [tensorflow/workspace.bzl](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/workspace.bzl).
-
-|tensorflow|protobuf|
-|---       |---     |
-|1.13.1    |3.6.1.2 |
-|1.12.0    |3.6.0   |
-|1.11.0    |3.6.0   |
-|1.10.1    |3.6.0   |
-|1.10.0    |3.6.0   |
+cuBERT is built with [protobuf-c](https://github.com/protobuf-c/protobuf-c) to 
+avoid version and code conflicting with tensorflow protobuf.
 
 ### CUDA
 
