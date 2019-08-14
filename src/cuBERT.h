@@ -59,6 +59,32 @@ void cuBERT_tokenize_compute(void* model,
                              cuBERT_OutputType output_type = cuBERT_LOGITS,
                              cuBERT_ComputeType compute_type = cuBERT_COMPUTE_FLOAT);
 
+/** new API with multiple outputs **/
+
+struct cuBERT_Output {
+    void* logits = nullptr;
+    void* pooled_output = nullptr;
+    void* sequence_output = nullptr;
+    void* embedding_output = nullptr;
+    void* probs = nullptr;
+};
+
+void cuBERT_compute_m(void* model,
+                      int batch_size,
+                      int* input_ids,
+                      int8_t* input_mask,
+                      int8_t* segment_ids,
+                      cuBERT_Output* output,
+                      cuBERT_ComputeType compute_type = cuBERT_COMPUTE_FLOAT);
+
+void cuBERT_tokenize_compute_m(void* model,
+                               void* tokenizer,
+                               int batch_size,
+                               const char** text_a,
+                               const char** text_b,
+                               cuBERT_Output* output,
+                               cuBERT_ComputeType compute_type = cuBERT_COMPUTE_FLOAT);
+
 }
 
 #endif

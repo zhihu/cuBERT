@@ -62,9 +62,9 @@ namespace cuBERT {
 
     template <typename T>
     unsigned int BertM<T>::compute(size_t batch_size,
-                                int *input_ids, int8_t *input_mask, int8_t *segment_ids,
-                                T *output,
-                                cuBERT_OutputType output_type) {
+                                   int *input_ids, int8_t *input_mask, int8_t *segment_ids,
+                                   T *output,
+                                   cuBERT_OutputType output_type) {
         uint8_t count = rr++;
         unsigned int choice = count % bert_instances.size();
 
@@ -94,6 +94,24 @@ namespace cuBERT {
                 throw std::invalid_argument("invalid output type");
         }
 
+        return choice;
+    }
+
+    template <typename T>
+    unsigned int BertM<T>::compute(size_t batch_size,
+                                   int *input_ids, int8_t *input_mask, int8_t *segment_ids,
+                                   cuBERT_Output *output) {
+        uint8_t count = rr++;
+        unsigned int choice = count % bert_instances.size();
+
+        cuBERT::set_gpu(choice);
+        Bert<T> *bert_instance = bert_instances[choice];
+        std::mutex *mutex_instance = mutex_instances[choice];
+
+        std::lock_guard<std::mutex> lg(*mutex_instance);
+        bert_instance->compute(batch_size, input_ids, input_mask, segment_ids);
+
+        bert_instance->output(batch_size, output);
         return choice;
     }
 
