@@ -4,6 +4,7 @@
 #include <string>
 #include <unordered_map>
 
+#include "cuBERT.h"
 #include "cuBERT/op_bert/BertEmbeddings.h"
 #include "cuBERT/op_att/Transformer.h"
 #include "cuBERT/op_bert/BertPooler.h"
@@ -26,6 +27,9 @@ namespace cuBERT {
 
         virtual ~Bert();
 
+        // pre-compute buffers
+        void _pre_compute(size_t batch_size);
+
         void compute(size_t batch_size, int *input_ids, int8_t *input_mask, int8_t *segment_ids);
 
         // ouput methods, cpu/gpu outputs
@@ -33,6 +37,8 @@ namespace cuBERT {
         void pooled_output(size_t batch_size, T *pooled_output);
         void sequence_output(size_t batch_size, T *sequence_output);
         void embedding_output(size_t batch_size, T *embedding_output);
+
+        void output(size_t batch_size, cuBERT_Output* output);
 
     private:
         void* cublas;

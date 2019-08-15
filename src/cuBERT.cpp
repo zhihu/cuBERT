@@ -62,6 +62,28 @@ void cuBERT_compute(void *model,
     }
 }
 
+void cuBERT_compute_m(void* model,
+                      int batch_size,
+                      int* input_ids,
+                      int8_t* input_mask,
+                      int8_t* segment_ids,
+                      cuBERT_Output* output,
+                      cuBERT_ComputeType compute_type) {
+    if (compute_type == cuBERT_COMPUTE_FLOAT) {
+        ((cuBERT::BertM<float> *) model)->compute(batch_size,
+                                                  input_ids, input_mask, segment_ids,
+                                                  output);
+    } else {
+#ifdef HAVE_CUDA
+        ((cuBERT::BertM<half> *) model)->compute(batch_size,
+                                                 input_ids, input_mask, segment_ids,
+                                                 output);
+#else
+        throw std::invalid_argument("half precision not supported by CPU");
+#endif
+    }
+}
+
 void cuBERT_close(void *model, cuBERT_ComputeType compute_type) {
     if (compute_type == cuBERT_COMPUTE_FLOAT) {
         delete (cuBERT::BertM<float> *) model;
@@ -214,4 +236,39 @@ void cuBERT_tokenize_compute(void* model,
     }
 
     cuBERT_compute(model, batch_size, input_ids, input_mask, segment_ids, output, output_type, compute_type);
+}
+
+void cuBERT_tokenize_compute_m(void* model,
+                               void* tokenizer,
+                               int batch_size,
+                               const char** text_a,
+                               const char** text_b,
+                               cuBERT_Output* output,
+                               cuBERT_ComputeType compute_type) {
+    size_t max_seq_length;
+    if (compute_type == cuBERT_COMPUTE_FLOAT) {
+        max_seq_length = ((cuBERT::BertM<float> *) model)->seq_length;
+    } else {
+#ifdef HAVE_CUDA
+        max_seq_length = ((cuBERT::BertM<half> *) model)->seq_length;
+#else
+        throw std::invalid_argument("half precision not supported by CPU");
+#endif
+    }
+
+    int input_ids[batch_size * max_seq_length];
+    int8_t input_mask[batch_size * max_seq_length];
+    int8_t segment_ids[batch_size * max_seq_length];
+
+    for (int batch_idx = 0; batch_idx < batch_size; ++batch_idx) {
+        convert_single_example((cuBERT::FullTokenizer *) tokenizer,
+                               max_seq_length,
+                               text_a[batch_idx],
+                               text_b == nullptr ? nullptr : text_b[batch_idx],
+                               input_ids + max_seq_length * batch_idx,
+                               input_mask + max_seq_length * batch_idx,
+                               segment_ids + max_seq_length * batch_idx);
+    }
+
+    cuBERT_compute_m(model, batch_size, input_ids, input_mask, segment_ids, output, compute_type);
 }

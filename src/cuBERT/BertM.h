@@ -27,6 +27,10 @@ namespace cuBERT {
                              T *output,
                              cuBERT_OutputType output_type = cuBERT_LOGITS);
 
+        unsigned int compute(size_t batch_size,
+                             int *input_ids, int8_t *input_mask, int8_t *segment_ids,
+                             cuBERT_Output *output);
+
         size_t seq_length;
 
     private:
