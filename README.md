@@ -228,6 +228,10 @@ parallelism of 4 should work quite well.
 * But if you have many CPU cores like 40, it might be better to try with
 request-level parallelism of 5 and operation-level parallelism of 8.
 
+In summary, `OMP_NUM_THREADS` or `MKL_NUM_THREADS` defines how many threads
+one model could use, and `CUBERT_NUM_CPU_MODELS` defines how many models in
+total.
+
 Again, the per request latency and overall throughput should be balanced,
 and it diffs from model `seq_length`, `batch_size`, your CPU cores, your
 server QPS, and many many other things. You should take a lot benchmark
