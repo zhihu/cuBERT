@@ -3,8 +3,11 @@ package com.zhihu.cubert;
 import com.sun.jna.Library;
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;
+import com.sun.jna.Structure;
 
 import java.nio.Buffer;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
 interface CLibrary extends Library {
     CLibrary INSTANCE = Native.load("cuBERT", CLibrary.class);
@@ -44,4 +47,46 @@ interface CLibrary extends Library {
                                  Buffer output,
                                  int output_type,
                                  int compute_type);
+
+    @Structure.FieldOrder({"logits", "pooled_output", "sequence_output", "embedding_output", "probs"})
+    class cuBERT_Output extends Structure {
+        public ByteBuffer logits;
+        public ByteBuffer pooled_output;
+        public ByteBuffer sequence_output;
+        public ByteBuffer embedding_output;
+        public ByteBuffer probs;
+
+        cuBERT_Output(Output output, ComputeType computeType) {
+            this.logits = allocate(output.logits, computeType);
+            this.pooled_output = allocate(output.pooledOutput, computeType);
+            this.sequence_output = allocate(output.sequenceOutput, computeType);
+            this.embedding_output = allocate(output.embeddingOutput, computeType);
+            this.probs = allocate(output.probs, computeType);
+        }
+
+        private static ByteBuffer allocate(Number[] array, ComputeType computeType) {
+            if (array == null) {
+                return null;
+            }
+            int outputSize = array.length;
+            int elementSize = computeType == ComputeType.HALF ? 2 : 4;
+            return ByteBuffer.allocateDirect(outputSize * elementSize).order(ByteOrder.nativeOrder());
+        }
+    }
+
+    void cuBERT_compute_m(Pointer model,
+                          int batch_size,
+                          int[] input_ids,
+                          byte[] input_mask,
+                          byte[] segment_ids,
+                          cuBERT_Output output,
+                          int compute_type);
+
+    void cuBERT_tokenize_compute_m(Pointer model,
+                                   Pointer tokenizer,
+                                   int batch_size,
+                                   String[] text_a,
+                                   String[] text_b,
+                                   cuBERT_Output output,
+                                   int compute_type);
 }

@@ -1,10 +1,6 @@
 package com.zhihu.cubert;
 
-import android.util.Half;
 import com.sun.jna.Pointer;
-
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 
 public class Model implements AutoCloseable {
 
@@ -48,43 +44,35 @@ public class Model implements AutoCloseable {
                         byte[] segmentIds,
                         Number[] output,
                         OutputType outputType) {
-        int outputSize = output.length;
-        int elementSize = computeType == ComputeType.HALF ? 2 : 4;
-        ByteBuffer outputBuffer = ByteBuffer.allocateDirect(outputSize * elementSize).order(ByteOrder.nativeOrder());
+        Output o = new Output(output, outputType);
+        compute(batchSize, inputIds, inputMask, segmentIds, o);
+    }
 
-        CLibrary.INSTANCE.cuBERT_compute(
-                _c_model, batchSize, inputIds, inputMask, segmentIds,
-                outputBuffer, outputType.ordinal(), computeType.ordinal());
-
-        fillOutput(outputBuffer, output);
+    public void compute(int batchSize,
+                        int[] inputIds,
+                        byte[] inputMask,
+                        byte[] segmentIds,
+                        Output output) {
+        CLibrary.cuBERT_Output c_output = new CLibrary.cuBERT_Output(output, computeType);
+        CLibrary.INSTANCE.cuBERT_compute_m(
+                _c_model, batchSize, inputIds, inputMask, segmentIds, c_output, computeType.ordinal());
+        output.fillOutput(c_output, computeType);
     }
 
     public void tokenizeCompute(String[] textA, String[] textB, Number[] output, OutputType outputType) {
+        Output o = new Output(output, outputType);
+        tokenizeCompute(textA, textB, o);
+    }
+
+    public void tokenizeCompute(String[] textA, String[] textB, Output output) {
         int batchSize = textA.length;
         if (textB != null && batchSize != textB.length) {
             throw new IllegalArgumentException("batch_size mismatch");
         }
 
-        int outputSize = output.length;
-        int elementSize = computeType == ComputeType.HALF ? 2 : 4;
-        ByteBuffer outputBuffer = ByteBuffer.allocateDirect(outputSize * elementSize).order(ByteOrder.nativeOrder());
-
-        CLibrary.INSTANCE.cuBERT_tokenize_compute(
-                _c_model, _c_tokenizer, batchSize, textA, textB,
-                outputBuffer, outputType.ordinal(), computeType.ordinal());
-
-        fillOutput(outputBuffer, output);
-    }
-
-    private void fillOutput(ByteBuffer buffer, Number[] output) {
-        if (computeType == ComputeType.HALF) {
-            for (int i = 0 ; i < output.length; i++) {
-                output[i] = new Half(buffer.getShort());
-            }
-        } else {
-            for (int i = 0; i < output.length; i++) {
-                output[i] = buffer.getFloat();
-            }
-        }
+        CLibrary.cuBERT_Output c_output = new CLibrary.cuBERT_Output(output, computeType);
+        CLibrary.INSTANCE.cuBERT_tokenize_compute_m(
+                _c_model, _c_tokenizer, batchSize, textA, textB, c_output, computeType.ordinal());
+        output.fillOutput(c_output, computeType);
     }
 }
