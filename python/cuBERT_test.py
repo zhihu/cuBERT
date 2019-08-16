@@ -25,10 +25,16 @@ output_type=cuBERT.OutputType.LOGITS
 compute_type=cuBERT.ComputeType.FLOAT
 output = np.zeros([batch_size], dtype=np.float32, order='C')
 
+new_output = cuBERT.Output()
+new_output.logits = np.zeros([batch_size], dtype=np.float32, order='C')
+
 model = cuBERT.Model("../build/bert_frozen_seq32.pb", max_batch_size, seq_length, 12, 12, 
                      compute_type=compute_type)
 model.compute(input_ids, input_mask, segment_ids, output, output_type=output_type)
 np.testing.assert_almost_equal([-2.9427543, -1.4876306], output, 5)
+
+model.compute_m(input_ids, input_mask, segment_ids, new_output)
+np.testing.assert_almost_equal([-2.9427543, -1.4876306], new_output.logits, 5)
 
 
 text_a = [u"知乎", u"知乎"]
@@ -38,3 +44,6 @@ model = cuBERT.Model("../build/bert_frozen_seq32.pb", max_batch_size, seq_length
                      vocab_file="../build/vocab.txt")
 model.tokenize_compute(text_a, text_b, output, output_type=output_type)
 np.testing.assert_almost_equal([-2.51366, -1.47348], output, 5)
+
+model.tokenize_compute_m(text_a, text_b, new_output)
+np.testing.assert_almost_equal([-2.51366, -1.47348], new_output.logits, 5)

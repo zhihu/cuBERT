@@ -1,4 +1,5 @@
 import setuptools
+import sys
 from distutils.core import setup
 from distutils.extension import Extension
 from Cython.Build import cythonize
@@ -32,5 +33,6 @@ setup(
                                        include_dirs=[np.get_include()],
                                        language='c++',
                                        extra_compile_args=extra_compile_args,
-                                       extra_link_args=extra_link_args)]),
+                                       extra_link_args=extra_link_args)],
+                            compiler_directives={'language_level' : sys.version_info[0]}),
 )
