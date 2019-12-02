@@ -2,7 +2,7 @@
 #include <algorithm>
 #include <cstring>
 #include <fstream>
-#include "utf8proc/utf8proc.h"
+#include "utf8proc.h"
 
 #include "./tokenization.h"
 
