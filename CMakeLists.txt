@@ -23,13 +23,16 @@ endif()
 include(cub)
 include(protobuf)
 include(protobuf-c)
+include(utf8proc)
 
 set(cuBERT_EXTERNAL_LIBRARIES
-        ${protobuf-c_STATIC_LIBRARIES})
+        ${protobuf-c_STATIC_LIBRARIES}
+        ${utf8proc_STATIC_LIBRARIES})
 set(cuBERT_EXTERNAL_DEPENDENCIES
         cub
         protobuf
         protobuf-c
+        utf8proc
         googletest)
 
 include_directories(
@@ -38,7 +41,8 @@ include_directories(
         ${CMAKE_CURRENT_BINARY_DIR}
         # External dependencies.
         ${cub_INCLUDE_DIR}
-        ${protobuf-c_INCLUDE_DIRS})
+        ${protobuf-c_INCLUDE_DIRS}
+        ${utf8proc_INCLUDE_DIRS})
 
 # MKL Support
 if(cuBERT_ENABLE_MKL_SUPPORT)
@@ -78,7 +82,6 @@ include(tf_core_framework)
 
 set(SOURCE_FILES
         src/cuBERT.cpp
-        src/utf8proc/utf8proc.c
         src/cuBERT/common.cpp
         src/cuBERT/tokenization.cpp
         src/cuBERT/Bert.cpp
