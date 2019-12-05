@@ -68,16 +68,17 @@ void cuBERT_compute_m(void* model,
                       int8_t* input_mask,
                       int8_t* segment_ids,
                       cuBERT_Output* output,
-                      cuBERT_ComputeType compute_type) {
+                      cuBERT_ComputeType compute_type,
+                      int output_to_float) {
     if (compute_type == cuBERT_COMPUTE_FLOAT) {
         ((cuBERT::BertM<float> *) model)->compute(batch_size,
                                                   input_ids, input_mask, segment_ids,
-                                                  output);
+                                                  output, output_to_float);
     } else {
 #ifdef HAVE_CUDA
         ((cuBERT::BertM<half> *) model)->compute(batch_size,
                                                  input_ids, input_mask, segment_ids,
-                                                 output);
+                                                 output, output_to_float);
 #else
         throw std::invalid_argument("half precision not supported by CPU");
 #endif
@@ -244,7 +245,8 @@ void cuBERT_tokenize_compute_m(void* model,
                                const char** text_a,
                                const char** text_b,
                                cuBERT_Output* output,
-                               cuBERT_ComputeType compute_type) {
+                               cuBERT_ComputeType compute_type,
+                               int output_to_float) {
     size_t max_seq_length;
     if (compute_type == cuBERT_COMPUTE_FLOAT) {
         max_seq_length = ((cuBERT::BertM<float> *) model)->seq_length;
@@ -270,5 +272,5 @@ void cuBERT_tokenize_compute_m(void* model,
                                segment_ids + max_seq_length * batch_idx);
     }
 
-    cuBERT_compute_m(model, batch_size, input_ids, input_mask, segment_ids, output, compute_type);
+    cuBERT_compute_m(model, batch_size, input_ids, input_mask, segment_ids, output, compute_type, output_to_float);
 }
