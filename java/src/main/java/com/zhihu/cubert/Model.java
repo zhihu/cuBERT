@@ -42,7 +42,7 @@ public class Model implements AutoCloseable {
                         int[] inputIds,
                         byte[] inputMask,
                         byte[] segmentIds,
-                        Number[] output,
+                        float[] output,
                         OutputType outputType) {
         Output o = new Output(output, outputType);
         compute(batchSize, inputIds, inputMask, segmentIds, o);
@@ -53,13 +53,13 @@ public class Model implements AutoCloseable {
                         byte[] inputMask,
                         byte[] segmentIds,
                         Output output) {
-        CLibrary.cuBERT_Output c_output = new CLibrary.cuBERT_Output(output, computeType);
+        CLibrary.cuBERT_Output c_output = new CLibrary.cuBERT_Output(output);
         CLibrary.INSTANCE.cuBERT_compute_m(
-                _c_model, batchSize, inputIds, inputMask, segmentIds, c_output, computeType.ordinal());
-        output.fillOutput(c_output, computeType);
+                _c_model, batchSize, inputIds, inputMask, segmentIds, c_output, computeType.ordinal(), 1);
+        output.fillOutput(c_output);
     }
 
-    public void tokenizeCompute(String[] textA, String[] textB, Number[] output, OutputType outputType) {
+    public void tokenizeCompute(String[] textA, String[] textB, float[] output, OutputType outputType) {
         Output o = new Output(output, outputType);
         tokenizeCompute(textA, textB, o);
     }
@@ -70,9 +70,9 @@ public class Model implements AutoCloseable {
             throw new IllegalArgumentException("batch_size mismatch");
         }
 
-        CLibrary.cuBERT_Output c_output = new CLibrary.cuBERT_Output(output, computeType);
+        CLibrary.cuBERT_Output c_output = new CLibrary.cuBERT_Output(output);
         CLibrary.INSTANCE.cuBERT_tokenize_compute_m(
-                _c_model, _c_tokenizer, batchSize, textA, textB, c_output, computeType.ordinal());
-        output.fillOutput(c_output, computeType);
+                _c_model, _c_tokenizer, batchSize, textA, textB, c_output, computeType.ordinal(), 1);
+        output.fillOutput(c_output);
     }
 }
