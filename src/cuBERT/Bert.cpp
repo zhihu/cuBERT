@@ -204,8 +204,57 @@ namespace cuBERT {
         this->_pre_compute(batch_size);
     }
 
+    template <>
+    void Bert<float>::output_to_float(size_t batch_size, cuBERT_Output* output) {
+        this->output(batch_size, output);
+    }
+
     template class Bert<float>;
+
 #ifdef HAVE_CUDA
+    template <>
+    void Bert<half>::output_to_float(size_t batch_size, cuBERT_Output* output) {
+        cuBERT_Output tmp;  // half tmp buffer
+        if (output->logits != nullptr) {
+            tmp.logits = new half[batch_size * num_labels];
+        }
+        if (output->probs != nullptr) {
+            tmp.probs = new half[batch_size * num_labels];
+        }
+        if (output->pooled_output != nullptr) {
+            tmp.pooled_output = new half[batch_size * hidden_size];
+        }
+        if (output->sequence_output != nullptr) {
+            tmp.sequence_output = new half[batch_size * seq_length * hidden_size];
+        }
+        if (output->embedding_output != nullptr) {
+            tmp.embedding_output = new half[batch_size * seq_length * hidden_size];
+        }
+
+        this->output(batch_size, &tmp);
+
+        if (output->logits != nullptr) {
+            half2float(tmp.logits, (float*) output->logits, batch_size * num_labels);
+            delete[] (half*) tmp.logits;
+        }
+        if (output->probs != nullptr) {
+            half2float(tmp.probs, (float*) output->probs, batch_size * num_labels);
+            delete[] (half*) tmp.probs;
+        }
+        if (output->pooled_output != nullptr) {
+            half2float(tmp.pooled_output, (float*) output->pooled_output, batch_size * hidden_size);
+            delete[] (half*) tmp.pooled_output;
+        }
+        if (output->sequence_output != nullptr) {
+            half2float(tmp.sequence_output, (float*) output->sequence_output, batch_size * seq_length * hidden_size);
+            delete[] (half*) tmp.sequence_output;
+        }
+        if (output->embedding_output != nullptr) {
+            half2float(tmp.embedding_output, (float*) output->embedding_output, batch_size * seq_length * hidden_size);
+            delete[] (half*) tmp.embedding_output;
+        }
+    }
+
     template class Bert<half>;
 #endif
 }

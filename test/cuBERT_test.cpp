@@ -78,3 +78,31 @@ TEST_F(cuBertTest, compute_tokenize) {
     std::cout << output[0] << std::endl;
     std::cout << output[1] << std::endl;
 }
+
+#ifdef HAVE_CUDA
+TEST_F(cuBertTest, compute_tokenize_mf) {
+    int max_batch_size = 128;
+    int batch_size = 2;
+    int seq_length = 32;
+    float logits[batch_size];
+    cuBERT_Output output;
+    output.logits = logits;
+
+    const char* text_a[] = {u8"知乎", u8"知乎"};
+    const char* text_b[] = {u8"在家刷知乎", u8"知乎发现更大的世界"};
+
+    void* model = cuBERT_open("bert_frozen_seq32.pb", max_batch_size, seq_length, 12, 12, cuBERT_COMPUTE_HALF);
+    void* tokenizer = cuBERT_open_tokenizer("vocab.txt");
+
+    cuBERT_tokenize_compute_m(model, tokenizer, batch_size,
+                              text_a,
+                              text_b,
+                              &output, cuBERT_COMPUTE_HALF, 1);
+
+    cuBERT_close_tokenizer(tokenizer);
+    cuBERT_close(model);
+
+    std::cout << logits[0] << std::endl;
+    std::cout << logits[1] << std::endl;
+}
+#endif

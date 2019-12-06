@@ -100,7 +100,7 @@ namespace cuBERT {
     template <typename T>
     unsigned int BertM<T>::compute(size_t batch_size,
                                    int *input_ids, int8_t *input_mask, int8_t *segment_ids,
-                                   cuBERT_Output *output) {
+                                   cuBERT_Output *output, bool output_to_float) {
         uint8_t count = rr++;
         unsigned int choice = count % bert_instances.size();
 
@@ -111,7 +111,11 @@ namespace cuBERT {
         std::lock_guard<std::mutex> lg(*mutex_instance);
         bert_instance->compute(batch_size, input_ids, input_mask, segment_ids);
 
-        bert_instance->output(batch_size, output);
+        if (output_to_float) {
+            bert_instance->output_to_float(batch_size, output);
+        } else {
+            bert_instance->output(batch_size, output);
+        }
         return choice;
     }
 

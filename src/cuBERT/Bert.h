@@ -40,6 +40,9 @@ namespace cuBERT {
 
         void output(size_t batch_size, cuBERT_Output* output);
 
+        // output is always float, convert half to float if necessary
+        void output_to_float(size_t batch_size, cuBERT_Output* output);
+
     private:
         void* cublas;
         void* stream;

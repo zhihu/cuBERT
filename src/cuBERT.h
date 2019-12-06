@@ -69,13 +69,19 @@ struct cuBERT_Output {
     void* probs = nullptr;
 };
 
+// output_to_float = true:
+//     for half model, the output should be always float, the method will convert half to float internally;
+//     for float model, this flag is not used.
+// output_to_float = false:
+//     the output data type should be equal to compute_type.
 void cuBERT_compute_m(void* model,
                       int batch_size,
                       int* input_ids,
                       int8_t* input_mask,
                       int8_t* segment_ids,
                       cuBERT_Output* output,
-                      cuBERT_ComputeType compute_type = cuBERT_COMPUTE_FLOAT);
+                      cuBERT_ComputeType compute_type = cuBERT_COMPUTE_FLOAT,
+                      int output_to_float = 0);
 
 void cuBERT_tokenize_compute_m(void* model,
                                void* tokenizer,
@@ -83,7 +89,8 @@ void cuBERT_tokenize_compute_m(void* model,
                                const char** text_a,
                                const char** text_b,
                                cuBERT_Output* output,
-                               cuBERT_ComputeType compute_type = cuBERT_COMPUTE_FLOAT);
+                               cuBERT_ComputeType compute_type = cuBERT_COMPUTE_FLOAT,
+                               int output_to_float = 0);
 
 }
 

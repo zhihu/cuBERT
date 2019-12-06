@@ -27,9 +27,12 @@ namespace cuBERT {
                              T *output,
                              cuBERT_OutputType output_type = cuBERT_LOGITS);
 
+        // output_to_float = true:
+        //     for half model, the output is always float, the method will convert half to float;
+        //     for float model, this flag is not used.
         unsigned int compute(size_t batch_size,
                              int *input_ids, int8_t *input_mask, int8_t *segment_ids,
-                             cuBERT_Output *output);
+                             cuBERT_Output *output, bool output_to_float = false);
 
         size_t seq_length;
 
