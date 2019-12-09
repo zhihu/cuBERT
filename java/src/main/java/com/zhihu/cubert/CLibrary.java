@@ -56,20 +56,20 @@ interface CLibrary extends Library {
         public ByteBuffer embedding_output;
         public ByteBuffer probs;
 
-        cuBERT_Output(Output output, ComputeType computeType) {
-            this.logits = allocate(output.logits, computeType);
-            this.pooled_output = allocate(output.pooledOutput, computeType);
-            this.sequence_output = allocate(output.sequenceOutput, computeType);
-            this.embedding_output = allocate(output.embeddingOutput, computeType);
-            this.probs = allocate(output.probs, computeType);
+        cuBERT_Output(Output output) {
+            this.logits = allocate(output.logits);
+            this.pooled_output = allocate(output.pooledOutput);
+            this.sequence_output = allocate(output.sequenceOutput);
+            this.embedding_output = allocate(output.embeddingOutput);
+            this.probs = allocate(output.probs);
         }
 
-        private static ByteBuffer allocate(Number[] array, ComputeType computeType) {
+        private static ByteBuffer allocate(float[] array) {
             if (array == null) {
                 return null;
             }
             int outputSize = array.length;
-            int elementSize = computeType == ComputeType.HALF ? 2 : 4;
+            int elementSize = 4;
             return ByteBuffer.allocateDirect(outputSize * elementSize).order(ByteOrder.nativeOrder());
         }
     }
@@ -80,7 +80,8 @@ interface CLibrary extends Library {
                           byte[] input_mask,
                           byte[] segment_ids,
                           cuBERT_Output output,
-                          int compute_type);
+                          int compute_type,
+                          int output_to_float);
 
     void cuBERT_tokenize_compute_m(Pointer model,
                                    Pointer tokenizer,
@@ -88,5 +89,6 @@ interface CLibrary extends Library {
                                    String[] text_a,
                                    String[] text_b,
                                    cuBERT_Output output,
-                                   int compute_type);
+                                   int compute_type,
+                                   int output_to_float);
 }

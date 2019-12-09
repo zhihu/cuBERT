@@ -1,19 +1,17 @@
 package com.zhihu.cubert;
 
-import android.util.Half;
-
 import java.nio.ByteBuffer;
 
 public class Output {
-    public Number[] logits;
-    public Number[] pooledOutput;
-    public Number[] sequenceOutput;
-    public Number[] embeddingOutput;
-    public Number[] probs;
+    public float[] logits;
+    public float[] pooledOutput;
+    public float[] sequenceOutput;
+    public float[] embeddingOutput;
+    public float[] probs;
 
     public Output() {}
 
-    public Output(Number[] output, OutputType outputType) {
+    public Output(float[] output, OutputType outputType) {
         switch (outputType) {
             case LOGITS:
                 logits = output;
@@ -35,26 +33,18 @@ public class Output {
         }
     }
 
-    void fillOutput(CLibrary.cuBERT_Output output, ComputeType computeType) {
-        fillOutput(output.logits, logits, computeType);
-        fillOutput(output.pooled_output, pooledOutput, computeType);
-        fillOutput(output.sequence_output, sequenceOutput, computeType);
-        fillOutput(output.embedding_output, embeddingOutput, computeType);
-        fillOutput(output.probs, probs, computeType);
+    void fillOutput(CLibrary.cuBERT_Output output) {
+        fillOutput(output.logits, logits);
+        fillOutput(output.pooled_output, pooledOutput);
+        fillOutput(output.sequence_output, sequenceOutput);
+        fillOutput(output.embedding_output, embeddingOutput);
+        fillOutput(output.probs, probs);
     }
 
-    private static void fillOutput(ByteBuffer buffer, Number[] output, ComputeType computeType) {
+    private static void fillOutput(ByteBuffer buffer, float[] output) {
         if (buffer == null || output == null) {
             return;
         }
-        if (computeType == ComputeType.HALF) {
-            for (int i = 0 ; i < output.length; i++) {
-                output[i] = new Half(buffer.getShort());
-            }
-        } else {
-            for (int i = 0; i < output.length; i++) {
-                output[i] = buffer.getFloat();
-            }
-        }
+        buffer.asFloatBuffer().get(output);
     }
 }

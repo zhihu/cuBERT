@@ -34,16 +34,16 @@ public class ModelTest {
         byte[] segment_ids = {1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0, 1, 0,
                 0, 1, 1, 0, 0, 1, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 1, 1, 1, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 0};
 
-        Float[] output = new Float[2];
+        float[] output = new float[2];
         model.compute(2, input_ids, input_mask, segment_ids, output, OutputType.LOGITS);
         Assert.assertEquals(-2.9427543, output[0], 1e-5);
         Assert.assertEquals(-1.4876306, output[1], 1e-5);
 
         Output newOutput = new Output();
-        newOutput.logits = new Float[2];
+        newOutput.logits = new float[2];
         model.compute(2, input_ids, input_mask, segment_ids, newOutput);
-        Assert.assertEquals(-2.9427543, newOutput.logits[0].doubleValue(), 1e-5);
-        Assert.assertEquals(-1.4876306, newOutput.logits[1].doubleValue(), 1e-5);
+        Assert.assertEquals(-2.9427543, newOutput.logits[0], 1e-5);
+        Assert.assertEquals(-1.4876306, newOutput.logits[1], 1e-5);
     }
 
     @Test
@@ -51,15 +51,15 @@ public class ModelTest {
         String[] textA = new String[]{"知乎", "知乎"};
         String[] textB = new String[]{"在家刷知乎", "知乎发现更大的世界"};
 
-        Float[] output = new Float[2];
+        float[] output = new float[2];
         model.tokenizeCompute(textA, textB, output, OutputType.LOGITS);
         Assert.assertEquals(-2.51366, output[0], 1e-5);
         Assert.assertEquals(-1.47348, output[1], 1e-5);
 
         Output newOutput = new Output();
-        newOutput.logits = new Float[2];
+        newOutput.logits = new float[2];
         model.tokenizeCompute(textA, textB, newOutput);
-        Assert.assertEquals(-2.51366, newOutput.logits[0].doubleValue(), 1e-5);
-        Assert.assertEquals(-1.47348, newOutput.logits[1].doubleValue(), 1e-5);
+        Assert.assertEquals(-2.51366, newOutput.logits[0], 1e-5);
+        Assert.assertEquals(-1.47348, newOutput.logits[1], 1e-5);
     }
 }
