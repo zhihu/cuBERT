@@ -16,6 +16,10 @@ void cuBERT_finalize() {
     cuBERT::finalize();
 }
 
+int cuBERT_get_gpu_count() {
+    return cuBERT::get_gpu_count();
+}
+
 void *cuBERT_open(const char *model_file,
                   int max_batch_size,
                   int seq_length,

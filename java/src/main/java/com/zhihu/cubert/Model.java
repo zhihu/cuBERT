@@ -75,4 +75,8 @@ public class Model implements AutoCloseable {
                 _c_model, _c_tokenizer, batchSize, textA, textB, c_output, computeType.ordinal(), 1);
         output.fillOutput(c_output);
     }
+
+    public static int getGpuCount() {
+        return CLibrary.INSTANCE.cuBERT_get_gpu_count();
+    }
 }

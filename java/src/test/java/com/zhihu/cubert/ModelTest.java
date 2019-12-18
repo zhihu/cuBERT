@@ -11,6 +11,7 @@ public class ModelTest {
 
     @Before
     public void setUp() {
+        Model.getGpuCount();
         model = new Model(
                 "../build/bert_frozen_seq32.pb",
                 128, 32, 12, 12,

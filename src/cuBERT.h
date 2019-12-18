@@ -25,6 +25,8 @@ enum cuBERT_OutputType {
 void cuBERT_initialize();
 void cuBERT_finalize();
 
+int cuBERT_get_gpu_count();
+
 void* cuBERT_open(const char* model_file,
                   int max_batch_size,
                   int seq_length,

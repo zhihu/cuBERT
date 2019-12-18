@@ -8,6 +8,8 @@ cdef extern from "../src/cuBERT.h":
     void cuBERT_initialize() except +
     void cuBERT_finalize() except +
 
+    int cuBERT_get_gpu_count()
+
     void* cuBERT_open(const char* model_file,
                       int max_batch_size,
                       int seq_length,
