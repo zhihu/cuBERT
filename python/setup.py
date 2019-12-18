@@ -20,7 +20,7 @@ shutil.copyfile('../build/' + libname, './libcubert/' + libname)
 
 setup(
     name='cuBERT',
-    version='0.0.3',
+    version='0.0.4',
     author='qinluo',
     author_email='eric.x.sun@gmail.com',
     description='python interface for cuBERT',
