@@ -2,6 +2,8 @@
 import numpy as np
 import libcubert as cuBERT
 
+cuBERT.get_gpu_count()
+
 max_batch_size = 128
 batch_size = 2
 seq_length = 32

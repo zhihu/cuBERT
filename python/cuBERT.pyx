@@ -24,6 +24,9 @@ cdef const char** string_array_to_ptr(list text):
         _c_text[i] = text[i]
     return _c_text
 
+def get_gpu_count():
+    return _cuBERT.cuBERT_get_gpu_count()
+
 class ComputeType:
     FLOAT = _cuBERT.cuBERT_ComputeType.cuBERT_COMPUTE_FLOAT
     HALF = _cuBERT.cuBERT_ComputeType.cuBERT_COMPUTE_HALF
