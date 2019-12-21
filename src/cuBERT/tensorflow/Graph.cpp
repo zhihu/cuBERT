@@ -83,6 +83,11 @@ namespace cuBERT {
         if (var.empty()) {
             throw std::invalid_argument("model file invalid");
         }
+        std::cerr << "model param: {vocab_size=" << vocab_size
+                  << ";type_vocab_size=" << type_vocab_size
+                  << ";hidden_size=" << hidden_size
+                  << ";intermediate_size=" << intermediate_size
+                  << ";num_labels=}" << num_labels << std::endl;
     }
 
     template <typename T>

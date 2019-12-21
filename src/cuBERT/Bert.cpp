@@ -41,16 +41,19 @@ namespace cuBERT {
         }
 
         if (var.count("output_weights")) {
+            T* output_weights = var.at("output_weights");
             T* output_bias = var.count("output_bias") ? var.at("output_bias") : nullptr;
-            this->additional_output_layer = new ClassifierOutputLayer<T>(cublas, hidden_size, num_labels, var.at("output_weights"), output_bias, max_batch_size);
+            this->additional_output_layer = new ClassifierOutputLayer<T>(cublas, hidden_size, num_labels, output_weights, output_bias, max_batch_size);
+            this->_logits = static_cast<T *>(cuBERT::malloc(sizeof(T) * max_batch_size * num_labels));
+            this->_probs = static_cast<T *>(cuBERT::malloc(sizeof(T) * max_batch_size * num_labels));
         } else {
             this->additional_output_layer = nullptr;
+            this->_logits = nullptr;
+            this->_probs = nullptr;
         }
 
         this->_embedding_output = static_cast<T *>(cuBERT::malloc(sizeof(T) * max_batch_size * seq_length * hidden_size));
         this->_pooled_output = static_cast<T *>(cuBERT::malloc(sizeof(T) * max_batch_size * hidden_size));
-        this->_logits = static_cast<T *>(cuBERT::malloc(sizeof(T) * max_batch_size * num_labels));
-        this->_probs = static_cast<T *>(cuBERT::malloc(sizeof(T) * max_batch_size * num_labels));
 
         this->input_ids_buf = static_cast<int *>(cuBERT::malloc(sizeof(int) * max_batch_size * seq_length));
         this->input_mask_buf = static_cast<int8_t *>(cuBERT::malloc(sizeof(int8_t) * max_batch_size * seq_length));

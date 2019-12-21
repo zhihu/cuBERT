@@ -19,7 +19,7 @@ namespace cuBERT {
         size_t type_vocab_size;
         size_t hidden_size;
         size_t intermediate_size;
-        size_t num_labels;
+        size_t num_labels = 1;
     };
 }
 
