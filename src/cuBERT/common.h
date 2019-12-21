@@ -19,6 +19,7 @@ namespace cuBERT {
 
     int get_gpu_count();
     void set_gpu(int device);
+    void gpu_info(int device);
 
     void *cuda_stream_create();
     void cuda_stream_destroy(void *stream);

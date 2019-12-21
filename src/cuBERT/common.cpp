@@ -114,6 +114,17 @@ namespace cuBERT {
 #endif
     }
 
+    void gpu_info(int device) {
+#ifdef HAVE_CUDA
+        cudaDeviceProp prop;
+        CUDA_CHECK(cudaGetDeviceProperties(&prop, device));
+        fprintf(stderr, "Found device %d with properties:\n", device);
+        fprintf(stderr, "  name: %s major: %d minor: %d memoryClockRate(kHz): %d\n", prop.name, prop.major, prop.minor, prop.memoryClockRate);
+        fprintf(stderr, "  pciBusID: %d\n", prop.pciBusID);
+        fprintf(stderr, "  totalMemory: %zu\n", prop.totalGlobalMem);
+#endif
+    }
+
     void *cuda_stream_create() {
 #ifdef HAVE_CUDA
             cudaStream_t ptr;
@@ -138,11 +149,19 @@ namespace cuBERT {
 
     void *malloc(size_t size) {
 #ifdef HAVE_CUDA
-            void *ptr;
-            CUDA_CHECK(cudaMalloc(&ptr, size));
+        void *ptr;
+        cudaError_t err = cudaMalloc(&ptr, size);
+        if (cudaSuccess == err) {
             return ptr;
+        }
+
+        size_t free, total;
+        CUDA_CHECK(cudaMemGetInfo(&free, &total));
+        fprintf(stderr, "CUDA %s. Tried to allocate %zu (%zu total; %zu free)\n",
+                cudaGetErrorString(err), size, total, free);
+        exit(EXIT_FAILURE);
 #else
-            return std::malloc(size);
+        return std::malloc(size);
 #endif
     }
 
