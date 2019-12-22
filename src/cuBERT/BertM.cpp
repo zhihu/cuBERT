@@ -30,6 +30,7 @@ namespace cuBERT {
         for (int device = 0; device < count; ++device) {
             auto start = std::chrono::high_resolution_clock::now();
             cuBERT::set_gpu(device);
+            cuBERT::gpu_info(device);
 
             auto *bert = new Bert<T>(graph.var, max_batch_size, seq_length,
                                      graph.vocab_size,
