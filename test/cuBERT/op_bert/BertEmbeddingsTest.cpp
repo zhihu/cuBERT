@@ -1,4 +1,3 @@
-#include "gtest/gtest.h"
 #include <cmath>
 
 #include "../common_test.h"

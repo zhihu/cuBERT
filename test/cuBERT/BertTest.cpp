@@ -1,4 +1,3 @@
-#include "gtest/gtest.h"
 #include <unordered_map>
 
 #include "common_test.h"

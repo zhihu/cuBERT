@@ -1,5 +1,3 @@
-#include "gtest/gtest.h"
-
 #include "../common_test.h"
 #include "cuBERT/op_out/AdditionalOutputLayer.h"
 using namespace cuBERT;

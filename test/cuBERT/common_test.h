@@ -1,11 +1,12 @@
 #ifndef CUBERT_COMMON_TEST_H
 #define CUBERT_COMMON_TEST_H
 
-#include "gtest/gtest.h"
 #include <cstdlib>
 #include <cstring>
 
 #include "cuBERT/common.h"
+
+#include "gtest/gtest.h"
 
 class CommonTest : public ::testing::Test {
 protected:

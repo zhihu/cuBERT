@@ -1,5 +1,3 @@
-#include "gtest/gtest.h"
-
 #include "common_test.h"
 
 TEST_F(CommonTest, memcpy) {
