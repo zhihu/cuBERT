@@ -161,7 +161,7 @@ namespace cuBERT {
                 cudaGetErrorString(err), size, total, free);
         exit(EXIT_FAILURE);
 #else
-        return std::malloc(size);
+        return mkl_malloc(size, 64);
 #endif
     }
 
@@ -169,7 +169,7 @@ namespace cuBERT {
 #ifdef HAVE_CUDA
             CUDA_CHECK(cudaFree(ptr));
 #else
-            std::free(ptr);
+            mkl_free(ptr);
 #endif
     }
 
