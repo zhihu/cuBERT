@@ -9,6 +9,8 @@ add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
 
 option(cuBERT_ENABLE_GPU "Enable GPU support" OFF)
 option(cuBERT_ENABLE_MKL_SUPPORT "Enable Intel MKL support" OFF)
+option(cuBERT_SYSTEM_MKL "Use system MKL" OFF)
+option(cuBERT_SYSTEM_PROTOBUF "Use system Protobuf and Protobuf-c" OFF)
 
 find_package(Threads REQUIRED)
 
@@ -21,19 +23,19 @@ if (OPENMP_FOUND)
 endif()
 
 include(cub)
-include(protobuf)
-include(protobuf-c)
 include(utf8proc)
+include(protobuf-c)
+include(googletest)
+
+set(cuBERT_EXTERNAL_DEPENDENCIES
+        cub
+        utf8proc
+        protobuf-c
+        googletest)
 
 set(cuBERT_EXTERNAL_LIBRARIES
         ${protobuf-c_STATIC_LIBRARIES}
         ${utf8proc_STATIC_LIBRARIES})
-set(cuBERT_EXTERNAL_DEPENDENCIES
-        cub
-        protobuf
-        protobuf-c
-        utf8proc
-        googletest)
 
 include_directories(
         # Source and generated code.
@@ -46,11 +48,15 @@ include_directories(
 
 # MKL Support
 if(cuBERT_ENABLE_MKL_SUPPORT)
-    include(mkl)
     add_definitions(-DHAVE_MKL)
-    list(APPEND cuBERT_EXTERNAL_LIBRARIES ${mkl_SHARED_LIBRARIES})
-    list(APPEND cuBERT_EXTERNAL_DEPENDENCIES mkl_copy_shared_to_destination)
-    include_directories(${mkl_INCLUDE_DIRS})
+    if(cuBERT_SYSTEM_MKL)
+        find_package(MKL REQUIRED)
+    else()
+        include(mkl)
+        list(APPEND cuBERT_EXTERNAL_DEPENDENCIES mkl_copy_shared_to_destination)
+    endif()
+    list(APPEND cuBERT_EXTERNAL_LIBRARIES ${MKL_LIBRARIES})
+    include_directories(${MKL_INCLUDE_DIR})
 endif(cuBERT_ENABLE_MKL_SUPPORT)
 
 if(cuBERT_ENABLE_GPU)
@@ -127,7 +133,6 @@ endif ()
 
 enable_testing()
 configure_file(test_vocab.txt ${CMAKE_CURRENT_BINARY_DIR}/test_vocab.txt COPYONLY)
-include(googletest)
 add_executable(cuBERT_test test/unit_test.cpp
         test/cuBERT/common_test.cpp
         test/cuBERT/tokenization_test.cpp
@@ -157,5 +162,7 @@ install(TARGETS cuBERT
         ARCHIVE DESTINATION lib/static)
 install(FILES ${CMAKE_SOURCE_DIR}/src/cuBERT.h DESTINATION include)
 
-install(FILES ${mkl_SHARED_LIBRARIES} DESTINATION lib)
-install(DIRECTORY ${mkl_INCLUDE_DIRS} DESTINATION .)
+if(NOT ${cuBERT_SYSTEM_MKL})
+    install(FILES ${MKL_LIBRARIES} DESTINATION lib)
+    install(DIRECTORY ${MKL_INCLUDE_DIR} DESTINATION .)
+endif()

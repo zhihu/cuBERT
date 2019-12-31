@@ -307,17 +307,20 @@ namespace cuBERT {
                                         const float *B, int ldb, long long int strideB,
                                         const float beta,
                                         float *C, int ldc, long long int strideC,
-                                        int batchCount) {
+                                        int batchCount,
+                                        int algo) {
 #ifdef HAVE_CUDA
-            CUBLAS_CHECK(cublasSgemmStridedBatched((cublasHandle_t) handle,
+            CUBLAS_CHECK(cublasGemmStridedBatchedEx((cublasHandle_t) handle,
                                                     TransA ? CUBLAS_OP_T : CUBLAS_OP_N, TransB ? CUBLAS_OP_T : CUBLAS_OP_N,
                                                     m, n, k,
                                                     &alpha,
-                                                    A, lda, strideA,
-                                                    B, ldb, strideB,
+                                                    A, CUDA_R_32F, lda, strideA,
+                                                    B, CUDA_R_32F, ldb, strideB,
                                                     &beta,
-                                                    C, ldc, strideC,
-                                                    batchCount));
+                                                    C, CUDA_R_32F, ldc, strideC,
+                                                    batchCount,
+                                                    CUDA_R_32F,
+                                                    (cublasGemmAlgo_t) algo));
             return;
 #endif
 #ifdef HAVE_MKL
@@ -401,7 +404,8 @@ namespace cuBERT {
                                        const half *B, int ldb, long long int strideB,
                                        const float beta,
                                        half *C, int ldc, long long int strideC,
-                                       int batchCount) {
+                                       int batchCount,
+                                       int algo) {
             CUBLAS_CHECK(cublasGemmStridedBatchedEx((cublasHandle_t) handle,
                                                     TransA ? CUBLAS_OP_T : CUBLAS_OP_N, TransB ? CUBLAS_OP_T : CUBLAS_OP_N,
                                                     m, n, k,
@@ -411,7 +415,8 @@ namespace cuBERT {
                                                     &beta,
                                                     C, CUDA_R_16F, ldc, strideC,
                                                     batchCount,
-                                                    CUDA_R_32F, CUBLAS_GEMM_DEFAULT_TENSOR_OP));
+                                                    CUDA_R_32F,
+                                                    (cublasGemmAlgo_t) algo));
     }
 #endif
 
