@@ -16,7 +16,7 @@ include (ExternalProject)
 
 # NOTE: Different from mkldnn.cmake, this file is meant to download mkl libraries
 set(MKL_INCLUDE_DIR ${CMAKE_CURRENT_BINARY_DIR}/mkl/src/mkl/include)
-set(MKL_BIN_DIRS ${CMAKE_CURRENT_BINARY_DIR}/mkl/bin)
+set(MKL_BIN_DIR ${CMAKE_CURRENT_BINARY_DIR}/mkl/bin)
 set(mkl_WIN mklml_win_2019.0.3.20190220.zip)
 set(mkl_MAC mklml_mac_2019.0.3.20190220.tgz)
 set(mkl_LNX mklml_lnx_2019.0.3.20190220.tgz)
@@ -52,12 +52,12 @@ ExternalProject_Add(mkl
 
 # put mkl dynamic libraries in one bin directory
 add_custom_target(mkl_create_destination_dir
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${MKL_BIN_DIRS}
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${MKL_BIN_DIR}
         DEPENDS mkl)
 
 add_custom_target(mkl_copy_shared_to_destination DEPENDS mkl_create_destination_dir)
 
 foreach(dll_file ${MKL_LIBRARIES})
     add_custom_command(TARGET mkl_copy_shared_to_destination PRE_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${dll_file} ${MKL_BIN_DIRS})
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${dll_file} ${MKL_BIN_DIR})
 endforeach()

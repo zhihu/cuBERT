@@ -10,7 +10,7 @@ add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
 option(cuBERT_ENABLE_GPU "Enable GPU support" OFF)
 option(cuBERT_ENABLE_MKL_SUPPORT "Enable Intel MKL support" OFF)
 option(cuBERT_SYSTEM_MKL "Use system MKL" OFF)
-option(cuBERT_SYSTEM_PROTOBUF "Use system Protobuf and Protobuf-c" OFF)
+option(cuBERT_SYSTEM_PROTOBUF "Use system Protobuf" OFF)
 
 find_package(Threads REQUIRED)
 
