@@ -20,10 +20,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         automake \
         libtool \
         pkg-config \
+        protobuf-compiler \
+        libprotoc-dev \
+        libprotobuf-dev \
         && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
 RUN rm -rf build && mkdir build && cd build && \
-    cmake -DCMAKE_BUILD_TYPE=Release -DcuBERT_ENABLE_GPU=ON -DCUDA_ARCH_NAME=Common .. && \
+    cmake -DCMAKE_BUILD_TYPE=Release -DcuBERT_ENABLE_GPU=ON -DCUDA_ARCH_NAME=Common -DcuBERT_SYSTEM_PROTOBUF=ON .. && \
     make

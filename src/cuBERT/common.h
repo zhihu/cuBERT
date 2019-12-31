@@ -88,7 +88,8 @@ namespace cuBERT {
                                  const T *B, int ldb, long long int strideB,
                                  const float beta,
                                  T *C, int ldc, long long int strideC,
-                                 int batchCount);
+                                 int batchCount,
+                                 int algo = -1);
 
     inline void float2half(const float* fs, void* hs, size_t n) {
         auto* _hs = (half_float::half*) hs;
