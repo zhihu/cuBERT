@@ -14,8 +14,8 @@ RUN rm -rf build && mkdir build && cd build && \
     make
 
 RUN /opt/python/cp36-cp36m/bin/pip install Cython numpy
-RUN /opt/python/cp27-cp27m/bin/pip install Cython numpy
+RUN /opt/python/cp27-cp27mu/bin/pip install Cython numpy
 
 RUN cd python && \
     /opt/python/cp36-cp36m/bin/python setup.py bdist_wheel && \
-    /opt/python/cp27-cp27m/bin/python setup.py bdist_wheel
+    /opt/python/cp27-cp27mu/bin/python setup.py bdist_wheel
