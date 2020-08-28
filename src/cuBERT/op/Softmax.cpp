@@ -1,3 +1,4 @@
+#include <cfloat>
 #include <cmath>
 #include <stdexcept>
 
@@ -16,9 +17,16 @@ namespace cuBERT {
                          void *stream) {
 #pragma omp parallel for
         for (int batch_idx = 0; batch_idx < batch_size; ++batch_idx) {
+            float max = -FLT_MAX;
+            for (int i = batch_idx * channel; i < (batch_idx + 1) * channel; ++i) {
+                if (in[i] > max) {
+                    max = in[i];
+                }
+            }
+
             float sum = 0;
             for (int i = batch_idx * channel; i < (batch_idx + 1) * channel; ++i) {
-                out[i] = expf(in[i]);
+                out[i] = expf(in[i] - max);
                 sum += out[i];
             }
 
