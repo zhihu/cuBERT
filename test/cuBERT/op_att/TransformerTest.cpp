@@ -118,18 +118,18 @@ TEST_F(CommonTest, transformer) {
     cuBERT::free(tensor_gpu);
     cuBERT::free(mask_gpu);
 
-    EXPECT_FLOAT_EQ(out[0], -1.655961);
-    EXPECT_FLOAT_EQ(out[1], -0.5762695);
+    EXPECT_NEAR(out[0], -1.655961, 1e-6);
+    EXPECT_NEAR(out[1], -0.5762695, 1e-6);
     EXPECT_NEAR(out[2], 0.019856449, 1e-6);
     EXPECT_NEAR(out[3], 0.22128667, 1e-6);
-    EXPECT_FLOAT_EQ(out[4], 0.5440447);
-    EXPECT_FLOAT_EQ(out[5], 1.5205542);
-    EXPECT_FLOAT_EQ(out[42], -1.7647616);
+    EXPECT_NEAR(out[4], 0.5440447, 1e-6);
+    EXPECT_NEAR(out[5], 1.5205542, 1e-6);
+    EXPECT_NEAR(out[42], -1.7647616, 1e-6);
     EXPECT_NEAR(out[43], -0.35221404, 1e-6);
     EXPECT_NEAR(out[44], 0.24000001, 1e-6);
     EXPECT_NEAR(out[45], 0.198767971, 1e-6);
     EXPECT_NEAR(out[46], 0.19049276, 1e-6);
-    EXPECT_FLOAT_EQ(out[47], 1.5452648);
+    EXPECT_NEAR(out[47], 1.5452648, 1e-6);
 }
 
 TEST_F(CommonTest, transformer_complex) {

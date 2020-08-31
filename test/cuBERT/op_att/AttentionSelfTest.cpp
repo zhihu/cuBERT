@@ -77,16 +77,16 @@ TEST_F(CommonTest, attention_self) {
     cuBERT::free(mask_gpu);
     cuBERT::free(tensor_gpu);
 
-    EXPECT_FLOAT_EQ(out[0], 3.1048317);
-    EXPECT_FLOAT_EQ(out[1], 0.9379833);
-    EXPECT_FLOAT_EQ(out[2], -2.2327702);
-    EXPECT_FLOAT_EQ(out[3], 0.8868696);
-    EXPECT_FLOAT_EQ(out[4], -0.2311137);
-    EXPECT_FLOAT_EQ(out[5], -0.43307996);
-    EXPECT_FLOAT_EQ(out[42], 5.7841063);
-    EXPECT_FLOAT_EQ(out[43], 1.9979048);
-    EXPECT_FLOAT_EQ(out[44], -4.535029);
-    EXPECT_FLOAT_EQ(out[45], 1.191874);
-    EXPECT_FLOAT_EQ(out[46], -0.8387809);
-    EXPECT_FLOAT_EQ(out[47], -1.3139831);
+    EXPECT_NEAR(out[0], 3.1048317, 1e-5);
+    EXPECT_NEAR(out[1], 0.9379833, 1e-5);
+    EXPECT_NEAR(out[2], -2.2327702, 1e-5);
+    EXPECT_NEAR(out[3], 0.8868696, 1e-5);
+    EXPECT_NEAR(out[4], -0.2311137, 1e-5);
+    EXPECT_NEAR(out[5], -0.43308, 1e-5);
+    EXPECT_NEAR(out[42], 5.7841063, 1e-5);
+    EXPECT_NEAR(out[43], 1.9979048, 1e-5);
+    EXPECT_NEAR(out[44], -4.535029, 1e-5);
+    EXPECT_NEAR(out[45], 1.191874, 1e-5);
+    EXPECT_NEAR(out[46], -0.8387809, 1e-5);
+    EXPECT_NEAR(out[47], -1.3139831, 1e-5);
 }
