@@ -128,7 +128,7 @@ namespace cuBERT {
         char dst[4];
 
         while (word_bytes > 0) {
-            size_t len = utf8proc_iterate((const utf8proc_uint8_t *) text + subpos, word_bytes, &cp);
+            int len = utf8proc_iterate((const utf8proc_uint8_t *) text + subpos, word_bytes, &cp);
             if (len < 0) {
                 std::cerr << "UTF-8 decode error: " << text << std::endl;
                 break;
